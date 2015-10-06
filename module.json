@@ -18,5 +18,14 @@
       "type": "Apache-2.0"
     }
   ],
-  "dependencies": {}
+  "extraIncludes": [	
+    "x-nucleo-idb0xa1",
+    "x-nucleo-idb0xa1/BlueNRG_HCI/include",
+    "x-nucleo-idb0xa1/x-nucleo-idb0xa1/platform/inc",
+    "x-nucleo-idb0xa1/x-nucleo-idb0xa1/platform/X-NUCLEO-IDB04A1",
+    "x-nucleo-idb0xa1/x-nucleo-idb0xa1/utils/inc"
+  ],
+  "dependencies": {
+    "ble": "*"
+  }
 }
