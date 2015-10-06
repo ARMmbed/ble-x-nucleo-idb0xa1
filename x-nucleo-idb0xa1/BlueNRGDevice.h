@@ -41,8 +41,8 @@
 #include "btle.h"
 
 #include "mbed.h"
-#include "blecommon.h"
-#include "BLE.h"
+#include "ble/blecommon.h"
+#include "ble/BLE.h"
 #include "BlueNRGGap.h"
 #include "BlueNRGGattServer.h"
 

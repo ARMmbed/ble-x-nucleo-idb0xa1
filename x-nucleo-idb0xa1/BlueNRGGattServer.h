@@ -37,9 +37,9 @@
 #define __BLUENRG_GATT_SERVER_H__
 
 #include "mbed.h"
-#include "blecommon.h"
+#include "ble/blecommon.h"
 #include "btle.h"
-#include "GattService.h"
+#include "ble/GattService.h"
 #include "ble/GattServer.h"
 #include <vector>
 #include <map>

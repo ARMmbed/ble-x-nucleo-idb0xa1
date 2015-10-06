@@ -36,10 +36,10 @@
 #define __BLUENRG_GAP_H__
 
 #include "mbed.h"
-#include "blecommon.h"
+#include "ble/blecommon.h"
 #include "btle.h"
-#include "GapAdvertisingParams.h"
-#include "GapAdvertisingData.h"
+#include "ble/GapAdvertisingParams.h"
+#include "ble/GapAdvertisingData.h"
 #include <ble/Gap.h>
 
 #define BLE_CONN_HANDLE_INVALID 0x0

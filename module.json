@@ -20,10 +20,10 @@
   ],
   "extraIncludes": [	
     "x-nucleo-idb0xa1",
-    "x-nucleo-idb0xa1/BlueNRG_HCI/include",
-    "x-nucleo-idb0xa1/x-nucleo-idb0xa1/platform/inc",
-    "x-nucleo-idb0xa1/x-nucleo-idb0xa1/platform/X-NUCLEO-IDB04A1",
-    "x-nucleo-idb0xa1/x-nucleo-idb0xa1/utils/inc"
+    "x-nucleo-idb0xa1/utils/inc",
+    "x-nucleo-idb0xa1/platform/inc",
+    "x-nucleo-idb0xa1/BlueNRG_HCI/includes",
+    "x-nucleo-idb0xa1/platform/X-NUCLEO-IDB04A1"
   ],
   "dependencies": {
     "ble": "*"
