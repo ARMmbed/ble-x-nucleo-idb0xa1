@@ -209,8 +209,11 @@ void btle_init(bool isSetAddress, uint8_t role)
 */
 /**************************************************************************/
 #ifdef YOTTA_CFG
+int btle_handler_pending = 0;
+
 void btle_handler(void)
 {
+    btle_handler_pending = 0;
     HCI_Process();
 }
 #endif

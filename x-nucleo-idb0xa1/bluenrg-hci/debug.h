@@ -48,7 +48,7 @@
 
 /* Exported macro ------------------------------------------------------------*/
 #define YOTTA_CFG
-//#define DEBUG
+#define DEBUG
 #ifdef DEBUG
 #include <stdio.h>
 #define PRINTF(...) printf(__VA_ARGS__)

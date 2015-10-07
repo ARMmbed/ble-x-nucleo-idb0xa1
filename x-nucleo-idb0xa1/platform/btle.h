@@ -44,6 +44,7 @@ void User_Process(void);
 void setConnectable(void);
 
 #ifdef YOTTA_CFG
+extern int btle_handler_pending;
 extern void btle_handler(void);
 #endif
 

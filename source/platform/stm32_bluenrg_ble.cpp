@@ -184,7 +184,10 @@ void Disable_SPI_IRQ(void)
  */
 void Call_BTLE_Handler(void)
 {
-	minar::Scheduler::postCallback(btle_handler);
+	if(!btle_handler_pending) {
+		btle_handler_pending = 1;
+		minar::Scheduler::postCallback(btle_handler);
+	}
 }
 #endif
 
