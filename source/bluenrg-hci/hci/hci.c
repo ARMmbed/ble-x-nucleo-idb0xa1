@@ -148,24 +148,23 @@ void HCI_Isr(void)
       else {
         // Insert the packet back into the pool.
         list_insert_head(&hciReadPktPool, (tListNode *)hciReadPacket);
-      }
-      
+      }     
+#ifdef YOTTA_CFG_MBED_OS
+      Call_BTLE_Handler();
+#endif
     }
     else{
       // HCI Read Packet Pool is empty, wait for a free packet.
       readPacketListFull = TRUE;
       Clear_SPI_EXTI_Flag();
-      goto get_out;
+#ifdef YOTTA_CFG_MBED_OS
+      Call_BTLE_Handler();
+#endif
+      return;
     }
     
     Clear_SPI_EXTI_Flag();
   }
-
- get_out:
-#ifdef YOTTA_CFG_MBED_OS
-  Call_BTLE_Handler();
-#endif
-  return;
 }
 
 void hci_write(const void* data1, const void* data2, uint8_t n_bytes1, uint8_t n_bytes2){
