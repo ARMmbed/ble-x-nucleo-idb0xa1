@@ -22,6 +22,7 @@
 #include "hal.h"
 #include "hci_const.h"
 #include "gp_timer.h"
+#include "debug.h"
 
 #include "stm32_bluenrg_ble.h"
 
@@ -156,11 +157,17 @@ void HCI_Isr(void)
       // HCI Read Packet Pool is empty, wait for a free packet.
       readPacketListFull = TRUE;
       Clear_SPI_EXTI_Flag();
-      return;
+      goto get_out;
     }
     
     Clear_SPI_EXTI_Flag();
   }
+
+ get_out:
+#ifdef YOTTA_CFG
+  Call_BTLE_Handler();
+#endif
+  return;
 }
 
 void hci_write(const void* data1, const void* data2, uint8_t n_bytes1, uint8_t n_bytes2){

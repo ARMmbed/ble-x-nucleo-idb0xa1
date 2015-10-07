@@ -39,6 +39,7 @@
 #include "BlueNRGGap.h"
 #include "BlueNRGDevice.h"
 #include "Utils.h"
+#include "btle.h"
 
 // FIXME: find a better way to get the instance of the BlueNRG device
 extern BlueNRGDevice bluenrgDeviceInstance;
@@ -174,6 +175,18 @@ void Disable_SPI_IRQ(void)
 { 
     bluenrgDeviceInstance.disable_irq();
 }
+
+#ifdef YOTTA_CFG
+/**
+ * Call BTLE callback handler.
+ * @param  None
+ * @retval None
+ */
+void Call_BTLE_Handler(void)
+{
+	minar::Scheduler::postCallback(btle_handler);
+}
+#endif
 
 /**
  * @brief  Clear Pending SPI IRQ.

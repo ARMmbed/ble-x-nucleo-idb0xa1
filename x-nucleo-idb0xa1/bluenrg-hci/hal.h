@@ -98,6 +98,11 @@ void Enable_SPI_IRQ(void);
  */
 void Disable_SPI_IRQ(void);
 
+/**
+ * Call BTLE callback handler.
+ */
+void Call_BTLE_Handler(void);
+
 void Hal_Init_Timer(void);
 uint32_t Hal_Get_Timer_Value(void);
 void Hal_Start_Timer(uint32_t timeout);

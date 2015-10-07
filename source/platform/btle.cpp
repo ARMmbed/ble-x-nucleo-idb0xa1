@@ -72,10 +72,6 @@ extern "C" {
 #define IDB04A1 0
 #define IDB05A1 1
 
-#ifdef YOTTA_CFG
-static void btle_handler(void);
-#endif
-
 void HCI_Input(tHciDataPacket * hciReadPacket);
 
 //#define BDADDR_SIZE 6
@@ -213,12 +209,9 @@ void btle_init(bool isSetAddress, uint8_t role)
 */
 /**************************************************************************/
 #ifdef YOTTA_CFG
-static void btle_handler(void)
+void btle_handler(void)
 {
     HCI_Process();
-
-    // reschedule myself
-    minar::Scheduler::postCallback(btle_handler);
 }
 #endif
 
@@ -365,12 +358,15 @@ extern "C" {
                         }                                             
                         //PRINTF("EVT_LE_CONN_COMPLETE LL role=%d\n", cc->role);
                         switch (cc->role) {
-                            case 0: //master
+			case 0: //master
                                 role = Gap::CENTRAL;
                                 break;
-                            case 1:
+			case 1:
                                 role = Gap::PERIPHERAL;
                                 break;
+			default:
+				role = Gap::CENTRAL;
+				break;
                         }
                         //PRINTF("EVT_LE_CONN_COMPLETE GAP role=%d\n", role);
                         BlueNRGGap::getInstance().processConnectionEvent(cc->handle, role/*Gap::PERIPHERAL*/, peerAddrType, cc->peer_bdaddr, addr_type, bleAddr, (const BlueNRGGap::ConnectionParams_t *)&connectionParams);                            

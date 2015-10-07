@@ -43,6 +43,10 @@ void SPI_Poll(void);
 void User_Process(void);
 void setConnectable(void);
 
+#ifdef YOTTA_CFG
+extern void btle_handler(void);
+#endif
+
 #ifdef __cplusplus
 }
 #endif
