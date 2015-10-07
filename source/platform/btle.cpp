@@ -193,7 +193,7 @@ void btle_init(bool isSetAddress, uint8_t role)
                             strlen(name), (tHalUint8 *)name);*/
 
     // Andrea: mbedOS
-#ifdef YOTTA_CFG
+#ifdef YOTTA_CFG_MBED_OS
     minar::Scheduler::postCallback(btle_handler);
 #endif
     return;
@@ -208,7 +208,7 @@ void btle_init(bool isSetAddress, uint8_t role)
     @returns
 */
 /**************************************************************************/
-#ifdef YOTTA_CFG
+#ifdef YOTTA_CFG_MBED_OS
 int btle_handler_pending = 0;
 
 void btle_handler(void)

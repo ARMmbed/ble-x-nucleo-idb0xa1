@@ -27,9 +27,7 @@
 #include "stm32_bluenrg_ble.h"
 
 #if BLE_CONFIG_DBG_ENABLE
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
+#undef PRINTF
 #endif
 
 #define HCI_LOG_ON 0
@@ -164,7 +162,7 @@ void HCI_Isr(void)
   }
 
  get_out:
-#ifdef YOTTA_CFG
+#ifdef YOTTA_CFG_MBED_OS
   Call_BTLE_Handler();
 #endif
   return;
