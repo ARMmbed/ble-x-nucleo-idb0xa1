@@ -16,10 +16,6 @@
 
 #include "Utils.h"
 
-#if NEED_CONSOLE_OUTPUT
-Serial  pc(USBTX, USBRX);
-#endif /* #if NEED_CONSOLE_OUTPUT */
-
 /**************************************************************************/
 /*!
     @brief  sets values of EN_HIGH_POWER and PA_LEVEL corresponding to dBMLevel of tx power

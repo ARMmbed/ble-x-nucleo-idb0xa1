@@ -40,7 +40,7 @@
 #include "btle.h"
 #include "ble/GapAdvertisingParams.h"
 #include "ble/GapAdvertisingData.h"
-#include <ble/Gap.h>
+#include "ble/Gap.h"
 
 #define BLE_CONN_HANDLE_INVALID 0x0
 #define BDADDR_SIZE 6
@@ -49,6 +49,19 @@
 #define BLUENRG_GAP_ADV_INTERVAL_MAX (0)
 #define BLE_GAP_ADV_NONCON_INTERVAL_MIN (0)
 
+// Scanning and Connection Params used by Central for creating connection
+#define LIMITED_DISCOVERY_PROCEDURE 0x01
+#define GENERAL_DISCOVERY_PROCEDURE 0x02
+
+#define SCAN_P         (0x4000)
+#define SCAN_L         (0x4000)
+#define SUPERV_TIMEOUT (600)
+#define CONN_P(x)      ((int)((x)/1.25f))
+#define CONN_L(x)      ((int)((x)/0.625f))
+#define CONN_P1        (CONN_P(50))//(CONN_P(1000))
+#define CONN_P2        (CONN_P(50))//(CONN_P(1000))
+#define CONN_L1        (CONN_L(5)) 
+#define CONN_L2        (CONN_L(5))
 #define UUID_BUFFER_SIZE 13 //6*2(16-bit UUIDs)+1
 #define ADV_DATA_MAX_SIZE 31
 
@@ -67,11 +80,17 @@ public:
     }
 
     // <<<ANDREA>>>
+    /*
     enum AdvType_t {
         ADV_IND           = GapAdvertisingParams::ADV_CONNECTABLE_UNDIRECTED,//Gap::ADV_IND,
         ADV_DIRECT_IND    = GapAdvertisingParams::ADV_CONNECTABLE_DIRECTED,//Gap::ADV_DIRECT_IND,
         ADV_SCAN_IND      = GapAdvertisingParams::ADV_SCANNABLE_UNDIRECTED,//Gap::ADV_SCAN_IND,
         ADV_NONCONN_IND   = GapAdvertisingParams::ADV_NON_CONNECTABLE_UNDIRECTED//Gap::ADV_NONCONN_IND
+    };
+    */
+    enum Reason_t {
+        DEVICE_FOUND,
+        DISCOVERY_COMPLETE
     };
     
     /* Functions that must be implemented from Gap */
@@ -98,12 +117,23 @@ public:
     virtual ble_error_t setTxPower(int8_t txPower);
     virtual void        getPermittedTxPowerValues(const int8_t **, size_t *);
     // <<<ANDREA>>>
+    virtual ble_error_t connect(const Address_t peerAddr,
+                                Gap::AddressType_t peerAddrType,
+                                const ConnectionParams_t *connectionParams,
+                                const GapScanningParams *scanParams);
     
 
+    void                Discovery_CB(Reason_t reason,
+                                     uint8_t adv_type,
+                                     uint8_t *addr_type,
+                                     uint8_t *addr,
+                                     uint8_t *data_length,
+                                     uint8_t *data,
+                                     uint8_t *RSSI);
+    ble_error_t         makeConnection(void);
     void     setConnectionHandle(uint16_t con_handle);
     uint16_t getConnectionHandle(void);
     
-    //tHalUint8* getAddress();
     bool getIsSetAddress();
     
     Timeout getAdvTimeout(void) const {
@@ -121,7 +151,11 @@ protected:
 
 private:
     uint16_t m_connectionHandle;
+    AddressType_t addr_type;
+    Address_t _peerAddr;
     uint8_t bdaddr[BDADDR_SIZE];
+    bool _scanning;
+    bool _connecting;
     bool isSetAddress;
     tBleStatus ret; // FIXME: delete this
     uint8_t *DeviceName;
@@ -143,6 +177,7 @@ private:
 
     BlueNRGGap() {
         m_connectionHandle = BLE_CONN_HANDLE_INVALID;
+        addr_type = Gap::ADDR_TYPE_PUBLIC;
         isSetAddress = false;
         DeviceName = NULL;     
     }

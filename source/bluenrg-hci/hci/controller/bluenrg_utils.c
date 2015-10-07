@@ -120,25 +120,25 @@ int program_device(const uint8_t *fw_image, uint32_t fw_size)
 
   /***********************************************************************
   * Erase and Program sectors
-  ************************************************************************/
+  ************************************************************************/  
   for(unsigned int i = FW_OFFSET; i < (number_sectors * SECTOR_SIZE); i += SECTOR_SIZE) {
-      num_erase_retries = 0;
-      while (num_erase_retries++ < MAX_ERASE_RETRIES) {
-          aci_updater_erase_sector(BASE_ADDRESS + i);
-          if ((i/SECTOR_SIZE) < (unsigned int)(number_sectors-1))
-              data_size = DATA_SIZE;
-          else
-              data_size = MIN_WRITE_BLOCK_SIZE;
-          for (j=i; ((j<SECTOR_SIZE+i)&&(j<fw_size)); j += data_size) {
-              RETRY_COMMAND(aci_updater_program_data_block(BASE_ADDRESS+j, data_size, fw_image+j), MAX_WRITE_RETRIES, status);
-              if (status != BLE_STATUS_SUCCESS)
-                  break;
-          }
-          if (status == BLE_STATUS_SUCCESS)
-              break;
+    num_erase_retries = 0;
+    while (num_erase_retries++ < MAX_ERASE_RETRIES) {
+      aci_updater_erase_sector(BASE_ADDRESS + i);
+      if ((i/SECTOR_SIZE) < (unsigned int)(number_sectors-1))
+	data_size = DATA_SIZE;
+      else
+	data_size = MIN_WRITE_BLOCK_SIZE;	
+      for (j=i; ((j<SECTOR_SIZE+i)&&(j<fw_size)); j += data_size) {
+	RETRY_COMMAND(aci_updater_program_data_block(BASE_ADDRESS+j, data_size, fw_image+j), MAX_WRITE_RETRIES, status);
+	if (status != BLE_STATUS_SUCCESS)
+	  break;
       }
-      if (num_erase_retries == MAX_ERASE_RETRIES)
-          return BLE_UTIL_ACI_ERROR;
+      if (status == BLE_STATUS_SUCCESS)
+	break;
+    }
+    if (num_erase_retries == MAX_ERASE_RETRIES)
+      return BLE_UTIL_ACI_ERROR;
   }
   
   /***********************************************************************

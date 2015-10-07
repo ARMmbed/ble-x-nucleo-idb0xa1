@@ -23,17 +23,6 @@
 #include "hal_types.h"
 #include "mbed.h"
 
-#define NEED_CONSOLE_OUTPUT 0 /* Set this if you need debug messages on the console; */
- /*it will have an impact on code-size and power consumption. */
-
-#if NEED_CONSOLE_OUTPUT
-//Serial usb(USBTX, USBRX); // tx, rx
-extern Serial  pc;
-#define DEBUG(...) { pc.printf(__VA_ARGS__); }
-#else
-#define DEBUG(...) /* nothing */
-#endif /* #if NEED_CONSOLE_OUTPUT */
-
 #define STORE_LE_16(buf, val)    ( ((buf)[0] =  (uint8_t) (val)    ) , \
     ((buf)[1] =  (uint8_t) (val>>8) ) )
 

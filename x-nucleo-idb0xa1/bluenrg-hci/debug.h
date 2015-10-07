@@ -47,6 +47,7 @@
 #include <string.h>
 
 /* Exported macro ------------------------------------------------------------*/
+#define YOTTA_CFG
 //#define DEBUG
 #ifdef DEBUG
 #include <stdio.h>

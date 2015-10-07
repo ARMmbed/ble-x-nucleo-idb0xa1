@@ -45,6 +45,7 @@
 #include "ble/BLE.h"
 #include "BlueNRGGap.h"
 #include "BlueNRGGattServer.h"
+#include "BlueNRGGattClient.h"
 
 
 class BlueNRGDevice : public BLEInstanceBase
@@ -64,7 +65,7 @@ public:
     virtual void        waitForEvent(void);
     
     virtual GattClient& getGattClient() {
-        return *gattClient;
+        return BlueNRGGattClient::getInstance();
     }
 
     virtual SecurityManager& getSecurityManager() {
@@ -93,7 +94,6 @@ private:
 
     //FIXME: TBI (by now just placeholders to let build
     /*** betzw: placeholders ***/
-    GattClient *gattClient;
     SecurityManager *sm;
 };
 

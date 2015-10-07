@@ -76,32 +76,30 @@ typedef	uint8_t	tBDAddr[6];
  * @{
  */
 
-// <<<ANDREA: commented defines (see BlueNRGGap.h)>>>
 /**
  * undirected scannable and connectable 
  */ 
-//#define ADV_IND         (0x00)
+#define ADV_IND         (0x00)
 
 /** 
  * directed non scannable
  */
-//#define ADV_DIRECT_IND  (0x01)
+#define ADV_DIRECT_IND  (0x01)
 
 /**
  * scannable non connectable
  */
-//#define ADV_SCAN_IND    (0x02)
+#define ADV_SCAN_IND    (0x02)
 
 /**
  * non-connectable and no scan response (used for passive scan)
  */
-//#define ADV_NONCONN_IND (0x03)
+#define ADV_NONCONN_IND (0x03)
 
 /**
  * scan response 
  */
-//#define SCAN_RSP        (0x04)
-// <<<ANDREA>>>
+#define SCAN_RSP        (0x04)
 
 /**
  * @}

@@ -133,7 +133,8 @@ ble_error_t BlueNRGDevice::init(void)
 	irq_.rise(&HCI_Isr);
 
 	/* ToDo: Clear memory contents, reset the SD, etc. */
-	btle_init(BlueNRGGap::getInstance().getIsSetAddress());
+	// By default, we set the device GAP role to PERIPHERAL
+	btle_init(BlueNRGGap::getInstance().getIsSetAddress(), GAP_PERIPHERAL_ROLE_IDB04A1);
 	
 	isInitialized = true;
     
