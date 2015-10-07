@@ -176,7 +176,7 @@ void Disable_SPI_IRQ(void)
     bluenrgDeviceInstance.disable_irq();
 }
 
-#ifdef YOTTA_CFG
+#ifdef YOTTA_CFG_MBED_OS
 /**
  * Call BTLE callback handler.
  * @param  None
