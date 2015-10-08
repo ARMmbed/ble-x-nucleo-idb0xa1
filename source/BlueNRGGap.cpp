@@ -289,7 +289,7 @@ void BlueNRGGap::setAdvToFlag(void) {
  * ADV timeout callback
  */   
 // ANDREA: mbedOS
-#ifdef YOTTA_CFG_MBED_OS
+#ifdef AST_FOR_MBED_OS
 static void advTimeoutCB(void)
 {
     Gap::GapState_t state;
@@ -316,7 +316,7 @@ static void advTimeoutCB(void)
 
     }
 }
-#endif /* YOTTA_CFG_MBED_OS */
+#endif /* AST_FOR_MBED_OS */
     
 /**************************************************************************/
 /*!
@@ -456,7 +456,7 @@ ble_error_t BlueNRGGap::startAdvertising(const GapAdvertisingParams &params)
     if(params.getTimeout() != 0) {
         PRINTF("!!! attaching to!!!\n");
         // ANDREA: mbedOS
-#ifdef YOTTA_CFG_MBED_OS
+#ifdef AST_FOR_MBED_OS
         minar::Scheduler::postCallback(advTimeoutCB).delay(minar::milliseconds(params.getTimeout()));
 #else
         advTimeout.attach(advTimeoutCB, params.getTimeout());

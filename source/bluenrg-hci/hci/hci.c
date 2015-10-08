@@ -149,7 +149,7 @@ void HCI_Isr(void)
         // Insert the packet back into the pool.
         list_insert_head(&hciReadPktPool, (tListNode *)hciReadPacket);
       }     
-#ifdef YOTTA_CFG_MBED_OS
+#ifdef AST_FOR_MBED_OS
       Call_BTLE_Handler();
 #endif
     }
@@ -157,7 +157,7 @@ void HCI_Isr(void)
       // HCI Read Packet Pool is empty, wait for a free packet.
       readPacketListFull = TRUE;
       Clear_SPI_EXTI_Flag();
-#ifdef YOTTA_CFG_MBED_OS
+#ifdef AST_FOR_MBED_OS
       Call_BTLE_Handler();
 #endif
       return;

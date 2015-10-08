@@ -47,10 +47,6 @@
 #include <string.h>
 
 /* Exported macro ------------------------------------------------------------*/
-#ifndef YOTTA_CFG_MBED_OS
-#define YOTTA_CFG_MBED_OS
-#endif
-
 #define DEBUG
 #ifdef DEBUG
 #include <stdio.h>
