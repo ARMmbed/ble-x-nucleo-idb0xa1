@@ -148,7 +148,7 @@ void btle_init(bool isSetAddress, uint8_t role)
                                         bdaddr);
     } else {
         
-        const Gap::Address_t BLE_address_BE = {0xFD,0x00,0x25,0xAA,0x02,0x04};
+        const Gap::Address_t BLE_address_BE = {0xFD,0x66,0x05,0x13,0xBE,0xBA};
         BlueNRGGap::getInstance().setAddress(Gap::ADDR_TYPE_PUBLIC, BLE_address_BE);
         
         ret = aci_hal_write_config_data(CONFIG_DATA_PUBADDR_OFFSET,

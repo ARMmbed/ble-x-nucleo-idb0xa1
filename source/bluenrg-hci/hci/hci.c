@@ -140,29 +140,26 @@ void HCI_Isr(void)
       data_len = BlueNRG_SPI_Read_All(hciReadPacket->dataBuff, HCI_READ_PACKET_SIZE);
       if(data_len > 0){                    
         hciReadPacket->data_len = data_len;
-        if(HCI_verify(hciReadPacket) == 0)
+        if(HCI_verify(hciReadPacket) == 0) {
           list_insert_tail(&hciReadPktRxQueue, (tListNode *)hciReadPacket);
-        else
-          list_insert_head(&hciReadPktPool, (tListNode *)hciReadPacket);          
+#ifdef AST_FOR_MBED_OS
+	  Call_BTLE_Handler();
+#endif
+        } else {
+          list_insert_head(&hciReadPktPool, (tListNode *)hciReadPacket);
+	}
       }
       else {
         // Insert the packet back into the pool.
         list_insert_head(&hciReadPktPool, (tListNode *)hciReadPacket);
-      }     
-#ifdef AST_FOR_MBED_OS
-      Call_BTLE_Handler();
-#endif
+      }
     }
     else{
       // HCI Read Packet Pool is empty, wait for a free packet.
       readPacketListFull = TRUE;
       Clear_SPI_EXTI_Flag();
-#ifdef AST_FOR_MBED_OS
-      Call_BTLE_Handler();
-#endif
       return;
     }
-    
     Clear_SPI_EXTI_Flag();
   }
 }
