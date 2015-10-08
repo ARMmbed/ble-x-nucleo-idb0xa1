@@ -1,12 +1,12 @@
 {
   "name": "x-nucleo-idb0xa1",
-  "version": "0.0.0",
-  "description": "BLE_API wrapper library for STMicroelectronics' BlueNRG Bluetooth Low Energy expansion board shield (Component) for MbedOS",
+  "version": "0.0.1",
+  "description": "ST driver for the mbed BLE API.",
   "keywords": [
-    "BLE",
-    "X-NUCLEO-IDB0XA1"
+    "Bluetooth",
+    "BLE"
   ],
-  "author": "wolfgang.betz@st.com",
+  "author": "Andrea Palmieri",
   "repository": {
     "url": "ssh://gitolite@codex.cro.st.com/x-nucleodev/x-nucleo-idb0xa1-mbedos.git",
     "type": "git"
@@ -25,7 +25,6 @@
     "x-nucleo-idb0xa1/bluenrg-hci"
   ],
   "dependencies": {
-    "ble": "*",
-    "core-util": "~0.2.0"
+    "ble": "*"
   }
 }

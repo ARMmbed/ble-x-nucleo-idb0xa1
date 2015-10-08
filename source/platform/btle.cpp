@@ -368,7 +368,7 @@ extern "C" {
                                 role = Gap::PERIPHERAL;
                                 break;
 			default:
-				role = Gap::CENTRAL;
+                                role = Gap::PERIPHERAL;
 				break;
                         }
                         //PRINTF("EVT_LE_CONN_COMPLETE GAP role=%d\n", role);

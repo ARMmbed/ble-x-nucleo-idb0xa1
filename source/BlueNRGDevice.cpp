@@ -166,7 +166,8 @@ ble_error_t BlueNRGDevice::reset(void)
     return BLE_ERROR_NONE;
 }
 
-
+// ANDREA: mbedOS
+// betzw: really?
 /*!
   @brief  Wait for any BLE Event like BLE Connection, Read Request etc.    
   @param[in] void
@@ -189,8 +190,7 @@ void BlueNRGDevice::waitForEvent(void)
 				       that conrol is given back to main loop before next WFE */
 	} while(true);
 
-}
- 
+} 
  
 /*!
     @brief  get GAP version

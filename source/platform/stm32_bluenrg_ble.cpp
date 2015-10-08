@@ -38,7 +38,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "BlueNRGGap.h"
 #include "BlueNRGDevice.h"
-#include "Utils.h"
+//#include "Utils.h"
 #include "btle.h"
 
 // FIXME: find a better way to get the instance of the BlueNRG device
@@ -166,16 +166,6 @@ void Enable_SPI_IRQ(void)
     bluenrgDeviceInstance.enable_irq();
 }
 
-/**
- * @brief  Disable SPI IRQ.
- * @param  None
- * @retval None
- */
-void Disable_SPI_IRQ(void)
-{ 
-    bluenrgDeviceInstance.disable_irq();
-}
-
 #ifdef AST_FOR_MBED_OS
 /**
  * Call BTLE callback handler.
@@ -190,6 +180,16 @@ void Call_BTLE_Handler(void)
 	}
 }
 #endif
+
+/**
+ * @brief  Disable SPI IRQ.
+ * @param  None
+ * @retval None
+ */
+void Disable_SPI_IRQ(void)
+{ 
+    bluenrgDeviceInstance.disable_irq();
+}
 
 /**
  * @brief  Clear Pending SPI IRQ.
