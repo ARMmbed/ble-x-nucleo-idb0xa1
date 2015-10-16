@@ -82,6 +82,8 @@ void BlueNRGGattClient::primaryServicesCB(Gap::Handle_t connectionHandle,
   GattAttribute::Handle_t startHandle, endHandle;
   UUID uuid;
   uint8_t i, offset, numAttr;
+  /* avoid compiler warnings about unused variables */
+  (void)connectionHandle;
 
   numAttr = (event_data_length - 1) / attribute_data_length;
 
@@ -135,6 +137,8 @@ void BlueNRGGattClient::primaryServiceCB(Gap::Handle_t connectionHandle,
   GattAttribute::Handle_t startHandle, endHandle;
   UUID uuid;
   uint8_t i, offset, numHandlePairs;
+  /* avoid compiler warnings about unused variables */
+  (void)connectionHandle;
 
   numHandlePairs = (event_data_length - 1) / 2;
 
@@ -302,9 +306,9 @@ ble_error_t BlueNRGGattClient::findServiceChars(Gap::Handle_t connectionHandle)
   PRINTF("findServiceChars\n\r");
   
   tBleStatus ret;
-  uint8_t uuid_type;
+  uint8_t uuid_type = UUID_TYPE_16;
   uint8_t short_uuid[2];
-  uint8_t *uuid;
+  uint8_t *uuid = NULL;
   
   DiscoveredService *service;
   
@@ -391,9 +395,9 @@ ble_error_t BlueNRGGattClient::launchServiceDiscovery(Gap::Handle_t             
   PRINTF("launchServiceDiscovery\n\r");
   
   tBleStatus ret;
-  uint8_t uuid_type;
+  uint8_t uuid_type = UUID_TYPE_16;
   uint8_t short_uuid[2];
-  uint8_t *uuid;
+  uint8_t *uuid = NULL;
   unsigned j;
   
   _connectionHandle = connectionHandle;
@@ -465,6 +469,11 @@ ble_error_t BlueNRGGattClient::discoverServices(Gap::Handle_t                   
                                                 ServiceDiscovery::ServiceCallback_t  callback,
                                                 const UUID                          &matchingServiceUUID)
 {
+  /* avoid compiler warnings about unused variables */
+  (void)connectionHandle;
+  (void)callback;
+  (void)matchingServiceUUID;
+
   return BLE_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -473,6 +482,12 @@ ble_error_t BlueNRGGattClient::discoverServices(Gap::Handle_t                   
                                                 GattAttribute::Handle_t              startHandle,
                                                 GattAttribute::Handle_t              endHandle)
 {
+  /* avoid compiler warnings about unused variables */
+  (void)connectionHandle;
+  (void)callback;
+  (void)startHandle;
+  (void)endHandle;
+
   return BLE_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -511,6 +526,9 @@ void BlueNRGGattClient::charReadCB(Gap::Handle_t connHandle,
 
 ble_error_t BlueNRGGattClient::read(Gap::Handle_t connHandle, GattAttribute::Handle_t attributeHandle, uint16_t offset) const
 {
+  /* avoid compiler warnings about unused variables */
+  (void)offset;
+
   tBleStatus ret;
   
   BlueNRGGattClient *gattc = const_cast<BlueNRGGattClient*>(this);
@@ -539,6 +557,9 @@ void BlueNRGGattClient::charWritePrepareCB(Gap::Handle_t connHandle,
                                            uint16_t offset,
                                            uint8_t *part_attr_value)
 {
+  /* avoid compiler warnings about unused variables */
+  (void)connHandle;
+
   // Update the write response params
   writeCBParams.handle = attribute_handle;
   writeCBParams.offset = offset;
@@ -551,6 +572,9 @@ void BlueNRGGattClient::charWritePrepareCB(Gap::Handle_t connHandle,
 void BlueNRGGattClient::charWriteExecCB(Gap::Handle_t connHandle,
                                         uint8_t event_data_length)
 {
+  /* avoid compiler warnings about unused variables */
+  (void)event_data_length;
+
   writeCBParams.connHandle = connHandle;
   
   BlueNRGGattClient::getInstance().processWriteResponse(&writeCBParams);
@@ -562,8 +586,10 @@ ble_error_t BlueNRGGattClient::write(GattClient::WriteOp_t    cmd,
                                      size_t                   length,
                                      const uint8_t           *value) const
 {
-  tBleStatus ret;
+  /* avoid compiler warnings about unused variables */
+  (void)cmd;
 
+  tBleStatus ret;
   
   BlueNRGGattClient *gattc = const_cast<BlueNRGGattClient*>(this);
     

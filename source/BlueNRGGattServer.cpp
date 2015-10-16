@@ -256,8 +256,14 @@ ble_error_t BlueNRGGattServer::addService(GattService &service)
 /**************************************************************************/
 ble_error_t BlueNRGGattServer::readValue(uint16_t charHandle, uint8_t buffer[], uint16_t *const lengthP)
 {
-    PRINTF("ReadValue() Not Supported\n\r");
-    return BLE_ERROR_NONE;
+  PRINTF("ReadValue() Not Supported\n\r");
+
+  /* avoid compiler warnings about unused variables */
+  (void)charHandle;
+  (void)buffer;
+  (void)lengthP;
+
+  return BLE_ERROR_NONE;
 }
 
 /**************************************************************************/
@@ -287,18 +293,30 @@ ble_error_t BlueNRGGattServer::readValue(uint16_t charHandle, uint8_t buffer[], 
 /**************************************************************************/
 // <<<ANDREA>>>
 ble_error_t BlueNRGGattServer::readValue(Gap::Handle_t connectionHandle, GattAttribute::Handle_t attributeHandle, uint8_t buffer[], uint16_t *lengthP) {
-    // Empty by now
-    return BLE_ERROR_NONE;
+
+  /* avoid compiler warnings about unused variables */
+  (void)connectionHandle;
+  (void)attributeHandle;
+  (void)buffer;
+  (void)lengthP;
+
+  return BLE_ERROR_NONE;
 }
 
 ble_error_t BlueNRGGattServer::write(Gap::Handle_t connectionHandle, GattAttribute::Handle_t, const uint8_t[], uint16_t, bool localOnly) {
-    // Empty by now
-    return BLE_ERROR_NONE;
+  /* avoid compiler warnings about unused variables */
+  (void)connectionHandle;
+  (void)localOnly;
+
+  return BLE_ERROR_NONE;
 }
     
 ble_error_t BlueNRGGattServer::write(GattAttribute::Handle_t charHandle, const uint8_t buffer[], uint16_t len, bool localOnly)
 {
-    tBleStatus ret;    
+    /* avoid compiler warnings about unused variables */
+    (void)localOnly;
+
+    tBleStatus ret;
     //uint8_t buff[2];
 
     PRINTF("updating bleCharacteristic charHandle =%u, corresponding serviceHanle= %u len=%d\n\r", charHandle, bleCharHanldeMap.find(charHandle)->second, len);  

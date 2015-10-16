@@ -524,6 +524,9 @@ ble_error_t BlueNRGGap::stopAdvertising(void)
 /**************************************************************************/
 ble_error_t BlueNRGGap::disconnect(Gap::DisconnectionReason_t reason)
 {
+    /* avoid compiler warnings about unused variables */
+    (void)reason;
+
     tBleStatus ret;
     //For Reason codes check BlueTooth HCI Spec
     
@@ -564,6 +567,9 @@ ble_error_t BlueNRGGap::disconnect(Gap::DisconnectionReason_t reason)
 /**************************************************************************/
 ble_error_t BlueNRGGap::disconnect(Handle_t connectionHandle, Gap::DisconnectionReason_t reason)
 {
+    /* avoid compiler warnings about unused variables */
+    (void)reason;
+
     tBleStatus ret;
     //For Reason codes check BlueTooth HCI Spec
     
@@ -713,6 +719,9 @@ ble_error_t BlueNRGGap::getAddress(AddressType_t *typeP, Address_t address)
 /**************************************************************************/
 ble_error_t BlueNRGGap::getPreferredConnectionParams(ConnectionParams_t *params) 
 {
+    /* avoid compiler warnings about unused variables */
+    (void)params;
+
     return BLE_ERROR_NONE;
 }
 
@@ -732,6 +741,9 @@ ble_error_t BlueNRGGap::getPreferredConnectionParams(ConnectionParams_t *params)
 /**************************************************************************/
 ble_error_t BlueNRGGap::setPreferredConnectionParams(const ConnectionParams_t *params) 
 {
+    /* avoid compiler warnings about unused variables */
+    (void)params;
+
     return BLE_ERROR_NONE;
 }
 
@@ -750,6 +762,10 @@ ble_error_t BlueNRGGap::setPreferredConnectionParams(const ConnectionParams_t *p
 /**************************************************************************/
 ble_error_t BlueNRGGap::updateConnectionParams(Handle_t handle, const ConnectionParams_t *params)
 {
+    /* avoid compiler warnings about unused variables */
+    (void) handle;
+    (void)params;
+
     return BLE_ERROR_NONE;
 }
 
@@ -965,6 +981,8 @@ void BlueNRGGap::Discovery_CB(Reason_t reason,
                               uint8_t *data,
                               uint8_t *RSSI)
 {
+  /* avoid compiler warnings about unused variables */
+  (void)addr_type;
 
   switch (reason) {
   case DEVICE_FOUND:
@@ -985,6 +1003,9 @@ void BlueNRGGap::Discovery_CB(Reason_t reason,
         break;
       case ADV_NONCONN_IND:
         type = GapAdvertisingParams::ADV_NON_CONNECTABLE_UNDIRECTED;
+        break;
+      default:
+        type = GapAdvertisingParams::ADV_CONNECTABLE_UNDIRECTED;
       }
     
       PRINTF("adv peerAddr[%02x %02x %02x %02x %02x %02x] \r\n",
@@ -1126,6 +1147,11 @@ ble_error_t BlueNRGGap::connect (const Gap::Address_t peerAddr,
                                  const ConnectionParams_t *connectionParams,
                                  const GapScanningParams *scanParams)
 {
+  /* avoid compiler warnings about unused variables */
+  (void)peerAddrType;
+  (void)connectionParams;
+  (void)scanParams;
+
     // Save the peer address
   for(int i=0; i<BDADDR_SIZE; i++) {
     _peerAddr[i] = peerAddr[i];
