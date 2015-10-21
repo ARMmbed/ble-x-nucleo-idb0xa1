@@ -34,7 +34,7 @@
 #ifndef __BLUENRG_GATT_CLIENT_H__
 #define __BLUENRG_GATT_CLIENT_H__
 
-#include "mbed.h"
+#include "mbed-drivers/mbed.h"
 #include "ble/blecommon.h"
 #include "btle.h"
 #include "ble/GattClient.h"

@@ -40,7 +40,7 @@
 
 #include "btle.h"
 
-#include "mbed.h"
+#include "mbed-drivers/mbed.h"
 #include "ble/blecommon.h"
 #include "ble/BLE.h"
 #include "BlueNRGGap.h"

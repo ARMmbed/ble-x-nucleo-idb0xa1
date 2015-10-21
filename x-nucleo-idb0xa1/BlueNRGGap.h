@@ -35,7 +35,7 @@
 #ifndef __BLUENRG_GAP_H__
 #define __BLUENRG_GAP_H__
 
-#include "mbed.h"
+#include "mbed-drivers/mbed.h"
 #include "ble/blecommon.h"
 #include "btle.h"
 #include "ble/GapAdvertisingParams.h"

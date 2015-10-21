@@ -21,7 +21,7 @@
 #define __UTIL_H__
 
 #include "hal_types.h"
-#include "mbed.h"
+#include "mbed-drivers/mbed.h"
 
 #define STORE_LE_16(buf, val)    ( ((buf)[0] =  (uint8_t) (val)    ) , \
     ((buf)[1] =  (uint8_t) (val>>8) ) )

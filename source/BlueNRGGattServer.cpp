@@ -40,7 +40,7 @@
  */
  
 #include "BlueNRGGattServer.h"
-#include "mbed.h"
+#include "mbed-drivers/mbed.h"
 #include "BlueNRGGap.h"
 #include "Utils.h"
 #include "debug.h"

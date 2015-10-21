@@ -1,7 +1,7 @@
 
 #include "clock.h"
-#include "wait_api.h"
-#include "rtc_time.h"
+#include "mbed-drivers/wait_api.h"
+#include "mbed-drivers/rtc_time.h"
 
 const uint32_t CLOCK_SECOND = 1000;
 

@@ -37,7 +37,7 @@
  *  @{
  */
  
-#include "mbed.h"
+#include "mbed-drivers/mbed.h"
 #include "BlueNRGDevice.h"
 #include "BlueNRGGap.h"
 #include "BlueNRGGattServer.h"

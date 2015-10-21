@@ -14,7 +14,7 @@
 * limitations under the License.
 */
 
-#include "mbed.h"
+#include "mbed-drivers/mbed.h"
 
 #ifndef __PAYLOAD_H__
 #define __PAYLOAD_H__

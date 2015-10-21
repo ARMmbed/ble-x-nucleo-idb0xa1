@@ -41,7 +41,7 @@
  */
 
 #include "BlueNRGDevice.h"
-#include "mbed.h"
+#include "mbed-drivers/mbed.h"
 #include "Payload.h"
 #include "Utils.h"
 #include "debug.h"
