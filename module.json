@@ -1,6 +1,6 @@
 {
   "name": "x-nucleo-idb0xa1",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "ST driver for the mbed BLE API.",
   "keywords": [
     "Bluetooth",
@@ -25,7 +25,7 @@
     "x-nucleo-idb0xa1/bluenrg-hci"
   ],
   "dependencies": {
-    "mbed-hal" : "*",
+    "mbed-hal": "*",
     "ble": "*"
   }
 }
