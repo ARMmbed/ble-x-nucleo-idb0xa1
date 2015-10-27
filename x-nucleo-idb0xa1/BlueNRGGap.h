@@ -157,6 +157,7 @@ private:
     bool _scanning;
     bool _connecting;
     bool isSetAddress;
+    bool btle_reinited;
     tBleStatus ret; // FIXME: delete this
     uint8_t *DeviceName;
     uint8_t deviceAppearance[2];
@@ -179,6 +180,7 @@ private:
         m_connectionHandle = BLE_CONN_HANDLE_INVALID;
         addr_type = Gap::ADDR_TYPE_PUBLIC;
         isSetAddress = false;
+        btle_reinited = false;
         DeviceName = NULL;     
     }
 

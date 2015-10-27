@@ -105,10 +105,12 @@ void BlueNRGGattClient::primaryServicesCB(Gap::Handle_t connectionHandle,
       uuid.setupLong(attribute_data_list+offset+4);
       
       PRINTF("S UUID-");
+#ifdef DEBUG
       const uint8_t *longUUIDBytes = uuid.getBaseUUID();
       for (unsigned j = 0; j < UUID::LENGTH_OF_LONG_UUID; j++) {
         PRINTF("%02x", longUUIDBytes[j]);
       }
+#endif
       PRINTF(" attrs[%u %u]\r\n", startHandle, endHandle);
       
     }
@@ -184,11 +186,13 @@ void BlueNRGGattClient::serviceCharsCB(Gap::Handle_t connectionHandle,
       PRINTF("Char UUID_TYPE_128\n\r");
       uuid.setupLong(handle_value_pair+offset+5);
       PRINTF("C UUID-");
+#ifdef DEBUG
       const uint8_t *longUUIDBytes = uuid.getBaseUUID();
       for (unsigned i = 0; i < UUID::LENGTH_OF_LONG_UUID; i++) {
         PRINTF("%02X", longUUIDBytes[i]);
       }
       PRINTF("\r\n");
+#endif
     }
     
     // Properties
@@ -254,11 +258,13 @@ void BlueNRGGattClient::serviceCharByUUIDCB(Gap::Handle_t connectionHandle,
     PRINTF("Char UUID_TYPE_128\n\r");
     uuid.setupLong(attr_value+3);
     PRINTF("C UUID-");
+#ifdef DEBUG
     const uint8_t *longUUIDBytes = uuid.getBaseUUID();
     for (unsigned i = 0; i < UUID::LENGTH_OF_LONG_UUID; i++) {
       PRINTF("%02X", longUUIDBytes[i]);
     }
     PRINTF("\r\n");
+#endif
   }
 
   // Properties
@@ -538,6 +544,10 @@ ble_error_t BlueNRGGattClient::read(Gap::Handle_t connHandle, GattAttribute::Han
   // Save the attribute_handle not provided by evt_att_read_resp    
   gattc->readCBParams.handle = attributeHandle;
   
+  // We need to wait for a while before starting a read due to
+  // BlueNRG process queue handling
+  Clock_Wait(100); //(?)
+
   ret = aci_gatt_read_charac_val(connHandle, attributeHandle);
   
   if(ret == BLE_STATUS_SUCCESS) {

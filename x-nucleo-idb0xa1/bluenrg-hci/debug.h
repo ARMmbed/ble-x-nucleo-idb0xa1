@@ -47,7 +47,7 @@
 #include <string.h>
 
 /* Exported macro ------------------------------------------------------------*/
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 #include <stdio.h>
 #define PRINTF(...) printf(__VA_ARGS__)

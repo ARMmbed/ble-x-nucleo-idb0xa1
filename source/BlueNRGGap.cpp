@@ -1018,15 +1018,17 @@ void BlueNRGGap::Discovery_CB(Reason_t reason,
     // The discovery is complete. If this is due to a stop scanning (i.e., the device
     // we are interested in has been found) and a connection has been requested
     // then we start the device connection. Otherwise, we restart the scanning.
+    PRINTF("DISCOVERY_COMPLETE\n\r");
     _scanning = false;
 
     if(_connecting) {
       // We need to wait for a while before creating a connection due to
       // BlueNRG process queue handling
-      Clock_Wait(10);
+      Clock_Wait(100);
       makeConnection();
       
     } else {
+      PRINTF("re-startRadioScan\n\r");
       startRadioScan(_scanningParams);
     }
 
@@ -1039,12 +1041,17 @@ ble_error_t BlueNRGGap::startRadioScan(const GapScanningParams &scanningParams)
   
   uint8_t ret = BLE_STATUS_SUCCESS;
 
+  printf("Scanning...\n\r");
+
   // We received a start scan request from the application level.
   // If we are on X-NUCLEO-IDB04A1 (playing a single role at time),
   // we need to re-init our expansion board to specify the GAP CENTRAL ROLE
-  btle_init(isSetAddress, GAP_CENTRAL_ROLE_IDB04A1);
-  
-  PRINTF("BTLE re-init\n\r");
+  if(!btle_reinited) {
+    btle_init(isSetAddress, GAP_CENTRAL_ROLE_IDB04A1);
+    btle_reinited = true;
+
+    PRINTF("BTLE re-init\n\r");
+  }
   
   ret = aci_gap_start_general_discovery_proc(scanningParams.getInterval(),
                                              scanningParams.getWindow(),
@@ -1090,6 +1097,9 @@ ble_error_t BlueNRGGap::setTxPower(int8_t txPower)
     int8_t paLevel = 0;    
 #ifdef DEBUG
     int8_t dbmActuallySet = getHighPowerAndPALevelValue(txPower, enHighPower, paLevel);
+#else
+    /* avoid compiler warnings about unused variables */
+    (void)txPower;
 #endif
     
     PRINTF("txPower=%d, dbmActuallySet=%d\n\r", txPower, dbmActuallySet);
