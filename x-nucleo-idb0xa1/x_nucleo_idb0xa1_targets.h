@@ -49,15 +49,13 @@
 #define IDB0XA1_PIN_SPI_RESET  (D7)
 #define IDB0XA1_PIN_SPI_IRQ    (A0)
 
-/* NOTE: Define beyond macro if you want to compile for a specifically
+/* NOTE: Define macro 'IDB0XA1_D13_PATCH' if you want to compile for a specifically
          modified version of the X_NUCLEO_IDB0XA1 expansion board in
          which pin 'D13' (rather than the standard pin 'D3') is used 
          in order to provide the SPI serial clock.
 	 Expansion boards modified in this way allow to be used on almost
 	 any Arduino-compliant base board.
 */
-// #define IDB0XA1_D13_PATCH
-
 #if defined(IDB0XA1_D13_PATCH)
 #define IDB0XA1_PIN_SPI_SCK    (D13)
 #else // !defined(IDB0XA1_D13_PATCH)
