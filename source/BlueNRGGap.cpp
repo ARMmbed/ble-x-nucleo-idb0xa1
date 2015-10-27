@@ -1041,7 +1041,7 @@ ble_error_t BlueNRGGap::startRadioScan(const GapScanningParams &scanningParams)
   
   uint8_t ret = BLE_STATUS_SUCCESS;
 
-  printf("Scanning...\n\r");
+  PRINTF("Scanning...\n\r");
 
   // We received a start scan request from the application level.
   // If we are on X-NUCLEO-IDB04A1 (playing a single role at time),
