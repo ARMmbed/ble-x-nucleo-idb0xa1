@@ -1029,6 +1029,9 @@ void BlueNRGGap::Discovery_CB(Reason_t reason,
       
     } else {
       PRINTF("re-startRadioScan\n\r");
+      // FIXME: We need to wait for a while before creating a connection
+      // due to BlueNRG process queue handling
+      Clock_Wait(100);
       startRadioScan(_scanningParams);
     }
 
@@ -1041,7 +1044,7 @@ ble_error_t BlueNRGGap::startRadioScan(const GapScanningParams &scanningParams)
   
   uint8_t ret = BLE_STATUS_SUCCESS;
 
-  printf("Scanning...\n\r");
+  PRINTF("Scanning...\n\r");
 
   // We received a start scan request from the application level.
   // If we are on X-NUCLEO-IDB04A1 (playing a single role at time),
