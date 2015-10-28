@@ -1053,11 +1053,18 @@ ble_error_t BlueNRGGap::startRadioScan(const GapScanningParams &scanningParams)
     PRINTF("BTLE re-init\n\r");
   }
   
-  ret = aci_gap_start_general_discovery_proc(scanningParams.getInterval(),
-                                             scanningParams.getWindow(),
-                                             addr_type,
-                                             1); // 1 to filter duplicates
+  while((ret = aci_gap_start_general_discovery_proc(scanningParams.getInterval(),
+						    scanningParams.getWindow(),
+						    addr_type,
+						    1) // 1 to filter duplicates
+	 ) == ERR_COMMAND_DISALLOWED) {
+	  PRINTF("betzw: wait a bit ...\n\r");
 
+	  // FIXME: We need to wait for a while before creating a connection
+	  // due to BlueNRG process queue handling
+	  Clock_Wait(1000);
+  }
+  
   if (ret != BLE_STATUS_SUCCESS) {
     printf("Start Discovery Procedure failed (0x%02X)\n\r", ret);
     return BLE_ERROR_UNSPECIFIED; 
