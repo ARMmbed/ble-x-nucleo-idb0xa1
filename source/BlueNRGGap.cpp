@@ -1029,6 +1029,9 @@ void BlueNRGGap::Discovery_CB(Reason_t reason,
       makeConnection();  
     } else {
       PRINTF("re-startRadioScan\n\r");
+      // FIXME: We need to wait for a while before creating a connection
+      // due to BlueNRG process queue handling
+      Clock_Wait(100);
       startRadioScan(_scanningParams);
     }
 

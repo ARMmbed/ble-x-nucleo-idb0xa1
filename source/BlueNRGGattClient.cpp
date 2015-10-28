@@ -544,9 +544,9 @@ ble_error_t BlueNRGGattClient::read(Gap::Handle_t connHandle, GattAttribute::Han
   // Save the attribute_handle not provided by evt_att_read_resp    
   gattc->readCBParams.handle = attributeHandle;
   
-  // We need to wait for a while before starting a read due to
-  // BlueNRG process queue handling
-  Clock_Wait(100); //(?)
+  // FIXME: We need to wait for a while before starting a read
+  // due to BlueNRG process queue handling
+  Clock_Wait(100);
 
   ret = aci_gatt_read_charac_val(connHandle, attributeHandle);
   
