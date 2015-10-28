@@ -1022,6 +1022,10 @@ void BlueNRGGap::Discovery_CB(Reason_t reason,
     _scanning = false;
 
     if(_connecting) {
+      // FIXME: We need to wait for a while before creating a connection
+      // due to BlueNRG process queue handling
+      Clock_Wait(100);
+	    
       makeConnection();  
     } else {
       PRINTF("re-startRadioScan\n\r");
@@ -1058,6 +1062,7 @@ ble_error_t BlueNRGGap::startRadioScan(const GapScanningParams &scanningParams)
 
 	  // FIXME: We need to wait for a while before creating a connection
 	  // due to BlueNRG process queue handling
+	  // NOTE: this workaround causes a potential risk for an endless loop!!!
 	  Clock_Wait(100);
   }
   
