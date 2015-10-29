@@ -977,11 +977,32 @@ GapScanningParams* BlueNRGGap::getScanningParams(void)
   return &_scanningParams;
 }
 
-static void radioScanning()
+static void radioScanning(void)
 {
+  ble_error_t ret;
+
   GapScanningParams* scanningParams = BlueNRGGap::getInstance().getScanningParams();
 
-  BlueNRGGap::getInstance().startRadioScan(*scanningParams);
+  ret = BlueNRGGap::getInstance().startRadioScan(*scanningParams);
+
+  // On error, reschedule myself
+  // NOTE: this workaround causes a potential risk for an endless loop!!!
+  if(ret != BLE_ERROR_NONE) {
+    minar::Scheduler::postCallback(radioScanning).delay(minar::milliseconds(100));
+  }
+}
+
+static void makeConnection(void)
+{
+  ble_error_t ret;
+
+  ret = BlueNRGGap::getInstance().createConnection();
+
+  // On error, reschedule myself
+  // NOTE: this workaround causes a potential risk for an endless loop!!!
+  if(ret != BLE_ERROR_NONE) {
+    minar::Scheduler::postCallback(makeConnection).delay(minar::milliseconds(100));
+  }
 }
 
 // ANDREA
@@ -1035,11 +1056,9 @@ void BlueNRGGap::Discovery_CB(Reason_t reason,
     _scanning = false;
 
     if(_connecting) {	    
-      makeConnection();  
+      minar::Scheduler::postCallback(makeConnection).delay(minar::milliseconds(100));
     } else {
-      PRINTF("re-startRadioScan\n\r");
-      //startRadioScan(_scanningParams);
-      minar::Scheduler::postCallback(radioScanning);
+      minar::Scheduler::postCallback(radioScanning).delay(minar::milliseconds(100));
     }
 
     break;
@@ -1063,18 +1082,14 @@ ble_error_t BlueNRGGap::startRadioScan(const GapScanningParams &scanningParams)
     PRINTF("BTLE re-init\n\r");
   }
   
-  while((ret = aci_gap_start_general_discovery_proc(scanningParams.getInterval(),
+  ret = aci_gap_start_general_discovery_proc(scanningParams.getInterval(),
 						    scanningParams.getWindow(),
 						    addr_type,
-						    1) // 1 to filter duplicates
-	 ) == ERR_COMMAND_DISALLOWED) {
-	  PRINTF("betzw: wait a bit ...\n\r");
+						    1); // 1 to filter duplicates
 
 	  // FIXME: We need to wait for a while before starting discovery proc
 	  // due to BlueNRG process queue handling
 	  // NOTE: this workaround causes a potential risk for an endless loop!!!
-	  Clock_Wait(100);
-  }
   
   if (ret != BLE_STATUS_SUCCESS) {
     printf("Start Discovery Procedure failed (0x%02X)\n\r", ret);
@@ -1147,7 +1162,7 @@ void BlueNRGGap::getPermittedTxPowerValues(const int8_t **valueArrayPP, size_t *
     *countP = sizeof(permittedTxValues) / sizeof(int8_t);
 }
 
-ble_error_t BlueNRGGap::makeConnection ()
+ble_error_t BlueNRGGap::createConnection ()
 {
   tBleStatus ret;
   
@@ -1157,22 +1172,13 @@ ble_error_t BlueNRGGap::makeConnection ()
   Scan_Interval, Scan_Window, Peer_Address_Type, Peer_Address, Own_Address_Type, Conn_Interval_Min, 
   Conn_Interval_Max, Conn_Latency, Supervision_Timeout, Conn_Len_Min, Conn_Len_Max    
   */
-  while((ret = aci_gap_create_connection(SCAN_P,
-                                         SCAN_L,
-                                         PUBLIC_ADDR,
-                                         (unsigned char*)_peerAddr,
-                                         PUBLIC_ADDR,
-                                         CONN_P1, CONN_P2, 0,
-                                         SUPERV_TIMEOUT, CONN_L1 , CONN_L2)
-	 ) == ERR_COMMAND_DISALLOWED) {
-	  PRINTF("wait a bit ...\n\r");
-
-	  // FIXME: We need to wait for a while before creating a connection
-	  // due to BlueNRG process queue handling
-	  // NOTE: this workaround causes a potential risk for an endless loop!!!
-	  Clock_Wait(100);
-  }
-  
+  ret = aci_gap_create_connection(SCAN_P,
+                                  SCAN_L,
+                                  PUBLIC_ADDR,
+                                  (unsigned char*)_peerAddr,
+                                  PUBLIC_ADDR,
+                                  CONN_P1, CONN_P2, 0,
+                                  SUPERV_TIMEOUT, CONN_L1 , CONN_L2);
  
   if (ret != BLE_STATUS_SUCCESS){
     printf("Error while starting connection (ret=0x%02X).\n\r", ret);
@@ -1193,18 +1199,18 @@ ble_error_t BlueNRGGap::connect (const Gap::Address_t peerAddr,
   (void)connectionParams;
   (void)scanParams;
 
-    // Save the peer address
+  // Save the peer address
   for(int i=0; i<BDADDR_SIZE; i++) {
     _peerAddr[i] = peerAddr[i];
   }
 
-    _connecting = true;
+  _connecting = true;
 
   if(_scanning) {
     stopScan();
   } else {
-    //PRINTF("Calling makeConnection from connect()\n\r");
-    return makeConnection();
+    PRINTF("Scheduling makeConnection from connect()\n\r");
+    minar::Scheduler::postCallback(makeConnection).delay(minar::milliseconds(100));
   }
   
   return BLE_ERROR_NONE;
