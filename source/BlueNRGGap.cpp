@@ -972,6 +972,18 @@ uint16_t BlueNRGGap::getMinNonConnectableAdvertisingInterval(void) const {
     return BLE_GAP_ADV_NONCON_INTERVAL_MIN;    
 }
 
+GapScanningParams* BlueNRGGap::getScanningParams(void)
+{
+  return &_scanningParams;
+}
+
+static void radioScanning()
+{
+  GapScanningParams* scanningParams = BlueNRGGap::getInstance().getScanningParams();
+
+  BlueNRGGap::getInstance().startRadioScan(*scanningParams);
+}
+
 // ANDREA
 void BlueNRGGap::Discovery_CB(Reason_t reason,
                               uint8_t adv_type,
@@ -1011,6 +1023,7 @@ void BlueNRGGap::Discovery_CB(Reason_t reason,
       PRINTF("adv peerAddr[%02x %02x %02x %02x %02x %02x] \r\n",
            addr[5], addr[4], addr[3], addr[2], addr[1], addr[0]);
       processAdvertisementReport(addr, *RSSI, isScanResponse, type, *data_length, data);
+      PRINTF("!!!After processAdvertisementReport\n\r");
     }
     break;
     
@@ -1021,15 +1034,12 @@ void BlueNRGGap::Discovery_CB(Reason_t reason,
     PRINTF("DISCOVERY_COMPLETE\n\r");
     _scanning = false;
 
-    if(_connecting) {
-      // FIXME: We need to wait for a while before creating a connection
-      // due to BlueNRG process queue handling
-      Clock_Wait(100);
-	    
+    if(_connecting) {	    
       makeConnection();  
     } else {
       PRINTF("re-startRadioScan\n\r");
-      startRadioScan(_scanningParams);
+      //startRadioScan(_scanningParams);
+      minar::Scheduler::postCallback(radioScanning);
     }
 
     break;
@@ -1060,7 +1070,7 @@ ble_error_t BlueNRGGap::startRadioScan(const GapScanningParams &scanningParams)
 	 ) == ERR_COMMAND_DISALLOWED) {
 	  PRINTF("betzw: wait a bit ...\n\r");
 
-	  // FIXME: We need to wait for a while before creating a connection
+	  // FIXME: We need to wait for a while before starting discovery proc
 	  // due to BlueNRG process queue handling
 	  // NOTE: this workaround causes a potential risk for an endless loop!!!
 	  Clock_Wait(100);
@@ -1147,8 +1157,21 @@ ble_error_t BlueNRGGap::makeConnection ()
   Scan_Interval, Scan_Window, Peer_Address_Type, Peer_Address, Own_Address_Type, Conn_Interval_Min, 
   Conn_Interval_Max, Conn_Latency, Supervision_Timeout, Conn_Len_Min, Conn_Len_Max    
   */
-  ret = aci_gap_create_connection(SCAN_P, SCAN_L, PUBLIC_ADDR, (unsigned char*)_peerAddr, PUBLIC_ADDR, CONN_P1, CONN_P2, 0, 
-                                  SUPERV_TIMEOUT, CONN_L1 , CONN_L2);
+  while((ret = aci_gap_create_connection(SCAN_P,
+                                         SCAN_L,
+                                         PUBLIC_ADDR,
+                                         (unsigned char*)_peerAddr,
+                                         PUBLIC_ADDR,
+                                         CONN_P1, CONN_P2, 0,
+                                         SUPERV_TIMEOUT, CONN_L1 , CONN_L2)
+	 ) == ERR_COMMAND_DISALLOWED) {
+	  PRINTF("wait a bit ...\n\r");
+
+	  // FIXME: We need to wait for a while before creating a connection
+	  // due to BlueNRG process queue handling
+	  // NOTE: this workaround causes a potential risk for an endless loop!!!
+	  Clock_Wait(100);
+  }
   
  
   if (ret != BLE_STATUS_SUCCESS){
