@@ -146,7 +146,8 @@ public:
     
     void Process(void);
 
-protected:
+    GapScanningParams* getScanningParams(void);
+
     virtual ble_error_t startRadioScan(const GapScanningParams &scanningParams);
 
 private:
