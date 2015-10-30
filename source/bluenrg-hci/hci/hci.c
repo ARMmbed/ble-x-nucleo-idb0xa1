@@ -32,13 +32,22 @@
 
 #define HCI_LOG_ON 0
 
-#define HCI_READ_PACKET_NUM_MAX 		 (50)
+#define HCI_READ_PACKET_NUM_MAX 		 (0x20)
 
 #define MIN(a,b)            ((a) < (b) )? (a) : (b)
 #define MAX(a,b)            ((a) > (b) )? (a) : (b)
 
 tListNode hciReadPktPool;
 tListNode hciReadPktRxQueue;
+
+// betzw - DEBUG:
+//#define POOL_CNT
+#ifdef POOL_CNT
+#include <stdio.h>
+static unsigned int nr_hciReadPktPool;
+static unsigned int lowest_nr_hciReadPktPool;
+#endif // POOL_CNT
+
 /* pool of hci read packets */
 static tHciDataPacket   hciReadPacketBuffer[HCI_READ_PACKET_NUM_MAX];
 
@@ -57,6 +66,12 @@ void HCI_Init(void)
 {
   uint8_t index;
   
+  Disable_SPI_IRQ();
+
+#ifdef POOL_CNT
+  nr_hciReadPktPool = 0;
+#endif // POOL_CNT
+
   /* Initialize list heads of ready and free hci data packet queues */
   list_init_head (&hciReadPktPool);
   list_init_head (&hciReadPktRxQueue);
@@ -65,7 +80,16 @@ void HCI_Init(void)
   for (index = 0; index < HCI_READ_PACKET_NUM_MAX; index++)
   {
     list_insert_tail(&hciReadPktPool, (tListNode *)&hciReadPacketBuffer[index]);
+#ifdef POOL_CNT
+    nr_hciReadPktPool++;
+#endif // POOL_CNT
   }
+
+#ifdef POOL_CNT
+  lowest_nr_hciReadPktPool = nr_hciReadPktPool;
+#endif // POOL_CNT
+
+  Enable_SPI_IRQ();
 }
 
 #define HCI_PCK_TYPE_OFFSET                 0
@@ -96,6 +120,11 @@ void HCI_Process(void)
   uint8_t buffer[HCI_READ_PACKET_SIZE];
   tHciDataPacket * hciReadPacket = NULL;
   
+#ifdef POOL_CNT
+  printf("betzw(%s, %d): nr_hciReadPktPool = %u (lowest = %u)\r\n", __func__, __LINE__, 
+	 nr_hciReadPktPool, lowest_nr_hciReadPktPool);
+#endif // POOL_CNT
+
   Disable_SPI_IRQ();
   uint8_t list_empty = list_is_empty(&hciReadPktRxQueue);        
   /* process any pending events read */
@@ -106,6 +135,9 @@ void HCI_Process(void)
     HCI_Event_CB(hciReadPacket->dataBuff);
     Disable_SPI_IRQ();
     list_insert_tail(&hciReadPktPool, (tListNode *)hciReadPacket);
+#ifdef POOL_CNT
+    nr_hciReadPktPool++;
+#endif
     list_empty = list_is_empty(&hciReadPktRxQueue);
   }
   if (readPacketListFull) {
@@ -136,7 +168,12 @@ void HCI_Isr(void)
       
       /* enqueueing a packet for read */
       list_remove_head (&hciReadPktPool, (tListNode **)&hciReadPacket);
-      
+#ifdef POOL_CNT
+      nr_hciReadPktPool--;
+      if(nr_hciReadPktPool < lowest_nr_hciReadPktPool)
+	      lowest_nr_hciReadPktPool = nr_hciReadPktPool;
+#endif
+
       data_len = BlueNRG_SPI_Read_All(hciReadPacket->dataBuff, HCI_READ_PACKET_SIZE);
       if(data_len > 0){                    
         hciReadPacket->data_len = data_len;
@@ -147,11 +184,17 @@ void HCI_Isr(void)
 #endif
         } else {
           list_insert_head(&hciReadPktPool, (tListNode *)hciReadPacket);
+#ifdef POOL_CNT
+	  nr_hciReadPktPool++;
+#endif
 	}
       }
       else {
         // Insert the packet back into the pool.
         list_insert_head(&hciReadPktPool, (tListNode *)hciReadPacket);
+#ifdef POOL_CNT
+	nr_hciReadPktPool++;
+#endif
       }
     }
     else{
@@ -327,15 +370,21 @@ int hci_send_req(struct hci_request *r, BOOL async)
     }
     
     /* In the meantime there could be other events from the controller.
-    In this case, insert the packet in a different queue. These packets will be
-    inserted back in the main queue just before exiting from send_req().
+       In this case, insert the packet in a different queue. These packets will be
+       inserted back in the main queue just before exiting from send_req().
     */
-    list_insert_tail(&hciTempQueue, (tListNode *)hciReadPacket);
+    if(hciReadPacket != NULL) {
+	    list_insert_tail(&hciTempQueue, (tListNode *)hciReadPacket);
+	    hciReadPacket = NULL;
+    }
     /* Be sure there is at list one packet in the pool to process the expected event. */
-    if(list_is_empty(&hciReadPktPool)){
+    if(list_is_empty(&hciReadPktPool)){ // betzw: this is a kind of steeling (should never happen?!?)
       pListNode tmp_node;      
       list_remove_head(&hciReadPktRxQueue, &tmp_node);
-      list_insert_tail(&hciReadPktPool, tmp_node);      
+      list_insert_tail(&hciReadPktPool, tmp_node);     
+#ifdef POOL_CNT
+      nr_hciReadPktPool++;
+#endif
     }
     
     Enable_SPI_IRQ();
@@ -343,13 +392,27 @@ int hci_send_req(struct hci_request *r, BOOL async)
   }
   
 failed: 
+  // Insert the packet back into the pool.
+  if(hciReadPacket != NULL) {
+	  list_insert_head(&hciReadPktPool, (tListNode *)hciReadPacket); 
+#ifdef POOL_CNT
+	  nr_hciReadPktPool++;
+#endif
+	  hciReadPacket = NULL;
+  }
   move_list(&hciReadPktRxQueue, &hciTempQueue);  
   Enable_SPI_IRQ();
   return -1;
   
 done:
   // Insert the packet back into the pool.
-  list_insert_head(&hciReadPktPool, (tListNode *)hciReadPacket); 
+  if(hciReadPacket != NULL) {
+	  list_insert_head(&hciReadPktPool, (tListNode *)hciReadPacket); 
+#ifdef POOL_CNT
+	  nr_hciReadPktPool++;
+#endif
+	  hciReadPacket = NULL;
+  }
   move_list(&hciReadPktRxQueue, &hciTempQueue);
   
   Enable_SPI_IRQ();

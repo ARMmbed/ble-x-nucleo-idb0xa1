@@ -1072,7 +1072,7 @@ ble_error_t BlueNRGGap::startRadioScan(const GapScanningParams &scanningParams)
 					     addr_type,
 					     1); // 1 to filter duplicates
   if (ret != BLE_STATUS_SUCCESS) {
-    printf("Start Discovery Procedure failed (0x%02X)\n\r", ret);
+    PRINTF("Start Discovery Procedure failed (0x%02X)\n\r", ret);
     // FIXME: We need to wait for a while before starting discovery proc
     // due to BlueNRG process queue handling
     // NOTE: this workaround causes a potential risk for an endless loop!!!
@@ -1163,7 +1163,7 @@ ble_error_t BlueNRGGap::makeConnection ()
 				  SUPERV_TIMEOUT, CONN_L1 , CONN_L2);
   
   if (ret != BLE_STATUS_SUCCESS) {
-    printf("Error while starting connection (ret=0x%02X).\n\r", ret);
+    PRINTF("Error while starting connection (ret=0x%02X).\n\r", ret);
     // FIXME: We need to wait for a while before creating a connection
     // due to BlueNRG process queue handling
     // NOTE: this workaround causes a potential risk for an endless loop!!!
