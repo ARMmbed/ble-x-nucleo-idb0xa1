@@ -1054,37 +1054,30 @@ ble_error_t BlueNRGGap::startRadioScan(const GapScanningParams &scanningParams)
 {
   
   uint8_t ret = BLE_STATUS_SUCCESS;
-
+  
   PRINTF("Scanning...\n\r");
-
+  
   // We received a start scan request from the application level.
   // If we are on X-NUCLEO-IDB04A1 (playing a single role at time),
   // we need to re-init our expansion board to specify the GAP CENTRAL ROLE
   if(!btle_reinited) {
     btle_init(isSetAddress, GAP_CENTRAL_ROLE_IDB04A1);
     btle_reinited = true;
-
+    
     PRINTF("BTLE re-init\n\r");
   }
   
-  if((ret = aci_gap_start_general_discovery_proc(scanningParams.getInterval(),
-						 scanningParams.getWindow(),
-						 addr_type,
-						 1) // 1 to filter duplicates
-      ) == ERR_COMMAND_DISALLOWED) {
-    PRINTF("\t==>betzw: wait a bit ...<==\n\r");
-    
+  ret = aci_gap_start_general_discovery_proc(scanningParams.getInterval(),
+					     scanningParams.getWindow(),
+					     addr_type,
+					     1); // 1 to filter duplicates
+  if (ret != BLE_STATUS_SUCCESS) {
+    printf("Start Discovery Procedure failed (0x%02X)\n\r", ret);
     // FIXME: We need to wait for a while before starting discovery proc
     // due to BlueNRG process queue handling
     // NOTE: this workaround causes a potential risk for an endless loop!!!
     minar::Scheduler::postCallback(radioScanning).delay(minar::milliseconds(100));
-    
     return BLE_STACK_BUSY;
-  }
-  
-  if (ret != BLE_STATUS_SUCCESS) {
-    printf("Start Discovery Procedure failed (0x%02X)\n\r", ret);
-    return BLE_ERROR_UNSPECIFIED; 
   } else {
     PRINTF("Discovery Procedure Started\n");
     _scanning = true;
@@ -1158,34 +1151,27 @@ ble_error_t BlueNRGGap::makeConnection ()
   tBleStatus ret;
   
   /*
-  Scan_Interval, Scan_Window, Peer_Address_Type, Peer_Address, Own_Address_Type, Conn_Interval_Min, 
-  Conn_Interval_Max, Conn_Latency, Supervision_Timeout, Conn_Len_Min, Conn_Len_Max    
+    Scan_Interval, Scan_Window, Peer_Address_Type, Peer_Address, Own_Address_Type, Conn_Interval_Min, 
+    Conn_Interval_Max, Conn_Latency, Supervision_Timeout, Conn_Len_Min, Conn_Len_Max    
   */
-  if((ret = aci_gap_create_connection(SCAN_P,
-				      SCAN_L,
-				      PUBLIC_ADDR,
-				      (unsigned char*)_peerAddr,
-				      PUBLIC_ADDR,
-				      CONN_P1, CONN_P2, 0,
-				      SUPERV_TIMEOUT, CONN_L1 , CONN_L2)
-      ) == ERR_COMMAND_DISALLOWED) {
-    PRINTF("\t==>betzw: wait a bit ...<==\n\r");
-    
+  ret = aci_gap_create_connection(SCAN_P,
+				  SCAN_L,
+				  PUBLIC_ADDR,
+				  (unsigned char*)_peerAddr,
+				  PUBLIC_ADDR,
+				  CONN_P1, CONN_P2, 0,
+				  SUPERV_TIMEOUT, CONN_L1 , CONN_L2);
+  
+  if (ret != BLE_STATUS_SUCCESS) {
+    printf("Error while starting connection (ret=0x%02X).\n\r", ret);
     // FIXME: We need to wait for a while before creating a connection
     // due to BlueNRG process queue handling
     // NOTE: this workaround causes a potential risk for an endless loop!!!
     minar::Scheduler::postCallback(makeConn).delay(minar::milliseconds(100));
-    
     return BLE_STACK_BUSY;
-  }
-  
-  _connecting = false;
-
-  if (ret != BLE_STATUS_SUCCESS){
-    printf("Error while starting connection (ret=0x%02X).\n\r", ret);
-    return BLE_ERROR_UNSPECIFIED;
   } else {
     PRINTF("Connection started.\n");
+    _connecting = false;
     return BLE_ERROR_NONE;
   }
 }
