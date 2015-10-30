@@ -130,7 +130,8 @@ public:
                                      uint8_t *data_length,
                                      uint8_t *data,
                                      uint8_t *RSSI);
-    ble_error_t         makeConnection(void);
+    ble_error_t         createConnection(void);
+
     void     setConnectionHandle(uint16_t con_handle);
     uint16_t getConnectionHandle(void);
     

@@ -32,7 +32,7 @@
 
 #define HCI_LOG_ON 0
 
-#define HCI_READ_PACKET_NUM_MAX 		 (0x20)
+#define HCI_READ_PACKET_NUM_MAX 		 (0x40)
 
 #define MIN(a,b)            ((a) < (b) )? (a) : (b)
 #define MAX(a,b)            ((a) > (b) )? (a) : (b)

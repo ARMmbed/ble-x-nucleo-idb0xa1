@@ -697,7 +697,7 @@ ble_error_t BlueNRGGap::getAddress(AddressType_t *typeP, Address_t address)
     {
         for(int i=0; i<BDADDR_SIZE; i++) {
             address[i] = bdaddr[i];
-            PRINTF("i[%d]:0x%x\n\r",i,bdaddr[i]);
+            //PRINTF("i[%d]:0x%x\n\r",i,bdaddr[i]);
         }
     }
         
@@ -977,16 +977,16 @@ GapScanningParams* BlueNRGGap::getScanningParams(void)
   return &_scanningParams;
 }
 
-static void radioScanning()
+static void radioScanning(void)
 {
   GapScanningParams* scanningParams = BlueNRGGap::getInstance().getScanningParams();
 
   BlueNRGGap::getInstance().startRadioScan(*scanningParams);
 }
 
-static void makeConn()
+static void makeConnection(void)
 {
-  BlueNRGGap::getInstance().makeConnection();
+  BlueNRGGap::getInstance().createConnection();
 }
 
 // ANDREA
@@ -1039,11 +1039,14 @@ void BlueNRGGap::Discovery_CB(Reason_t reason,
     PRINTF("DISCOVERY_COMPLETE\n\r");
     _scanning = false;
 
+    // Since the DISCOVERY_COMPLETE event can be received during the scanning interval,
+    // we need to delay the starting of connection or re-scanning procedures
+    uint16_t delay = 2*(_scanningParams.getInterval());
+
     if(_connecting) {
-      minar::Scheduler::postCallback(makeConn);  
+      minar::Scheduler::postCallback(makeConnection).delay(minar::milliseconds(delay));
     } else {
-      PRINTF("re-startRadioScan\n\r");
-      minar::Scheduler::postCallback(radioScanning);
+      minar::Scheduler::postCallback(radioScanning).delay(minar::milliseconds(delay));
     }
 
     break;
@@ -1053,7 +1056,7 @@ void BlueNRGGap::Discovery_CB(Reason_t reason,
 ble_error_t BlueNRGGap::startRadioScan(const GapScanningParams &scanningParams)
 {
   
-  uint8_t ret = BLE_STATUS_SUCCESS;
+  tBleStatus ret = BLE_STATUS_SUCCESS;
   
   PRINTF("Scanning...\n\r");
   
@@ -1071,13 +1074,10 @@ ble_error_t BlueNRGGap::startRadioScan(const GapScanningParams &scanningParams)
 					     scanningParams.getWindow(),
 					     addr_type,
 					     1); // 1 to filter duplicates
+  
   if (ret != BLE_STATUS_SUCCESS) {
-    PRINTF("Start Discovery Procedure failed (0x%02X)\n\r", ret);
-    // FIXME: We need to wait for a while before starting discovery proc
-    // due to BlueNRG process queue handling
-    // NOTE: this workaround causes a potential risk for an endless loop!!!
-    minar::Scheduler::postCallback(radioScanning).delay(minar::milliseconds(100));
-    return BLE_STACK_BUSY;
+    printf("Start Discovery Procedure failed (0x%02X)\n\r", ret);
+    return BLE_ERROR_UNSPECIFIED; 
   } else {
     PRINTF("Discovery Procedure Started\n");
     _scanning = true;
@@ -1086,7 +1086,7 @@ ble_error_t BlueNRGGap::startRadioScan(const GapScanningParams &scanningParams)
 }
 
 ble_error_t BlueNRGGap::stopScan() {
-  uint8_t ret = BLE_STATUS_SUCCESS;
+  tBleStatus ret = BLE_STATUS_SUCCESS;
   
   ret = aci_gap_terminate_gap_procedure(GENERAL_DISCOVERY_PROCEDURE);
   
@@ -1146,7 +1146,7 @@ void BlueNRGGap::getPermittedTxPowerValues(const int8_t **valueArrayPP, size_t *
     *countP = sizeof(permittedTxValues) / sizeof(int8_t);
 }
 
-ble_error_t BlueNRGGap::makeConnection ()
+ble_error_t BlueNRGGap::createConnection ()
 {
   tBleStatus ret;
   
@@ -1161,17 +1161,14 @@ ble_error_t BlueNRGGap::makeConnection ()
 				  PUBLIC_ADDR,
 				  CONN_P1, CONN_P2, 0,
 				  SUPERV_TIMEOUT, CONN_L1 , CONN_L2);
+
+  _connecting = false;
   
   if (ret != BLE_STATUS_SUCCESS) {
-    PRINTF("Error while starting connection (ret=0x%02X).\n\r", ret);
-    // FIXME: We need to wait for a while before creating a connection
-    // due to BlueNRG process queue handling
-    // NOTE: this workaround causes a potential risk for an endless loop!!!
-    minar::Scheduler::postCallback(makeConn).delay(minar::milliseconds(100));
-    return BLE_STACK_BUSY;
+    printf("Error while starting connection (ret=0x%02X).\n\r", ret);
+    return BLE_ERROR_UNSPECIFIED;
   } else {
     PRINTF("Connection started.\n");
-    _connecting = false;
     return BLE_ERROR_NONE;
   }
 }
@@ -1196,8 +1193,8 @@ ble_error_t BlueNRGGap::connect (const Gap::Address_t peerAddr,
   if(_scanning) {
     stopScan();
   } else {
-    //PRINTF("Calling makeConnection from connect()\n\r");
-    return makeConnection();
+    PRINTF("Calling createConnection from connect()\n\r");
+    return createConnection();
   }
   
   return BLE_ERROR_NONE;
