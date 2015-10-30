@@ -32,7 +32,7 @@
 
 #define HCI_LOG_ON 0
 
-#define HCI_READ_PACKET_NUM_MAX 		 (5)
+#define HCI_READ_PACKET_NUM_MAX 		 (15)
 
 #define MIN(a,b)            ((a) < (b) )? (a) : (b)
 #define MAX(a,b)            ((a) > (b) )? (a) : (b)
@@ -156,6 +156,9 @@ void HCI_Isr(void)
     }
     else{
       // HCI Read Packet Pool is empty, wait for a free packet.
+#ifdef AST_FOR_MBED_OS
+      Call_BTLE_Handler();
+#endif
       readPacketListFull = TRUE;
       Clear_SPI_EXTI_Flag();
       return;
