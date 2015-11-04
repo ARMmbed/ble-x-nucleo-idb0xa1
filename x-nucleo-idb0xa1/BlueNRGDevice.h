@@ -89,7 +89,6 @@ public:
     
 private:
     bool isInitialized;
-    BLE::InstanceID_t instanceID;
 
     SPI         spi_;
     DigitalOut  nCS_;

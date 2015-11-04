@@ -96,10 +96,9 @@ BlueNRGDevice::BlueNRGDevice(PinName mosi,
                              PinName sck,
                              PinName cs,
                              PinName rst,
-                             PinName irq) : spi_(mosi, miso, sck), nCS_(cs), rst_(rst), irq_(irq)
+                             PinName irq) : 
+	isInitialized(false), spi_(mosi, miso, sck), nCS_(cs), rst_(rst), irq_(irq)
 {
-    isInitialized = false;
-	
     // Setup the spi for 8 bit data, low clock polarity,
     // 1-edge phase, with an 8MHz clock rate
     spi_.format(8, 0);
@@ -140,8 +139,6 @@ ble_error_t BlueNRGDevice::init(BLE::InstanceID_t instanceID, FunctionPointerWit
 	// Set the interrupt handler for the device
 	irq_.mode(PullNone); // betzw: set irq mode
 	irq_.rise(&HCI_Isr);
-
-	instanceID = instanceID;
 
 	/* ToDo: Clear memory contents, reset the SD, etc. */
 	// By default, we set the device GAP role to PERIPHERAL
