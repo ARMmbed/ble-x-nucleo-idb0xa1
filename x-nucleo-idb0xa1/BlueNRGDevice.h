@@ -42,6 +42,7 @@
 
 #include "mbed-drivers/mbed.h"
 #include "ble/blecommon.h"
+#include "ble/BLEInstanceBase.h"
 #include "ble/BLE.h"
 #include "BlueNRGGap.h"
 #include "BlueNRGGattServer.h"
@@ -55,7 +56,7 @@ public:
     BlueNRGDevice(PinName mosi, PinName miso, PinName sck, PinName cs, PinName rst, PinName irq);
     virtual ~BlueNRGDevice(void);
 
-    virtual ble_error_t init(void);
+    virtual ble_error_t init(BLE::InstanceID_t instanceID, FunctionPointerWithContext<BLE::InitializationCompleteCallbackContext *> callback);
     virtual ble_error_t shutdown(void);   
     virtual const char *getVersion(void);
     virtual Gap&        getGap();
@@ -76,7 +77,9 @@ public:
         return *sm;
     }
     ble_error_t reset(void);
-    bool getIsInitialized(void);
+    virtual bool hasInitialized(void) const {
+        return isInitialized;
+    }
 
     bool dataPresent();
     int32_t spiRead(uint8_t *buffer, uint8_t buff_size);
@@ -86,6 +89,7 @@ public:
     
 private:
     bool isInitialized;
+    BLE::InstanceID_t instanceID;
 
     SPI         spi_;
     DigitalOut  nCS_;

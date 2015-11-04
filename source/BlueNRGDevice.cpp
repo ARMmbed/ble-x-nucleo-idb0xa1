@@ -126,17 +126,33 @@ BlueNRGDevice::~BlueNRGDevice(void)
     @param[in] void
     @returns    ble_error_t
 */
-ble_error_t BlueNRGDevice::init(void)
+ble_error_t BlueNRGDevice::init(BLE::InstanceID_t instanceID, FunctionPointerWithContext<BLE::InitializationCompleteCallbackContext *> callback)
 {
+	if (isInitialized) {
+        	BLE::InitializationCompleteCallbackContext context = {
+        	    BLE::Instance(instanceID),
+        	    BLE_ERROR_ALREADY_INITIALIZED
+        	};
+        	callback.call(&context);
+        	return BLE_ERROR_ALREADY_INITIALIZED;
+    	}
+
 	// Set the interrupt handler for the device
 	irq_.mode(PullNone); // betzw: set irq mode
 	irq_.rise(&HCI_Isr);
+
+	instanceID = instanceID;
 
 	/* ToDo: Clear memory contents, reset the SD, etc. */
 	// By default, we set the device GAP role to PERIPHERAL
 	btle_init(BlueNRGGap::getInstance().getIsSetAddress(), GAP_PERIPHERAL_ROLE_IDB04A1);
 	
 	isInitialized = true;
+	BLE::InitializationCompleteCallbackContext context = {
+	        BLE::Instance(instanceID),
+	        BLE_ERROR_NONE
+	};
+	callback.call(&context);
     
 	return BLE_ERROR_NONE;
 }
@@ -166,8 +182,6 @@ ble_error_t BlueNRGDevice::reset(void)
     return BLE_ERROR_NONE;
 }
 
-// ANDREA: mbedOS
-// betzw: really?
 /*!
   @brief  Wait for any BLE Event like BLE Connection, Read Request etc.    
   @param[in] void
@@ -202,18 +216,6 @@ const char *BlueNRGDevice::getVersion(void)
     char *version = new char[6];
     memcpy((void *)version, "1.0.0", 5);
     return version;
-}
-
-/**************************************************************************/
-/*!
-    @brief  get init state
-    @param[in] void
-    @returns    bool  
-*/
-/**************************************************************************/
-bool BlueNRGDevice::getIsInitialized(void)
-{
-    return isInitialized;
 }
 
 /**************************************************************************/
