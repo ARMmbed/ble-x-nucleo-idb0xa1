@@ -137,7 +137,7 @@ ble_error_t BlueNRGDevice::init(BLE::InstanceID_t instanceID, FunctionPointerWit
     	}
 
 	// Set the interrupt handler for the device
-	irq_.mode(PullNone); // betzw: set irq mode
+	irq_.mode(PullDown); // betzw: set irq mode
 	irq_.rise(&HCI_Isr);
 
 	/* ToDo: Clear memory contents, reset the SD, etc. */
