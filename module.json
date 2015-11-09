@@ -25,7 +25,7 @@
     "x-nucleo-idb0xa1/bluenrg-hci"
   ],
   "dependencies": {
-    "mbed-hal": "*",
-    "ble": "*"
+    "mbed-hal": "^1.0.0",
+    "ble": "^2.0.0"
   }
 }
