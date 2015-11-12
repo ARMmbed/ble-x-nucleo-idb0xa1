@@ -15,6 +15,7 @@
 */
 
 #include "mbed-drivers/mbed.h"
+#include "debug.h"
 
 #ifndef __PAYLOAD_H__
 #define __PAYLOAD_H__
@@ -122,20 +123,20 @@ public:
     
     void printDataAsHex()   {
         int i = 0;
-        printf("AdData=");
+        PRINTF("AdData=");
         for(i=0; i<*lenPtr-1; i++) {
-            printf("0x%x ", dataPtr[i]);
+            PRINTF("0x%x ", dataPtr[i]);
         }
-        printf("\n");
+        PRINTF("\n");
     }     
     
     void printDataAsString()   {
         int i = 0;
-        printf("AdData=");
+        PRINTF("AdData=");
         for(i=0; i<*lenPtr; i++) {
-            printf("%c", dataPtr[i]);
+            PRINTF("%c", dataPtr[i]);
         }
-        printf("\n");
+        PRINTF("\n");
     }                                                   
     
 };
