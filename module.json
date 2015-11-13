@@ -8,10 +8,10 @@
   ],
   "author": "Andrea Palmieri",
   "repository": {
-    "url": "ssh://gitolite@codex.cro.st.com/x-nucleodev/x-nucleo-idb0xa1-mbedos.git",
+    "url": "https://github.com/ARMmbed/ble-x-nucleo-idb0xa1.git",
     "type": "git"
   },
-  "homepage": "http://www.st.com",
+  "homepage": "https://github.com/ARMmbed/ble-x-nucleo-idb0xa1",
   "licenses": [
     {
       "url": "https://spdx.org/licenses/Apache-2.0",
