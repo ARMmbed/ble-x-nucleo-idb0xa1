@@ -139,14 +139,6 @@ ble_error_t BlueNRGDevice::init(BLE::InstanceID_t instanceID, FunctionPointerWit
 	// Set the interrupt handler for the device
 	irq_.mode(PullDown); // betzw: set irq mode
 	irq_.rise(&HCI_Isr);
-
-	// betzw - WORKAROUND: exploit current mbed 'InterruptIn' implementation
-	//                     to handle spurious BlueNRG interrupts
-	irq_.fall(&HCI_Isr); // attach IRQ handler & enable IRQ 
-	irq_.fall(NULL);     // this doesn't clear the attachment but just disables the IRQ!
-                             // In this way spurious BlueNRG interrupts (e.g. IRQs happening
-	                     // even without being enabled) end up in a real IRQ handler 
-	                     // function rather than in a NULL pointer (i.e. in a hard fault).
 	
 	/* ToDo: Clear memory contents, reset the SD, etc. */
 	// By default, we set the device GAP role to PERIPHERAL
