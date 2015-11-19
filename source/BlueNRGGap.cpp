@@ -998,9 +998,30 @@ GapScanningParams* BlueNRGGap::getScanningParams(void)
 
 static void radioScanning(void)
 {
+  ble_error_t ret;
+
   GapScanningParams* scanningParams = BlueNRGGap::getInstance().getScanningParams();
 
-  BlueNRGGap::getInstance().startRadioScan(*scanningParams);
+  ret = BlueNRGGap::getInstance().startRadioScan(*scanningParams);
+
+  // On error, reschedule myself
+  // NOTE: this workaround causes a potential risk for an endless loop!!!
+  if(ret != BLE_ERROR_NONE) {
+    minar::Scheduler::postCallback(radioScanning).delay(minar::milliseconds(100));
+  }
+}
+
+static void makeConnection(void)
+{
+  ble_error_t ret;
+
+  ret = BlueNRGGap::getInstance().createConnection();
+
+  // On error, reschedule myself
+  // NOTE: this workaround causes a potential risk for an endless loop!!!
+  if(ret != BLE_ERROR_NONE) {
+    minar::Scheduler::postCallback(makeConnection).delay(minar::milliseconds(100));
+  }
 }
 
 static void makeConnection(void)
@@ -1202,7 +1223,7 @@ ble_error_t BlueNRGGap::connect (const Gap::Address_t peerAddr,
   (void)connectionParams;
   (void)scanParams;
 
-    // Save the peer address
+  // Save the peer address
   for(int i=0; i<BDADDR_SIZE; i++) {
     _peerAddr[i] = peerAddr[i];
   }
