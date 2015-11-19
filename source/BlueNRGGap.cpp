@@ -264,8 +264,25 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
                 PRINTF("advtInterval=%d\n\r", (int)advtInterval);
                 break;
                 }
-            case GapAdvertisingData::MANUFACTURER_SPECIFIC_DATA:        /**< Manufacturer Specific Data */                                
+            case GapAdvertisingData::MANUFACTURER_SPECIFIC_DATA:        /**< Manufacturer Specific Data */                             
                 {
+                PRINTF("Advertising type: MANUFACTURER_SPECIFIC_DATA\n\r");
+                uint8_t buffSize = *loadPtr.getUnitAtIndex(index).getLenPtr()-1;
+                PRINTF("Advertising type: MANUFACTURER_SPECIFIC_DATA (buffSize=%d)\n\r", buffSize);
+                // the total ADV DATA LEN should include two more bytes:
+		// the buffer size byte;
+		// and the Manufacturer Specific Data Type Value byte
+                if(buffSize>ADV_DATA_MAX_SIZE-2) {
+                    return BLE_ERROR_PARAM_OUT_OF_RANGE;
+                }
+                for(int i=0; i<buffSize+1; i++) {
+                    PRINTF("Advertising type: MANUFACTURER_SPECIFIC_DATA loadPtr.getUnitAtIndex(index).getDataPtr()[%d] = 0x%x\n\r",
+				i, loadPtr.getUnitAtIndex(index).getDataPtr()[i]);
+                }
+                AdvLen = buffSize+2; // the total ADV DATA LEN should include two more bytes: the buffer size byte; and the Manufacturer Specific Data Type Value byte
+                AdvData[0] = buffSize+1; // the fisrt byte is the data buffer size (type+data)
+                AdvData[1] = AD_TYPE_MANUFACTURER_SPECIFIC_DATA;
+                memcpy(AdvData+2, loadPtr.getUnitAtIndex(index).getDataPtr(), buffSize);
                 break;
                 }
                 
@@ -433,7 +450,9 @@ ble_error_t BlueNRGGap::startAdvertising(const GapAdvertisingParams &params)
         }
       }
 
-      if(txPowerAdType) {
+      // If ADV Data Type is MANUFACTURER SPECIFIC, then the TxP is set implicitly
+      // (i.e., w/o calling setTxPower()
+      if(txPowerAdType || AdvData[1]==AD_TYPE_MANUFACTURER_SPECIFIC_DATA) {
         PRINTF("!!!calling aci_gap_delete_ad_type(AD_TYPE_TX_POWER_LEVEL)!!!\n");
         ret = aci_gap_delete_ad_type(AD_TYPE_TX_POWER_LEVEL);
         if (ret != BLE_STATUS_SUCCESS){
