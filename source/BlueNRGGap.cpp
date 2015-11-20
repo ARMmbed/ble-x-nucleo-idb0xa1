@@ -134,13 +134,15 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
                 }
             case GapAdvertisingData::INCOMPLETE_LIST_16BIT_SERVICE_IDS:  /**< Incomplete list of 16-bit Service IDs */
             case GapAdvertisingData::COMPLETE_LIST_16BIT_SERVICE_IDS:    /**< Complete list of 16-bit Service IDs */
+            case GapAdvertisingData::INCOMPLETE_LIST_128BIT_SERVICE_IDS: /**< Incomplete list of 128-bit Service IDs */
+            case GapAdvertisingData::COMPLETE_LIST_128BIT_SERVICE_IDS:   /**< Complete list of 128-bit Service IDs */
                 {
-                PRINTF("Advertising type: INCOMPLETE_LIST_16BIT_SERVICE_IDS/COMPLETE_LIST_16BIT_SERVICE_IDS\n\r");
+                PRINTF("Advertising type: INCOMPLETE_LIST SERVICE_IDS/COMPLETE_LIST SERVICE_IDS\n\r");
                 
                 uint8_t buffSize = *loadPtr.getUnitAtIndex(index).getLenPtr()-1;
                 // The total lenght should include the Data Type Value
                 if(buffSize>UUID_BUFFER_SIZE-1) {
-                    return BLE_ERROR_PARAM_OUT_OF_RANGE;
+                    return BLE_ERROR_INVALID_PARAM;
                 }
                 
                 servUuidlength = buffSize+1; // +1 to include the Data Type Value
@@ -149,7 +151,7 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
                 PRINTF("servUuidlength=%d servUuidData[0]=%d buffSize=%d\n\r", servUuidlength, servUuidData[0], buffSize);
                 // Save the Service UUID list just after the Data Type Value field
                 memcpy(servUuidData+1, loadPtr.getUnitAtIndex(index).getDataPtr(), buffSize);
-                
+#ifdef DEBUG
                 for(unsigned i=0; i<servUuidlength; i++) {
                     PRINTF("servUuidData[%d] = 0x%x\n\r", i, servUuidData[i]);
                 }
@@ -157,7 +159,7 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
                 for(unsigned i=0; i<buffSize; i++) {
                     PRINTF("loadPtr.getUnitAtIndex(index).getDataPtr()[%d] = 0x%x\n\r", i, loadPtr.getUnitAtIndex(index).getDataPtr()[i]);
                 }
-
+#endif /* DEBUG */
                 break;
                 }
             case GapAdvertisingData::INCOMPLETE_LIST_32BIT_SERVICE_IDS:  /**< Incomplete list of 32-bit Service IDs (not relevant for Bluetooth 4.0) */
@@ -168,16 +170,6 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
             case GapAdvertisingData::COMPLETE_LIST_32BIT_SERVICE_IDS:    /**< Complete list of 32-bit Service IDs (not relevant for Bluetooth 4.0) */
                 {
                 PRINTF("Advertising type: COMPLETE_LIST_32BIT_SERVICE_IDS\n\r");
-                return BLE_ERROR_NOT_IMPLEMENTED;
-                }
-            case GapAdvertisingData::INCOMPLETE_LIST_128BIT_SERVICE_IDS: /**< Incomplete list of 128-bit Service IDs */
-                {
-                PRINTF("Advertising type: INCOMPLETE_LIST_128BIT_SERVICE_IDS\n\r");
-                return BLE_ERROR_NOT_IMPLEMENTED;
-                }
-            case GapAdvertisingData::COMPLETE_LIST_128BIT_SERVICE_IDS:   /**< Complete list of 128-bit Service IDs */
-                {
-                PRINTF("Advertising type: COMPLETE_LIST_128BIT_SERVICE_IDS\n\r");
                 return BLE_ERROR_NOT_IMPLEMENTED;
                 }
             case GapAdvertisingData::SHORTENED_LOCAL_NAME:               /**< Shortened Local Name */
