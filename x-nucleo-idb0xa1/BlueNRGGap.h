@@ -62,7 +62,8 @@
 #define CONN_P2        (CONN_P(50))//(CONN_P(1000))
 #define CONN_L1        (CONN_L(5)) 
 #define CONN_L2        (CONN_L(5))
-#define UUID_BUFFER_SIZE 13 //6*2(16-bit UUIDs)+1
+
+#define UUID_BUFFER_SIZE 17 //Either 8*2(16-bit UUIDs) or 4*4(32-bit UUIDs) or 1*16(128-bit UUIDs) +1
 #define ADV_DATA_MAX_SIZE 31
 
 /**************************************************************************/
@@ -160,7 +161,6 @@ private:
     bool _connecting;
     bool isSetAddress;
     bool btle_reinited;
-    tBleStatus ret; // FIXME: delete this
     uint8_t *DeviceName;
     uint8_t deviceAppearance[2];
 
