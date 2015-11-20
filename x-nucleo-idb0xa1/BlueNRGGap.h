@@ -160,7 +160,6 @@ private:
     bool _connecting;
     bool isSetAddress;
     bool btle_reinited;
-    tBleStatus ret; // FIXME: delete this
     uint8_t *DeviceName;
     uint8_t deviceAppearance[2];
 
