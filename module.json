@@ -26,7 +26,6 @@
   ],
   "dependencies": {
     "mbed-drivers": ">=0.11.3",
-    "mbed-hal": "^1.0.0",
     "ble": "^2.0.0"
   }
 }
