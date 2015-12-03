@@ -285,7 +285,7 @@ void Attribute_Modified_CB(uint16_t attr_handle, uint8_t data_length, uint8_t *a
 
             //BlueNRGGattServer::getInstance().handleEvent(GattServerEvents::GATT_EVENT_DATA_WRITTEN, evt->attr_handle);
             //Write the actual Data to the Attr Handle? (uint8_1[])att_data contains the data
-            if ((p_char->getValueAttribute().getValuePtr() != NULL) && (p_char->getValueAttribute().getInitialLength() > 0)) {
+            if ((p_char->getValueAttribute().getValuePtr() != NULL) && (p_char->getValueAttribute().getLength() > 0)) {
                 BlueNRGGattServer::getInstance().write(p_char->getValueAttribute().getHandle(), (uint8_t*)att_data, data_length, false);
             }
         } 

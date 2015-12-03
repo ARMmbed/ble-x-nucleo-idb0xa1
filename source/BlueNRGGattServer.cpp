@@ -196,8 +196,8 @@ ble_error_t BlueNRGGattServer::addService(GattService &service)
         p_char->getValueAttribute().setHandle(bleCharacteristic);    //Set the characteristic count as the corresponding char handle
         PRINTF("added bleCharacteristic handle =%u\n\r", bleCharacteristic);
 
-        if ((p_char->getValueAttribute().getValuePtr() != NULL) && (p_char->getValueAttribute().getInitialLength() > 0)) {
-            write(p_char->getValueAttribute().getHandle(), p_char->getValueAttribute().getValuePtr(), p_char->getValueAttribute().getInitialLength(), false /* localOnly */);
+        if ((p_char->getValueAttribute().getValuePtr() != NULL) && (p_char->getValueAttribute().getLength() > 0)) {
+            write(p_char->getValueAttribute().getHandle(), p_char->getValueAttribute().getValuePtr(), p_char->getValueAttribute().getLength(), false /* localOnly */);
         }
 
         // add descriptors now
@@ -209,7 +209,7 @@ ble_error_t BlueNRGGattServer::addService(GattService &service)
             uint16_t shortUUID = descriptor->getUUID().getShortUUID();
             const uint8_t uuidArray[] = {(uint8_t)((shortUUID>>8)&0xFF), (uint8_t)((shortUUID&0xFF))};
             ret = aci_gatt_add_char_desc(service.getHandle(), p_char->getValueAttribute().getHandle(), 
-            CHAR_DESC_TYPE_16_BIT, uuidArray, descriptor->getMaxLength(), descriptor->getInitialLength(), 
+            CHAR_DESC_TYPE_16_BIT, uuidArray, descriptor->getMaxLength(), descriptor->getLength(),
             descriptor->getValuePtr(), CHAR_DESC_SECURITY_PERMISSION, CHAR_DESC_ACCESS_PERMISSION, GATT_NOTIFY_ATTRIBUTE_WRITE,
             MIN_ENCRY_KEY_SIZE, CHAR_ATTRIBUTE_LEN_IS_FIXED, &descHandle);
             PRINTF("Adding Descriptor descriptor handle=%d ret=%d\n\r", descHandle, ret);
