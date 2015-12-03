@@ -468,9 +468,9 @@ ble_error_t BlueNRGGap::startAdvertising(const GapAdvertisingParams &params)
         }
       }
 
-      // If ADV Data Type is MANUFACTURER SPECIFIC, then the TxP is set implicitly
-      // (i.e., w/o calling setTxPower()
-      if(txPowerAdType || AdvData[1]==AD_TYPE_MANUFACTURER_SPECIFIC_DATA) {
+      // If ADV Data Type is SERVICE DATA or MANUFACTURER SPECIFIC DATA,
+      // we need to delete it to make the needed room in ADV payload
+      if(AdvData[1]==AD_TYPE_SERVICE_DATA || AdvData[1]==AD_TYPE_MANUFACTURER_SPECIFIC_DATA) {
         PRINTF("!!!calling aci_gap_delete_ad_type(AD_TYPE_TX_POWER_LEVEL)!!!\n");
         ret = aci_gap_delete_ad_type(AD_TYPE_TX_POWER_LEVEL);
         if (BLE_STATUS_SUCCESS!=ret){
@@ -1200,12 +1200,13 @@ ble_error_t BlueNRGGap::setTxPower(int8_t txPower)
     tBleStatus ret;
     
     int8_t enHighPower = 0;
-    int8_t paLevel = 0;    
-#ifdef DEBUG
+    int8_t paLevel = 0;
+
     int8_t dbmActuallySet = getHighPowerAndPALevelValue(txPower, enHighPower, paLevel);
-#else
+
+#ifndef DEBUG
     /* avoid compiler warnings about unused variables */
-    (void)txPower;
+    (void)dbmActuallySet;
 #endif
     
     PRINTF("txPower=%d, dbmActuallySet=%d\n\r", txPower, dbmActuallySet);
@@ -1214,8 +1215,7 @@ ble_error_t BlueNRGGap::setTxPower(int8_t txPower)
     if(ret!=BLE_STATUS_SUCCESS) {
       return BLE_ERROR_UNSPECIFIED;
     }
-    
-    txPowerAdType = true;
+
     return BLE_ERROR_NONE;
 }
 
