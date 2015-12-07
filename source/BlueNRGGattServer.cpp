@@ -254,16 +254,21 @@ ble_error_t BlueNRGGattServer::addService(GattService &service)
     @endcode
 */
 /**************************************************************************/
-ble_error_t BlueNRGGattServer::readValue(uint16_t charHandle, uint8_t buffer[], uint16_t *const lengthP)
+ble_error_t BlueNRGGattServer::read(GattAttribute::Handle_t charHandle, uint8_t buffer[], uint16_t *lengthP)
 {
-  PRINTF("ReadValue() Not Supported\n\r");
+  tBleStatus ret;
 
-  /* avoid compiler warnings about unused variables */
-  (void)charHandle;
-  (void)buffer;
-  (void)lengthP;
+  ret = aci_gatt_read_handle_value(charHandle+CHAR_VALUE_OFFSET, *lengthP, lengthP, buffer);
 
-  return BLE_ERROR_NONE;
+  if(ret == BLE_STATUS_SUCCESS) {
+    return BLE_ERROR_NONE;
+  }
+  switch (ret) {
+  case ERR_INVALID_HCI_CMD_PARAMS:
+    return BLE_ERROR_INVALID_PARAM;
+  default:
+    return BLE_ERROR_UNSPECIFIED;
+  }
 }
 
 /**************************************************************************/
@@ -292,7 +297,7 @@ ble_error_t BlueNRGGattServer::readValue(uint16_t charHandle, uint8_t buffer[], 
 */
 /**************************************************************************/
 // <<<ANDREA>>>
-ble_error_t BlueNRGGattServer::readValue(Gap::Handle_t connectionHandle, GattAttribute::Handle_t attributeHandle, uint8_t buffer[], uint16_t *lengthP) {
+ble_error_t BlueNRGGattServer::read(Gap::Handle_t connectionHandle, GattAttribute::Handle_t attributeHandle, uint8_t buffer[], uint16_t *lengthP) {
 
   /* avoid compiler warnings about unused variables */
   (void)connectionHandle;
