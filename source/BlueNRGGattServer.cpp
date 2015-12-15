@@ -92,8 +92,7 @@ ble_error_t BlueNRGGattServer::addService(GattService &service)
     if(type==UUID::UUID_TYPE_LONG) {
         base_uuid = (service.getUUID()).getBaseUUID();   
         
-        COPY_UUID_128(primary_base_uuid, base_uuid[15],base_uuid[14],base_uuid[13],base_uuid[12],base_uuid[11],base_uuid[10],base_uuid[9],
-        base_uuid[8],base_uuid[7],base_uuid[6],base_uuid[5],base_uuid[4],primary_short_uuid[1],primary_short_uuid[0],base_uuid[1],base_uuid[0]);
+        COPY_UUID_128(primary_base_uuid, base_uuid[15],base_uuid[14],primary_short_uuid[1],primary_short_uuid[0],base_uuid[11],base_uuid[10],base_uuid[9],base_uuid[8],base_uuid[7],base_uuid[6],base_uuid[5],base_uuid[4],base_uuid[3],base_uuid[2],base_uuid[1],base_uuid[0]);
     }
 
     charsCount = service.getCharacteristicCount();
@@ -133,8 +132,7 @@ ble_error_t BlueNRGGattServer::addService(GattService &service)
         if(type==UUID::UUID_TYPE_LONG) {
             base_char_uuid = (p_char->getValueAttribute().getUUID()).getBaseUUID();
             
-            COPY_UUID_128(char_base_uuid, base_char_uuid[15],base_char_uuid[14],base_char_uuid[13],base_char_uuid[12],base_char_uuid[11],base_char_uuid[10],base_char_uuid[9],
-            base_char_uuid[8],base_char_uuid[7],base_char_uuid[6],base_char_uuid[5],base_char_uuid[4],int_8_uuid[1],int_8_uuid[0],base_char_uuid[1],base_char_uuid[0]);
+            COPY_UUID_128(char_base_uuid,base_char_uuid[15],base_char_uuid[14],int_8_uuid[1],int_8_uuid[0],base_char_uuid[11],base_char_uuid[10],base_char_uuid[9],base_char_uuid[8],base_char_uuid[7],base_char_uuid[6],base_char_uuid[5],base_char_uuid[4],base_char_uuid[3],base_char_uuid[2],base_char_uuid[1],base_char_uuid[0]);
         }
         
         PRINTF("Char Properties 0x%x\n\r", p_char->getProperties());
@@ -333,9 +331,14 @@ ble_error_t BlueNRGGattServer::write(GattAttribute::Handle_t charHandle, const u
     ret = aci_gatt_update_char_value(bleCharHanldeMap.find(charHandle)->second, charHandle, 0, len, buffer);
 
     if (ret != BLE_STATUS_SUCCESS){
-        PRINTF("Error while updating characteristic (ret=0x%x).\n\r", ret) ;
-        return BLE_ERROR_PARAM_OUT_OF_RANGE ; //Not correct Error Value 
-        //FIXME: Define Error values equivalent to BlueNRG Error Codes.
+      PRINTF("Error while updating characteristic (ret=0x%x).\n\r", ret);
+      switch (ret) {
+        case BLE_STATUS_INVALID_HANDLE:
+        case BLE_STATUS_INVALID_PARAMETER:
+          return BLE_ERROR_INVALID_PARAM;
+        default:
+          return BLE_STACK_BUSY;
+      }
     }
 
     //Generate Data Sent Event Here? (GattServerEvents::GATT_EVENT_DATA_SENT)  //FIXME: Is this correct?
