@@ -706,7 +706,7 @@ uint16_t BlueNRGGap::getConnectionHandle(void)
 /**************************************************************************/
 ble_error_t BlueNRGGap::setAddress(AddressType_t type, const Address_t address)
 {
-    if (type > ADDR_TYPE_RANDOM_PRIVATE_NON_RESOLVABLE) {
+    if (type > BLEProtocol::AddressType::RANDOM_PRIVATE_NON_RESOLVABLE) {
         return BLE_ERROR_PARAM_OUT_OF_RANGE;
     }
     

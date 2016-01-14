@@ -178,7 +178,7 @@ private:
 
     BlueNRGGap() {
         m_connectionHandle = BLE_CONN_HANDLE_INVALID;
-        addr_type = Gap::ADDR_TYPE_PUBLIC;
+        addr_type = BLEProtocol::AddressType::PUBLIC;
         isSetAddress = false;
         btle_reinited = false;
         DeviceName = NULL;     

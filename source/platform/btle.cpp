@@ -87,7 +87,7 @@ volatile uint8_t set_connectable = 1;
 uint8_t bnrg_expansion_board = IDB04A1; /* at startup, suppose the X-NUCLEO-IDB04A1 is used */
 
 Gap::Address_t bleAddr;
-Gap::AddressType_t addr_type = Gap::ADDR_TYPE_PUBLIC;
+Gap::AddressType_t addr_type = BLEProtocol::AddressType::PUBLIC;
 
 /**************************************************************************/
 /*!
@@ -149,7 +149,7 @@ void btle_init(bool isSetAddress, uint8_t role)
     } else {
         
         const Gap::Address_t BLE_address_BE = {0xFD,0x66,0x05,0x13,0xBE,0xBA};
-        BlueNRGGap::getInstance().setAddress(Gap::ADDR_TYPE_PUBLIC, BLE_address_BE);
+        BlueNRGGap::getInstance().setAddress(BLEProtocol::AddressType::PUBLIC, BLE_address_BE);
         
         ret = aci_hal_write_config_data(CONFIG_DATA_PUBADDR_OFFSET,
                                         CONFIG_DATA_PUBADDR_LEN,
@@ -337,7 +337,7 @@ extern "C" {
                 case EVT_LE_CONN_COMPLETE:
                     {                            
                         PRINTF("EVT_LE_CONN_COMPLETE\n");
-                        Gap::AddressType_t peerAddrType = Gap::ADDR_TYPE_PUBLIC;
+                        Gap::AddressType_t peerAddrType = BLEProtocol::AddressType::PUBLIC;
                         Gap::Role_t role;
                         
                         evt_le_connection_complete *cc = (evt_le_connection_complete *)evt->data;
@@ -347,16 +347,16 @@ extern "C" {
                         BlueNRGGap::getInstance().getPreferredConnectionParams(&connectionParams);
                         switch (cc->peer_bdaddr_type) {
                             case PUBLIC_ADDR:
-                                peerAddrType = Gap::ADDR_TYPE_PUBLIC;
+                                peerAddrType = BLEProtocol::AddressType::PUBLIC;
                                 break;
                             case STATIC_RANDOM_ADDR:
-                                peerAddrType = Gap::ADDR_TYPE_RANDOM_STATIC;
+                                peerAddrType = BLEProtocol::AddressType::RANDOM_STATIC;
                                 break;
                             case RESOLVABLE_PRIVATE_ADDR:
-                                peerAddrType = Gap::ADDR_TYPE_RANDOM_PRIVATE_RESOLVABLE;
+                                peerAddrType = BLEProtocol::AddressType::RANDOM_PRIVATE_RESOLVABLE;
                                 break;
                             case NON_RESOLVABLE_PRIVATE_ADDR:
-                                peerAddrType = Gap::ADDR_TYPE_RANDOM_PRIVATE_NON_RESOLVABLE;
+                                peerAddrType = BLEProtocol::AddressType::RANDOM_PRIVATE_NON_RESOLVABLE;
                                 break;
                         }                                             
                         //PRINTF("EVT_LE_CONN_COMPLETE LL role=%d\n", cc->role);
