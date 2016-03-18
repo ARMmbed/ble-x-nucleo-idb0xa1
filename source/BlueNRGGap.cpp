@@ -283,6 +283,21 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
         //Set the SCAN_RSP Payload
         scan_response_payload = scanResponse.getPayload();
         scan_rsp_length = scanResponse.getPayloadLen();
+        
+        // Update the ADV data if we are already in ADV mode
+        if(AdvLen > 0 && state.advertising == 1) {
+ 
+            tBleStatus ret = aci_gap_update_adv_data(AdvLen, AdvData);
+            if(BLE_STATUS_SUCCESS!=ret) {
+                PRINTF("error occurred while adding adv data (ret=0x%x)\n", ret);
+                switch (ret) {
+                    case BLE_STATUS_TIMEOUT:
+                        return BLE_STACK_BUSY;
+                    default:
+                        return BLE_ERROR_UNSPECIFIED;
+                }
+            }
+        }
     }
     return BLE_ERROR_NONE;
 }
