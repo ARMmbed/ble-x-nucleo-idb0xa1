@@ -50,8 +50,7 @@
 #define BLE_GAP_ADV_NONCON_INTERVAL_MIN (0)
 
 // Scanning and Connection Params used by Central for creating connection
-#define LIMITED_DISCOVERY_PROCEDURE 0x01
-#define GENERAL_DISCOVERY_PROCEDURE 0x02
+#define GAP_OBSERVATION_PROC (0x80)
 
 #define SCAN_P         (0x4000)
 #define SCAN_L         (0x4000)
@@ -160,7 +159,6 @@ private:
     bool _scanning;
     bool _connecting;
     bool isSetAddress;
-    bool btle_reinited;
     uint8_t *DeviceName;
     uint8_t deviceAppearance[2];
 
@@ -180,7 +178,6 @@ private:
         m_connectionHandle = BLE_CONN_HANDLE_INVALID;
         addr_type = BLEProtocol::AddressType::PUBLIC;
         isSetAddress = false;
-        btle_reinited = false;
         DeviceName = NULL;     
     }
 

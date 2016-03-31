@@ -975,7 +975,7 @@ ble_error_t BlueNRGGap::setAppearance(GapAdvertisingData::Appearance appearance)
         return BLE_ERROR_NONE;
     }
 
-    PRINTF("setAppearance failed (ret=0x%x)!!\n\r", ret) ;
+    PRINTF("setAppearance failed (ret=0x%x)!!\n\r", ret);
     switch (ret) {
       case BLE_STATUS_INVALID_HANDLE:
       case BLE_STATUS_INVALID_PARAMETER:
@@ -1129,8 +1129,8 @@ void BlueNRGGap::Discovery_CB(Reason_t reason,
         type = GapAdvertisingParams::ADV_CONNECTABLE_UNDIRECTED;
       }
     
-      PRINTF("adv peerAddr[%02x %02x %02x %02x %02x %02x] \r\n",
-           addr[5], addr[4], addr[3], addr[2], addr[1], addr[0]);
+      PRINTF("data_length=%d adv peerAddr[%02x %02x %02x %02x %02x %02x] \r\n",
+             *data_length, addr[5], addr[4], addr[3], addr[2], addr[1], addr[0]);
       processAdvertisementReport(addr, *RSSI, isScanResponse, type, *data_length, data);
       PRINTF("!!!After processAdvertisementReport\n\r");
     }
@@ -1147,11 +1147,20 @@ void BlueNRGGap::Discovery_CB(Reason_t reason,
     // we need to delay the starting of connection or re-scanning procedures
     uint16_t delay = 2*(_scanningParams.getInterval());
 
+#ifdef AST_FOR_MBED_OS
     if(_connecting) {
       minar::Scheduler::postCallback(makeConnection).delay(minar::milliseconds(delay));
     } else {
       minar::Scheduler::postCallback(radioScanning).delay(minar::milliseconds(delay));
     }
+#else
+    Clock_Wait(delay);
+    if(_connecting) {
+      makeConnection();
+    } else {
+      radioScanning();
+    }
+#endif /* AST_FOR_MBED_OS */
 
     break;
   }
@@ -1163,36 +1172,35 @@ ble_error_t BlueNRGGap::startRadioScan(const GapScanningParams &scanningParams)
   tBleStatus ret = BLE_STATUS_SUCCESS;
   
   PRINTF("Scanning...\n\r");
-  
-  // We received a start scan request from the application level.
-  // If we are on X-NUCLEO-IDB04A1 (playing a single role at time),
-  // we need to re-init our expansion board to specify the GAP CENTRAL ROLE
-  if(!btle_reinited) {
-    btle_init(isSetAddress, GAP_CENTRAL_ROLE_IDB04A1);
-    btle_reinited = true;
-    
-    PRINTF("BTLE re-init\n\r");
-  }
-  
-  ret = aci_gap_start_general_discovery_proc(scanningParams.getInterval(),
-					     scanningParams.getWindow(),
-					     addr_type,
-					     1); // 1 to filter duplicates
-  
-  if (ret != BLE_STATUS_SUCCESS) {
-    printf("Start Discovery Procedure failed (0x%02X)\n\r", ret);
-    return BLE_ERROR_UNSPECIFIED; 
-  } else {
-    PRINTF("Discovery Procedure Started\n");
+
+  ret = btleStartRadioScan(scanningParams.getActiveScanning(),
+                           scanningParams.getInterval(),
+                           scanningParams.getWindow(),
+                           addr_type);
+
+
+  if (BLE_STATUS_SUCCESS == ret){
+    PRINTF("Observation Procedure Started\n");
     _scanning = true;
-    return BLE_ERROR_NONE; 
+    return BLE_ERROR_NONE;
   }
+
+  // Observer role is not supported by X-NUCLEO-IDB04A1, return BLE_ERROR_NOT_IMPLEMENTED
+  switch (ret) {
+    case BLE_STATUS_INVALID_CID:
+      printf("Observation Procedure not implemented!!!\n\r");
+      return BLE_ERROR_NOT_IMPLEMENTED;
+    default:
+      printf("Observation Procedure failed (0x%02X)\n\r", ret);
+      return BLE_ERROR_UNSPECIFIED;
+  }
+
 }
 
 ble_error_t BlueNRGGap::stopScan() {
   tBleStatus ret = BLE_STATUS_SUCCESS;
   
-  ret = aci_gap_terminate_gap_procedure(GENERAL_DISCOVERY_PROCEDURE);
+  ret = aci_gap_terminate_gap_procedure(GAP_OBSERVATION_PROC);
   
   if (ret != BLE_STATUS_SUCCESS) {
     printf("GAP Terminate Gap Procedure failed\n");
@@ -1287,7 +1295,7 @@ ble_error_t BlueNRGGap::connect (const Gap::Address_t peerAddr,
   (void)connectionParams;
   (void)scanParams;
 
-    // Save the peer address
+  // Save the peer address
   for(int i=0; i<BDADDR_SIZE; i++) {
     _peerAddr[i] = peerAddr[i];
   }
