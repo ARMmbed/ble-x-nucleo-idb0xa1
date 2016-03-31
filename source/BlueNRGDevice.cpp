@@ -142,7 +142,7 @@ ble_error_t BlueNRGDevice::init(BLE::InstanceID_t instanceID, FunctionPointerWit
 	
 	/* ToDo: Clear memory contents, reset the SD, etc. */
 	// By default, we set the device GAP role to PERIPHERAL
-	btle_init(BlueNRGGap::getInstance().getIsSetAddress(), GAP_PERIPHERAL_ROLE_IDB04A1);
+	btleInit(BlueNRGGap::getInstance().getIsSetAddress(), GAP_PERIPHERAL_ROLE_IDB04A1);
 	
 	isInitialized = true;
 	BLE::InitializationCompleteCallbackContext context = {
@@ -205,14 +205,14 @@ void BlueNRGDevice::waitForEvent(void)
  
 /*!
     @brief  get GAP version
+    @brief Get the BLE stack version information
     @param[in] void
     @returns    char *
+    @returns char *
 */
 const char *BlueNRGDevice::getVersion(void)
 {
-    char *version = new char[6];
-    memcpy((void *)version, "1.0.0", 5);
-    return version;
+    return getVersionString();
 }
 
 /**************************************************************************/
@@ -251,11 +251,15 @@ const GattServer &BlueNRGDevice::getGattServer() const
  
 /**************************************************************************/
 /*!
-    @brief  shut down the the BLE device
+    @brief  shut down the BLE device
     @param[out] error if any
 */
 /**************************************************************************/
 ble_error_t  BlueNRGDevice::shutdown(void) {
+    if (!isInitialized) {
+        return BLE_ERROR_INITIALIZATION_INCOMPLETE;
+    }
+
     return reset();
 }
 																							
