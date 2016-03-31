@@ -1055,7 +1055,7 @@ tBleStatus aci_gap_set_broadcast_mode_IDB05A1(uint16_t adv_interv_min, uint16_t 
  * 						   @arg 0x01: Filter duplicates
  * @return Value indicating success or error code.
  */
-tBleStatus aci_gap_start_observation_procedure_IDB05A1(uint16_t scan_interval, uint16_t scan_window, uint8_t scan_type,
+tBleStatus aci_gap_start_observation_procedure(uint16_t scan_interval, uint16_t scan_window, uint8_t scan_type,
 						 uint8_t own_address_type, uint8_t filter_duplicates);
 
 /**
