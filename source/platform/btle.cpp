@@ -74,16 +74,14 @@ extern "C" {
 
 void HCI_Input(tHciDataPacket * hciReadPacket);
 
-//#define BDADDR_SIZE 6
-//tHalUint8 bdaddr[BDADDR_SIZE]= {0xaa, 0x00, 0x00, 0xE1, 0x80, 0x02};
-
 uint16_t g_gap_service_handle = 0;
 uint16_t g_appearance_char_handle = 0;
 uint16_t g_device_name_char_handle = 0;
 
 /* Private variables ---------------------------------------------------------*/
 volatile uint8_t set_connectable = 1;
-// ANDREA
+
+static char versionString[32];
 uint8_t bnrg_expansion_board = IDB04A1; /* at startup, suppose the X-NUCLEO-IDB04A1 is used */
 
 Gap::Address_t bleAddr;
@@ -99,9 +97,9 @@ Gap::AddressType_t addr_type = BLEProtocol::AddressType::PUBLIC;
     @returns void
 */
 /**************************************************************************/
-void btle_init(bool isSetAddress, uint8_t role)
+void btleInit(bool isSetAddress, uint8_t role)
 {
-    PRINTF("btle_init>>\n\r"); 
+    PRINTF("btleInit>>\n\r");
     
     int ret;
     uint8_t  hwVersion;
@@ -133,8 +131,11 @@ void btle_init(bool isSetAddress, uint8_t role)
         bnrg_expansion_board = IDB05A1;
     }
 
+    /* set BLE version string */
+    setVersionString(hwVersion, fwVersion);
+
     /* The Nucleo board must be configured as SERVER */
-    //check if isSetAddress is set than set address.
+    //check if isSetAddress is set then set address.
     // ANDREA
     if(isSetAddress)
     {
@@ -161,7 +162,7 @@ void btle_init(bool isSetAddress, uint8_t role)
         PRINTF("GATT_Init failed.\n");
     }
     if (bnrg_expansion_board == IDB05A1) {
-        ret = aci_gap_init_IDB05A1(GAP_PERIPHERAL_ROLE_IDB05A1|GAP_CENTRAL_ROLE_IDB05A1, 0, 0x07, &service_handle, &dev_name_char_handle, &appearance_char_handle);
+        ret = aci_gap_init_IDB05A1(GAP_PERIPHERAL_ROLE_IDB05A1|GAP_CENTRAL_ROLE_IDB05A1|GAP_OBSERVER_ROLE_IDB05A1, 0, 0x07, &service_handle, &dev_name_char_handle, &appearance_char_handle);
     } else {
         ret = aci_gap_init_IDB04A1(role, &service_handle, &dev_name_char_handle, &appearance_char_handle);
     }
@@ -218,6 +219,45 @@ void btle_handler(void)
 }
 #endif
 
+/* set BLE Version string */
+void setVersionString(uint8_t hwVersion, uint16_t fwVersion)
+{
+    if(bnrg_expansion_board == IDB04A1 || bnrg_expansion_board == IDB05A1) {
+        snprintf(versionString, sizeof(versionString), "ST BLE4.1 HW v%u.%u FW v%u.%u",
+                                                        hwVersion>>4, (hwVersion&0x0F),
+                                                        fwVersion>>8, (fwVersion&0x00F0)>>4);
+    } else {
+        snprintf(versionString, sizeof(versionString), "ST (unknown spec)");
+    }
+}
+
+/* get BLE Version string */
+const char* getVersionString(void)
+{
+    return versionString;
+}
+
+tBleStatus btleStartRadioScan(uint8_t scan_type,
+                              uint16_t scan_interval,
+                              uint16_t scan_window,
+                              uint8_t own_address_type)
+{
+  tBleStatus ret;
+
+  // Observer role is not supported by X-NUCLEO-IDB04A1, return BLE_ERROR_NOT_IMPLEMENTED
+  if(bnrg_expansion_board == IDB05A1) {
+      ret = aci_gap_start_observation_procedure(scan_interval,
+	                                        scan_window,
+                                                scan_type,
+		                                own_address_type,
+                                                1); // 1 to filter duplicates
+  } else {
+      ret = BLE_STATUS_INVALID_CID;
+  }
+
+  return ret;
+
+}
 
 /*!
     @brief  Not Used
@@ -536,8 +576,7 @@ extern "C" {
             //printf("EVT_BLUE_GAP_PROCEDURE_COMPLETE (code=0x%02X)\n\r", pr->procedure_code);
             
             switch(pr->procedure_code) {
-            case GAP_LIMITED_DISCOVERY_PROC:
-            case GAP_GENERAL_DISCOVERY_PROC:
+            case GAP_OBSERVATION_PROC_IDB05A1:
               
               BlueNRGGap::getInstance().Discovery_CB(BlueNRGGap::DISCOVERY_COMPLETE, 0, NULL, NULL, NULL, NULL, NULL);
               break;

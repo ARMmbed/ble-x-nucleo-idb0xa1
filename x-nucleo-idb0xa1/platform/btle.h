@@ -38,10 +38,16 @@ extern uint16_t g_gap_service_handle;
 extern uint16_t g_appearance_char_handle;
 extern uint16_t g_device_name_char_handle;
 	
-void btle_init(bool isSetAddress, uint8_t role);
+void btleInit(bool isSetAddress, uint8_t role);
 void SPI_Poll(void);
 void User_Process(void);
 void setConnectable(void);
+void setVersionString(uint8_t hwVersion, uint16_t fwVersion);
+const char* getVersionString(void);
+tBleStatus btleStartRadioScan(uint8_t scan_type,
+                              uint16_t scan_interval,
+                              uint16_t scan_window,
+                              uint8_t own_address_type);
 
 #ifdef AST_FOR_MBED_OS
 extern int btle_handler_pending;
