@@ -372,7 +372,7 @@ ble_error_t BlueNRGGap::startAdvertising(const GapAdvertisingParams &params)
 
     /* Make sure we support the advertising type */
     if (params.getAdvertisingType() == GapAdvertisingParams::ADV_CONNECTABLE_DIRECTED) {
-        /* ToDo: This requires a propery security implementation, etc. */
+        /* ToDo: This requires a proper security implementation, etc. */
         return BLE_ERROR_NOT_IMPLEMENTED;
     }
 
@@ -415,44 +415,25 @@ ble_error_t BlueNRGGap::startAdvertising(const GapAdvertisingParams &params)
         }
     }
 
-    /*aci_gap_set_discoverable(Advertising_Event_Type, Adv_min_intvl, Adv_Max_Intvl, Addr_Type, Adv_Filter_Policy,
-                        Local_Name_Length, local_name, service_uuid_length, service_uuid_list, Slave_conn_intvl_min, Slave_conn_intvl_max);*/
-    /*LINK_LAYER.H DESCRIBES THE ADVERTISING TYPES*/ 
+    advtInterval = params.getIntervalInADVUnits();
+    PRINTF("advtInterval=%ld\n\r", advtInterval);
 
-    // Enable the else branch if you want to set default device name
-    char* name = NULL;
-    uint8_t nameLen = 0; 
-    if(local_name!=NULL) {
-        name = (char*)local_name;
-        PRINTF("name=%s\n\r", name); 
-        nameLen = local_name_length;
-    } /*else {
-        char str[] = "ST_BLE_DEV";
-        name = new char[strlen(str)+1];
-        name[0] = AD_TYPE_COMPLETE_LOCAL_NAME;
-        strcpy(name+1, str);
-        nameLen = strlen(name);
-        PRINTF("nameLen=%d\n\r", nameLen);
-        PRINTF("name=%s\n\r", name);      
-    }*/
-
-    advtInterval = params.getIntervalInADVUnits(); // set advtInterval in case it is not already set by user application  
-    ret = aci_gap_set_discoverable(params.getAdvertisingType(), // Advertising_Event_Type                                
-        advtInterval,   // Adv_Interval_Min
-        advtInterval,   // Adv_Interval_Max
-        PUBLIC_ADDR, // Address_Type 
-        NO_WHITE_LIST_USE,  // Adv_Filter_Policy
-        nameLen, //local_name_length, // Local_Name_Length
-        (const char*)name, //local_name, // Local_Name
-        servUuidlength,  //Service_Uuid_Length
-        servUuidData, //Service_Uuid_List
-        0, // Slave_Conn_Interval_Min
-        0);  // Slave_Conn_Interval_Max
+    ret = aci_gap_set_discoverable(params.getAdvertisingType(), // AdvType
+                                   advtInterval,                // AdvIntervMin
+                                   advtInterval,                // AdvIntervMax
+                                   PUBLIC_ADDR,                 // OwnAddrType
+                                   NO_WHITE_LIST_USE,           // AdvFilterPolicy
+                                   local_name_length,           // LocalNameLen
+                                   (const char*)local_name,     // LocalName
+                                   servUuidlength,              // ServiceUUIDLen
+                                   servUuidData,                // ServiceUUIDList
+                                   0,                           // SlaveConnIntervMin
+                                   0);                          // SlaveConnIntervMax
 
     
-    PRINTF("!!!setting discoverable (servUuidlength=0x%x)\n", servUuidlength);
+    PRINTF("!!!setting discoverable (servUuidlength=0x%x)\n\r", servUuidlength);
     if(BLE_STATUS_SUCCESS!=ret) {
-       PRINTF("error occurred while setting discoverable (ret=0x%x)\n", ret);
+       PRINTF("error occurred while setting discoverable (ret=0x%x)\n\r", ret);
        switch (ret) {
          case BLE_STATUS_INVALID_PARAMS:
            return BLE_ERROR_INVALID_PARAM;
@@ -469,7 +450,7 @@ ble_error_t BlueNRGGap::startAdvertising(const GapAdvertisingParams &params)
 
     // Before updating the ADV data, delete COMPLETE_LOCAL_NAME and TX_POWER_LEVEL fields (if present)
     if(AdvLen>0) {
-      if(name!=NULL) {
+      if(local_name!=NULL) {
         PRINTF("!!!calling aci_gap_delete_ad_type AD_TYPE_COMPLETE_LOCAL_NAME!!!\n");
         ret = aci_gap_delete_ad_type(AD_TYPE_COMPLETE_LOCAL_NAME);
         if (BLE_STATUS_SUCCESS!=ret){
@@ -1266,13 +1247,13 @@ ble_error_t BlueNRGGap::createConnection ()
     Scan_Interval, Scan_Window, Peer_Address_Type, Peer_Address, Own_Address_Type, Conn_Interval_Min, 
     Conn_Interval_Max, Conn_Latency, Supervision_Timeout, Conn_Len_Min, Conn_Len_Max    
   */
-  ret = aci_gap_create_connection(SCAN_P,
-				  SCAN_L,
+  ret = aci_gap_create_connection(_scanningParams.getInterval(),
+				  _scanningParams.getWindow(),
 				  PUBLIC_ADDR,
 				  (unsigned char*)_peerAddr,
 				  PUBLIC_ADDR,
 				  CONN_P1, CONN_P2, 0,
-				  SUPERV_TIMEOUT, CONN_L1 , CONN_L2);
+				  SUPERV_TIMEOUT, CONN_L1 , CONN_L1);
 
   _connecting = false;
   

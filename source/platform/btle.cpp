@@ -72,6 +72,9 @@ extern "C" {
 #define IDB04A1 0
 #define IDB05A1 1
 
+// Mode 0x03 allows a central to advertise while a connection is ongoing
+#define STACK_MODE (0x03)
+
 void HCI_Input(tHciDataPacket * hciReadPacket);
 
 uint16_t g_gap_service_handle = 0;
@@ -133,6 +136,13 @@ void btleInit(bool isSetAddress, uint8_t role)
 
     /* set BLE version string */
     setVersionString(hwVersion, fwVersion);
+
+    if (bnrg_expansion_board == IDB05A1) {
+        uint8_t stackMode = STACK_MODE;
+        ret = aci_hal_write_config_data(CONFIG_DATA_ROLE,
+                                        CONFIG_DATA_ROLE_LEN,
+                                        &stackMode);
+    }
 
     /* The Nucleo board must be configured as SERVER */
     //check if isSetAddress is set then set address.
@@ -246,10 +256,11 @@ tBleStatus btleStartRadioScan(uint8_t scan_type,
 
   // Observer role is not supported by X-NUCLEO-IDB04A1, return BLE_ERROR_NOT_IMPLEMENTED
   if(bnrg_expansion_board == IDB05A1) {
+      PRINTF("scan_interval=%d scan_window=%d\n\r", scan_interval, scan_window);
       ret = aci_gap_start_observation_procedure(scan_interval,
-	                                        scan_window,
+                                                scan_window,
                                                 scan_type,
-		                                own_address_type,
+                                                own_address_type,
                                                 1); // 1 to filter duplicates
   } else {
       ret = BLE_STATUS_INVALID_CID;

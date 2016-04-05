@@ -52,15 +52,15 @@
 // Scanning and Connection Params used by Central for creating connection
 #define GAP_OBSERVATION_PROC (0x80)
 
-#define SCAN_P         (0x4000)
-#define SCAN_L         (0x4000)
-#define SUPERV_TIMEOUT (600)
+#define SCAN_P         (0x0010)
+#define SCAN_L         (0x0010)
+#define SUPERV_TIMEOUT (0xC80)
 #define CONN_P(x)      ((int)((x)/1.25f))
 #define CONN_L(x)      ((int)((x)/0.625f))
-#define CONN_P1        (CONN_P(50))//(CONN_P(1000))
-#define CONN_P2        (CONN_P(50))//(CONN_P(1000))
-#define CONN_L1        (CONN_L(5)) 
-#define CONN_L2        (CONN_L(5))
+#define CONN_P1        ((int)(_advParams.getInterval()+5)/1.25f)//(0x4C)//(0x6C)
+#define CONN_P2        ((int)(_advParams.getInterval()+5)/1.25f)//(0x4C)//(0x6C)
+#define CONN_L1        (0x000C)
+#define CONN_L2        (0x000C)
 
 #define UUID_BUFFER_SIZE 17 //Either 8*2(16-bit UUIDs) or 4*4(32-bit UUIDs) or 1*16(128-bit UUIDs) +1
 #define ADV_DATA_MAX_SIZE 31
