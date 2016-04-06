@@ -87,9 +87,6 @@ volatile uint8_t set_connectable = 1;
 static char versionString[32];
 uint8_t bnrg_expansion_board = IDB04A1; /* at startup, suppose the X-NUCLEO-IDB04A1 is used */
 
-Gap::Address_t bleAddr;
-Gap::AddressType_t addr_type = BLEProtocol::AddressType::PUBLIC;
-
 /**************************************************************************/
 /*!
     @brief  Initialises BTLE and the underlying HW/Device
@@ -149,14 +146,14 @@ void btleInit(bool isSetAddress, uint8_t role)
     // ANDREA
     if(isSetAddress)
     {
+        Gap::Address_t bleAddr;
+        Gap::AddressType_t addr_type;
+
         BlueNRGGap::getInstance().getAddress(&addr_type, bleAddr);
         
-        Gap::Address_t bdaddr;
-        Osal_MemCpy(bdaddr, bleAddr, BDADDR_SIZE);
-
         ret = aci_hal_write_config_data(CONFIG_DATA_PUBADDR_OFFSET,
                                         CONFIG_DATA_PUBADDR_LEN,
-                                        bdaddr);
+                                        bleAddr);
     } else {
         
         const Gap::Address_t BLE_address_BE = {0xFD,0x66,0x05,0x13,0xBE,0xBA};
@@ -363,7 +360,7 @@ extern "C" {
         hci_event_pckt *event_pckt = (hci_event_pckt*)hci_pckt->data;
         
         if(hci_pckt->type != HCI_EVENT_PKT)
-        return;
+          return;
 
         switch(event_pckt->evt){
             
@@ -371,9 +368,9 @@ extern "C" {
             {
                 PRINTF("EVT_DISCONN_COMPLETE\n");
                 
-                evt_disconn_complete *evt = (evt_disconn_complete*)event_pckt;
+                evt_disconn_complete *evt = (evt_disconn_complete*)event_pckt->data;
                 
-                BlueNRGGap::getInstance().processDisconnectionEvent(evt->handle, BlueNRGGap::REMOTE_USER_TERMINATED_CONNECTION);
+                BlueNRGGap::getInstance().processDisconnectionEvent(evt->handle, (Gap::DisconnectionReason_t)evt->reason);
             }
             break;
             
@@ -388,6 +385,10 @@ extern "C" {
                 case EVT_LE_CONN_COMPLETE:
                     {                            
                         PRINTF("EVT_LE_CONN_COMPLETE\n");
+                        Gap::Address_t ownAddr;
+                        Gap::AddressType_t ownAddrType;
+                        BlueNRGGap::getInstance().getAddress(&ownAddrType, ownAddr);
+
                         Gap::AddressType_t peerAddrType = BLEProtocol::AddressType::PUBLIC;
                         Gap::Role_t role;
                         
@@ -423,7 +424,13 @@ extern "C" {
 				break;
                         }
                         //PRINTF("EVT_LE_CONN_COMPLETE GAP role=%d\n", role);
-                        BlueNRGGap::getInstance().processConnectionEvent(cc->handle, role/*Gap::PERIPHERAL*/, peerAddrType, cc->peer_bdaddr, addr_type, bleAddr, (const BlueNRGGap::ConnectionParams_t *)&connectionParams);                            
+                        BlueNRGGap::getInstance().processConnectionEvent(cc->handle,
+                                                                         role,
+                                                                         peerAddrType,
+                                                                         cc->peer_bdaddr,
+                                                                         ownAddrType,
+                                                                         ownAddr,
+                                                                         &connectionParams);
                     }
                     break;
           
