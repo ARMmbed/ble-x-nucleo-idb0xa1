@@ -179,13 +179,16 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
             case GapAdvertisingData::COMPLETE_LOCAL_NAME:                /**< Complete Local Name */
                 {
                 PRINTF("Advertising type: COMPLETE_LOCAL_NAME\n\r");
-                loadPtr.getUnitAtIndex(index).printDataAsString();       
-                local_name_length = *loadPtr.getUnitAtIndex(index).getLenPtr()-1;                        
-                local_name = (uint8_t*)loadPtr.getUnitAtIndex(index).getAdTypePtr();
-                PRINTF("Advertising type: COMPLETE_LOCAL_NAME local_name=%s\n\r", local_name);
-                //COMPLETE_LOCAL_NAME is only advertising device name. Gatt Device Name is not the same.(Must be set right after GAP/GATT init?)
-                
-                PRINTF("device_name length=%d\n\r", local_name_length);                                    
+                loadPtr.getUnitAtIndex(index).printDataAsString();
+                local_name_length = *loadPtr.getUnitAtIndex(index).getLenPtr()-1;
+                // The total lenght should include the Data Type Value
+                if(local_name_length>LOCAL_NAME_MAX_SIZE-1) {
+                    return BLE_ERROR_INVALID_PARAM;
+                }
+                local_name[0] = (uint8_t)(*loadPtr.getUnitAtIndex(index).getAdTypePtr()); //Data Type Value
+                memcpy(local_name+1, (uint8_t*)loadPtr.getUnitAtIndex(index).getDataPtr(), local_name_length-1);
+                PRINTF("Advertising type: COMPLETE_LOCAL_NAME local_name=%s local_name_length=%d\n\r", local_name, local_name_length);
+
                 break;
                 }
             case GapAdvertisingData::TX_POWER_LEVEL:                     /**< TX Power Level (in dBm) */
@@ -860,11 +863,11 @@ ble_error_t BlueNRGGap::setDeviceName(const uint8_t *deviceName)
     nameLen = strlen((const char*)DeviceName);
     //PRINTF("DeviceName Size=%d\n\r", nameLen); 
     
-    ret = aci_gatt_update_char_value(g_gap_service_handle, 
-    g_device_name_char_handle, 
-    0, 
-    nameLen, 
-    (uint8_t *)DeviceName);
+    ret = aci_gatt_update_char_value(g_gap_service_handle,
+                                     g_device_name_char_handle,
+                                     0,
+                                     nameLen,
+                                     (uint8_t *)DeviceName);
 
     if (BLE_STATUS_SUCCESS != ret){
         PRINTF("device set name failed (ret=0x%x)!!\n\r", ret) ;
@@ -1151,9 +1154,13 @@ ble_error_t BlueNRGGap::startRadioScan(const GapScanningParams &scanningParams)
 {
   
   tBleStatus ret = BLE_STATUS_SUCCESS;
-  
-  PRINTF("Scanning...\n\r");
 
+  // Stop ADV before scanning
+  if (state.advertising == 1) {
+    stopAdvertising();
+  }
+
+  PRINTF("Scanning...\n\r");
   ret = btleStartRadioScan(scanningParams.getActiveScanning(),
                            scanningParams.getInterval(),
                            scanningParams.getWindow(),
@@ -1242,13 +1249,14 @@ void BlueNRGGap::getPermittedTxPowerValues(const int8_t **valueArrayPP, size_t *
 ble_error_t BlueNRGGap::createConnection ()
 {
   tBleStatus ret;
+  GapScanningParams* scanningParams = getScanningParams();
   
   /*
     Scan_Interval, Scan_Window, Peer_Address_Type, Peer_Address, Own_Address_Type, Conn_Interval_Min, 
     Conn_Interval_Max, Conn_Latency, Supervision_Timeout, Conn_Len_Min, Conn_Len_Max    
   */
-  ret = aci_gap_create_connection(_scanningParams.getInterval(),
-				  _scanningParams.getWindow(),
+  ret = aci_gap_create_connection(scanningParams->getInterval(),
+				  scanningParams->getWindow(),
 				  PUBLIC_ADDR,
 				  (unsigned char*)_peerAddr,
 				  PUBLIC_ADDR,

@@ -62,7 +62,8 @@
 #define CONN_L1        (0x000C)
 #define CONN_L2        (0x000C)
 
-#define UUID_BUFFER_SIZE 17 //Either 8*2(16-bit UUIDs) or 4*4(32-bit UUIDs) or 1*16(128-bit UUIDs) +1
+#define LOCAL_NAME_MAX_SIZE 9 //8 + 1(AD_DATA_TYPE)
+#define UUID_BUFFER_SIZE 17 //Either 8*2(16-bit UUIDs) or 4*4(32-bit UUIDs) or 1*16(128-bit UUIDs) +1(AD_DATA_TYPE)
 #define ADV_DATA_MAX_SIZE 31
 
 /**************************************************************************/
@@ -162,8 +163,8 @@ private:
     uint8_t *DeviceName;
     uint8_t deviceAppearance[2];
 
-    uint8_t *local_name;
     uint8_t local_name_length;
+    uint8_t local_name[LOCAL_NAME_MAX_SIZE];
 
     uint8_t servUuidlength;
     uint8_t servUuidData[UUID_BUFFER_SIZE];
