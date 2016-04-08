@@ -419,7 +419,7 @@ ble_error_t BlueNRGGap::startAdvertising(const GapAdvertisingParams &params)
     }
 
     advtInterval = params.getIntervalInADVUnits();
-    PRINTF("advtInterval=%ld\n\r", advtInterval);
+    printf("advtInterval=%ld advType=%d\n\r", advtInterval, params.getAdvertisingType());
 
     ret = aci_gap_set_discoverable(params.getAdvertisingType(), // AdvType
                                    advtInterval,                // AdvIntervMin
@@ -434,9 +434,9 @@ ble_error_t BlueNRGGap::startAdvertising(const GapAdvertisingParams &params)
                                    0);                          // SlaveConnIntervMax
 
     
-    PRINTF("!!!setting discoverable (servUuidlength=0x%x)\n\r", servUuidlength);
+    printf("!!!setting discoverable (servUuidlength=0x%x)\n\r", servUuidlength);
     if(BLE_STATUS_SUCCESS!=ret) {
-       PRINTF("error occurred while setting discoverable (ret=0x%x)\n\r", ret);
+       printf("error occurred while setting discoverable (ret=0x%x)\n\r", ret);
        switch (ret) {
          case BLE_STATUS_INVALID_PARAMS:
            return BLE_ERROR_INVALID_PARAM;
@@ -1156,9 +1156,11 @@ ble_error_t BlueNRGGap::startRadioScan(const GapScanningParams &scanningParams)
   tBleStatus ret = BLE_STATUS_SUCCESS;
 
   // Stop ADV before scanning
+  /*
   if (state.advertising == 1) {
     stopAdvertising();
   }
+  */
 
   PRINTF("Scanning...\n\r");
   ret = btleStartRadioScan(scanningParams.getActiveScanning(),

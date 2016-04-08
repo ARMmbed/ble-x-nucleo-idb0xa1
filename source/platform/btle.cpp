@@ -72,8 +72,8 @@ extern "C" {
 #define IDB04A1 0
 #define IDB05A1 1
 
-// Mode 0x03 allows a central to advertise while a connection is ongoing
-#define STACK_MODE (0x03)
+// Stack Mode 0x04 allows Simultaneous Scanning and Advertisement (SSAdv)
+#define STACK_MODE (0x04)
 
 void HCI_Input(tHciDataPacket * hciReadPacket);
 
