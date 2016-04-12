@@ -45,9 +45,9 @@
 #define BLE_CONN_HANDLE_INVALID 0x0
 #define BDADDR_SIZE 6
 
-#define BLUENRG_GAP_ADV_INTERVAL_MIN (0)
-#define BLUENRG_GAP_ADV_INTERVAL_MAX (0)
-#define BLE_GAP_ADV_NONCON_INTERVAL_MIN (0)
+#define BLUENRG_GAP_ADV_INTERVAL_MIN (0x0020)
+#define BLUENRG_GAP_ADV_INTERVAL_MAX (0x00A0)
+#define BLUENRG_GAP_ADV_NONCON_INTERVAL_MIN (0x4000)
 
 // Scanning and Connection Params used by Central for creating connection
 #define GAP_OBSERVATION_PROC (0x80)
@@ -101,9 +101,9 @@ public:
     virtual ble_error_t startAdvertising(const GapAdvertisingParams &);
     virtual ble_error_t stopAdvertising(void);
     virtual ble_error_t stopScan();
-    virtual uint16_t    getMinAdvertisingInterval(void) const;
-    virtual uint16_t    getMinNonConnectableAdvertisingInterval(void) const;
-    virtual uint16_t    getMaxAdvertisingInterval(void) const;
+    virtual uint16_t    getMinAdvertisingInterval(void) const {return GapAdvertisingParams::ADVERTISEMENT_DURATION_UNITS_TO_MS(BLUENRG_GAP_ADV_INTERVAL_MIN);}
+    virtual uint16_t    getMinNonConnectableAdvertisingInterval(void) const {return GapAdvertisingParams::ADVERTISEMENT_DURATION_UNITS_TO_MS(BLUENRG_GAP_ADV_NONCON_INTERVAL_MIN);}
+    virtual uint16_t    getMaxAdvertisingInterval(void) const {return GapAdvertisingParams::ADVERTISEMENT_DURATION_UNITS_TO_MS(BLUENRG_GAP_ADV_INTERVAL_MAX);}
     virtual ble_error_t disconnect(DisconnectionReason_t reason);
     virtual ble_error_t disconnect(Handle_t connectionHandle, DisconnectionReason_t reason);
     virtual ble_error_t getPreferredConnectionParams(ConnectionParams_t *params);

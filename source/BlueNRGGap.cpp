@@ -1002,64 +1002,6 @@ ble_error_t BlueNRGGap::getAppearance(GapAdvertisingData::Appearance *appearance
     return BLE_ERROR_NONE;    
 }
 
-/**************************************************************************/
-/*!
-    @brief  Gets the value of maximum advertising interval in ms
-
-    @returns    uint16_t
-
-    @retval     value of maximum advertising interval in ms
-                
-    @section EXAMPLE
-
-    @code
-
-    @endcode
-*/
-/**************************************************************************/
-uint16_t BlueNRGGap::getMaxAdvertisingInterval(void) const  {
-    return advtInterval;
-} 
-
-
-/**************************************************************************/
-/*!
-    @brief  Gets the value of minimum advertising interval in ms
-
-    @returns    uint16_t
-
-    @retval     value of minimum advertising interval in ms
-                
-    @section EXAMPLE
-
-    @code
-
-    @endcode
-*/
-/**************************************************************************/
-uint16_t BlueNRGGap::getMinAdvertisingInterval(void) const {    
-    return 0;    // minimum Advertising interval is 0
-}
-
-/**************************************************************************/
-/*!
-    @brief  Gets the value of minimum non connectable advertising interval in ms
-
-    @returns    uint16_t
-
-    @retval     value of minimum non connectable advertising interval in ms
-                
-    @section EXAMPLE
-
-    @code
-
-    @endcode
-*/
-/**************************************************************************/
-uint16_t BlueNRGGap::getMinNonConnectableAdvertisingInterval(void) const {     
-    return BLE_GAP_ADV_NONCON_INTERVAL_MIN;    
-}
-
 GapScanningParams* BlueNRGGap::getScanningParams(void)
 {
   return &_scanningParams;
