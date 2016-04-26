@@ -231,25 +231,21 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
                 memcpy(AdvData+2, loadPtr.getUnitAtIndex(index).getDataPtr(), buffSize);
                 break;
                 }
-            case GapAdvertisingData::APPEARANCE:   
+            case GapAdvertisingData::APPEARANCE:			/**< Appearance */
                 {
-                /* 
-                    Tested with GapAdvertisingData::GENERIC_PHONE. 
-                    for other appearances BLE Scanner android app is not behaving properly 
-                    */
                 PRINTF("Advertising type: APPEARANCE\n\r");
-                const char *deviceAppearance = NULL;                    
-                deviceAppearance = (const char*)loadPtr.getUnitAtIndex(index).getDataPtr();  // to be set later when startAdvertising() is called
+                uint8_t buffSize = *loadPtr.getUnitAtIndex(index).getLenPtr()-1;
+                if(buffSize>ADV_DATA_MAX_SIZE-2) {
+                    return BLE_ERROR_PARAM_OUT_OF_RANGE;
+                }
+                GapAdvertisingData::Appearance appearanceP;
+                memcpy(deviceAppearance, loadPtr.getUnitAtIndex(index).getDataPtr(), 2);
                 
-#ifdef DEBUG
-                uint8_t Appearance[2] = {0, 0};
-                uint16_t devP = (uint16_t)*deviceAppearance;
-                STORE_LE_16(Appearance, (uint16_t)devP);
-#endif
-                
-                PRINTF("input: deviceAppearance= 0x%x 0x%x..., strlen(deviceAppearance)=%d\n\r", Appearance[1], Appearance[0], (uint8_t)*loadPtr.getUnitAtIndex(index).getLenPtr()-1);         /**< \ref Appearance */
-                
-                aci_gatt_update_char_value(g_gap_service_handle, g_appearance_char_handle, 0, 2, (uint8_t *)deviceAppearance);//not using array Appearance[2]
+                PRINTF("input: deviceAppearance= 0x%x 0x%x\n\r", deviceAppearance[1], deviceAppearance[0]);
+
+                appearanceP = (GapAdvertisingData::Appearance)(deviceAppearance[1]<<8|deviceAppearance[0]);
+                /* Align the GAP Service Appearance Char value coherently */
+                setAppearance(appearanceP);
                 break;
                 }
             case GapAdvertisingData::ADVERTISING_INTERVAL:               /**< Advertising Interval */
@@ -406,16 +402,25 @@ ble_error_t BlueNRGGap::startAdvertising(const GapAdvertisingParams &params)
         return BLE_ERROR_PARAM_OUT_OF_RANGE;
     }
 
-    /* set scan response data */
-    ret = hci_le_set_scan_resp_data(scan_rsp_length, scan_response_payload);
-    if(BLE_STATUS_SUCCESS!=ret) {
-        PRINTF(" error while setting scan response data (ret=0x%x)\n", ret);
-        switch (ret) {
-          case BLE_STATUS_TIMEOUT:
-            return BLE_STACK_BUSY;
-          default:
-            return BLE_ERROR_UNSPECIFIED;
+    /* Check the ADV type before setting scan response data */
+    if (params.getAdvertisingType() == GapAdvertisingParams::ADV_CONNECTABLE_UNDIRECTED ||
+        params.getAdvertisingType() == GapAdvertisingParams::ADV_SCANNABLE_UNDIRECTED) {
+
+        /* set scan response data */
+        PRINTF(" setting scan response data (scan_rsp_length=%u)\n", scan_rsp_length);
+        ret = hci_le_set_scan_resp_data(scan_rsp_length, scan_response_payload);
+
+        if(BLE_STATUS_SUCCESS!=ret) {
+            PRINTF(" error while setting scan response data (ret=0x%x)\n", ret);
+            switch (ret) {
+              case BLE_STATUS_TIMEOUT:
+                return BLE_STACK_BUSY;
+              default:
+                return BLE_ERROR_UNSPECIFIED;
+            }
         }
+    } else {
+        hci_le_set_scan_resp_data(0, NULL);
     }
 
     advtInterval = params.getIntervalInADVUnits();
@@ -424,7 +429,7 @@ ble_error_t BlueNRGGap::startAdvertising(const GapAdvertisingParams &params)
     ret = aci_gap_set_discoverable(params.getAdvertisingType(), // AdvType
                                    advtInterval,                // AdvIntervMin
                                    advtInterval,                // AdvIntervMax
-                                   PUBLIC_ADDR,                 // OwnAddrType
+                                   addr_type,                   // OwnAddrType
                                    NO_WHITE_LIST_USE,           // AdvFilterPolicy
                                    local_name_length,           // LocalNameLen
                                    (const char*)local_name,     // LocalName
@@ -452,8 +457,8 @@ ble_error_t BlueNRGGap::startAdvertising(const GapAdvertisingParams &params)
     }
 
     // Before updating the ADV data, delete COMPLETE_LOCAL_NAME and TX_POWER_LEVEL fields (if present)
-    if(AdvLen>0) {
-      if(local_name!=NULL) {
+    if(AdvLen > 0) {
+      if(local_name_length > 0) {
         PRINTF("!!!calling aci_gap_delete_ad_type AD_TYPE_COMPLETE_LOCAL_NAME!!!\n");
         ret = aci_gap_delete_ad_type(AD_TYPE_COMPLETE_LOCAL_NAME);
         if (BLE_STATUS_SUCCESS!=ret){
@@ -493,8 +498,14 @@ ble_error_t BlueNRGGap::startAdvertising(const GapAdvertisingParams &params)
               return BLE_ERROR_UNSPECIFIED;
           }
       }
-      
+
     } // AdvLen>0
+
+    if(deviceAppearance != 0) {
+      PRINTF("deviceAppearance != 0\n\r");
+      uint8_t appearance[] = {3, AD_TYPE_APPEARANCE, deviceAppearance[0], deviceAppearance[1]};
+      aci_gap_update_adv_data(4, appearance);
+    }
 
     state.advertising = 1;
 
@@ -703,24 +714,28 @@ uint16_t BlueNRGGap::getConnectionHandle(void)
     @endcode
 */
 /**************************************************************************/
+/*
 ble_error_t BlueNRGGap::setAddress(AddressType_t type, const Address_t address)
 {
+    tBleStatus ret;
+
     if (type > BLEProtocol::AddressType::RANDOM_PRIVATE_NON_RESOLVABLE) {
         return BLE_ERROR_PARAM_OUT_OF_RANGE;
     }
     
     addr_type = type;
-    //copy address to bdAddr[6]
-    for(int i=0; i<BDADDR_SIZE; i++) {
-        bdaddr[i] = address[i];
-        //PRINTF("i[%d]:0x%x\n\r",i,bdaddr[i]);
+
+    // If Address Type is other than PUBLIC, the given Address is ignored
+    if(addr_type == BLEProtocol::AddressType::PUBLIC){
+        ret = aci_hal_write_config_data(CONFIG_DATA_PUBADDR_OFFSET,
+                                        CONFIG_DATA_PUBADDR_LEN,
+                                        address);
+        printf("setAddress (ret=0x%02X)\n\r", ret);
     }
-    
-    if(!isSetAddress) isSetAddress = true;
     
     return BLE_ERROR_NONE;
 }
-
+*/
 /**************************************************************************/
 /*!
     @brief      Returns boolean if the address of the device has been set
@@ -755,14 +770,13 @@ bool BlueNRGGap::getIsSetAddress()
 /**************************************************************************/
 ble_error_t BlueNRGGap::getAddress(AddressType_t *typeP, Address_t address) 
 {
-    *typeP = addr_type;//Gap::ADDR_TYPE_PUBLIC;
-    
-    if(isSetAddress)
-    {
-        for(int i=0; i<BDADDR_SIZE; i++) {
-            address[i] = bdaddr[i];
-            //PRINTF("i[%d]:0x%x\n\r",i,bdaddr[i]);
-        }
+    if(typeP != NULL) {
+        *typeP = addr_type;
+    }
+
+    hci_read_bd_addr(bdaddr);
+    if(address != NULL) {
+        memcpy(address, bdaddr, BDADDR_SIZE);
     }
         
     return BLE_ERROR_NONE;
@@ -857,17 +871,14 @@ ble_error_t BlueNRGGap::setDeviceName(const uint8_t *deviceName)
     tBleStatus ret;
     uint8_t nameLen = 0;     
     
-    DeviceName = (uint8_t *)deviceName;
-    //PRINTF("SetDeviceName=%s\n\r", DeviceName);
-    
-    nameLen = strlen((const char*)DeviceName);
-    //PRINTF("DeviceName Size=%d\n\r", nameLen); 
-    
+    nameLen = strlen((const char*)deviceName);
+    PRINTF("DeviceName Size=%d\n\r", nameLen);
+
     ret = aci_gatt_update_char_value(g_gap_service_handle,
                                      g_device_name_char_handle,
                                      0,
                                      nameLen,
-                                     (uint8_t *)DeviceName);
+                                     deviceName);
 
     if (BLE_STATUS_SUCCESS != ret){
         PRINTF("device set name failed (ret=0x%x)!!\n\r", ret) ;
@@ -909,18 +920,20 @@ ble_error_t BlueNRGGap::setDeviceName(const uint8_t *deviceName)
     @endcode
 */
 /**************************************************************************/
-ble_error_t BlueNRGGap::getDeviceName(uint8_t *deviceName, unsigned *lengthP) 
-{   
-    if(DeviceName==NULL) 
-      return BLE_ERROR_UNSPECIFIED;
-    
-    strcpy((char*)deviceName, (const char*)DeviceName);
-    //PRINTF("GetDeviceName=%s\n\r", deviceName);
-    
-    *lengthP = strlen((const char*)DeviceName);
-    //PRINTF("DeviceName Size=%d\n\r", *lengthP); 
-    
-    return BLE_ERROR_NONE;
+ble_error_t BlueNRGGap::getDeviceName(uint8_t *deviceName, unsigned *lengthP)
+{
+    tBleStatus ret;
+
+    ret = aci_gatt_read_handle_value(g_device_name_char_handle+CHAR_VALUE_OFFSET,
+                                     *lengthP,
+                                     (uint16_t *)lengthP,
+                                     deviceName);
+    PRINTF("getDeviceName ret=0x%02x (lengthP=%d)\n\r", ret, *lengthP);
+    if (ret == BLE_STATUS_SUCCESS) {
+        return BLE_ERROR_NONE;
+    } else {
+        return BLE_ERROR_PARAM_OUT_OF_RANGE;
+    }
 }
 
 /**************************************************************************/
@@ -945,16 +958,14 @@ ble_error_t BlueNRGGap::getDeviceName(uint8_t *deviceName, unsigned *lengthP)
 ble_error_t BlueNRGGap::setAppearance(GapAdvertisingData::Appearance appearance)
 {
     tBleStatus ret;
+    uint8_t deviceAppearance[2];
 
-    /* 
-    Tested with GapAdvertisingData::GENERIC_PHONE. 
-    for other appearances BLE Scanner android app is not behaving properly 
-    */
-    //char deviceAppearance[2];   
     STORE_LE_16(deviceAppearance, appearance);                 
     PRINTF("input: incoming = %d deviceAppearance= 0x%x 0x%x\n\r", appearance, deviceAppearance[1], deviceAppearance[0]);
     
-    ret = aci_gatt_update_char_value(g_gap_service_handle, g_appearance_char_handle, 0, 2, (uint8_t *)deviceAppearance);
+    ret = aci_gatt_update_char_value(g_gap_service_handle,
+                                     g_appearance_char_handle,
+                                     0, 2, (uint8_t *)deviceAppearance);
     if (BLE_STATUS_SUCCESS == ret){
         return BLE_ERROR_NONE;
     }
@@ -994,12 +1005,20 @@ ble_error_t BlueNRGGap::setAppearance(GapAdvertisingData::Appearance appearance)
 /**************************************************************************/
 ble_error_t BlueNRGGap::getAppearance(GapAdvertisingData::Appearance *appearanceP)
 {
-    uint16_t devP;
-    if(!appearanceP) return BLE_ERROR_PARAM_OUT_OF_RANGE;
-    devP = ((uint16_t)(0x0000|deviceAppearance[0])) | (((uint16_t)(0x0000|deviceAppearance[1]))<<8);
-    strcpy((char*)appearanceP, (const char*)&devP);
-    
-    return BLE_ERROR_NONE;    
+    tBleStatus ret;
+    uint16_t lengthP = 2;
+
+    ret = aci_gatt_read_handle_value(g_appearance_char_handle+CHAR_VALUE_OFFSET,
+                                     lengthP,
+                                     &lengthP,
+                                     (uint8_t*)appearanceP);
+    PRINTF("getAppearance ret=0x%02x (lengthP=%d)\n\r", ret, lengthP);
+    if (ret == BLE_STATUS_SUCCESS) {
+        return BLE_ERROR_NONE;
+    } else {
+        return BLE_ERROR_PARAM_OUT_OF_RANGE;
+    }
+
 }
 
 GapScanningParams* BlueNRGGap::getScanningParams(void)
@@ -1157,18 +1176,15 @@ ble_error_t BlueNRGGap::setTxPower(int8_t txPower)
     int8_t enHighPower = 0;
     int8_t paLevel = 0;
 
-    int8_t dbmActuallySet = getHighPowerAndPALevelValue(txPower, enHighPower, paLevel);
+    ret = getHighPowerAndPALevelValue(txPower, enHighPower, paLevel);
+    if(ret!=BLE_STATUS_SUCCESS) {
+        return BLE_ERROR_PARAM_OUT_OF_RANGE;
+    }
 
-#ifndef DEBUG
-    /* avoid compiler warnings about unused variables */
-    (void)dbmActuallySet;
-#endif
-    
-    PRINTF("txPower=%d, dbmActuallySet=%d\n\r", txPower, dbmActuallySet);
     PRINTF("enHighPower=%d, paLevel=%d\n\r", enHighPower, paLevel);                    
     ret = aci_hal_set_tx_power_level(enHighPower, paLevel);
     if(ret!=BLE_STATUS_SUCCESS) {
-      return BLE_ERROR_UNSPECIFIED;
+      return BLE_ERROR_PARAM_OUT_OF_RANGE;
     }
 
     return BLE_ERROR_NONE;
@@ -1183,7 +1199,7 @@ ble_error_t BlueNRGGap::setTxPower(int8_t txPower)
 /**************************************************************************/
 void BlueNRGGap::getPermittedTxPowerValues(const int8_t **valueArrayPP, size_t *countP) {
     static const int8_t permittedTxValues[] = {
-        -18, -14, -11, -8, -4, -1, 1, 5, -15, -11, -8, -5, -2, 1, 4, 8
+        -18, -15, -14, -12, -11, -9, -8, -6, -5 -2, 0, 2, 4, 5, 8
     };
 
     *valueArrayPP = permittedTxValues;

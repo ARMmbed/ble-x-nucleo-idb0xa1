@@ -95,7 +95,7 @@ public:
     };
     
     /* Functions that must be implemented from Gap */
-    virtual ble_error_t setAddress(addr_type_t type,   const Address_t address);
+    /*virtual ble_error_t setAddress(addr_type_t type,   const Address_t address);*/
     virtual ble_error_t getAddress(addr_type_t *typeP, Address_t address);
     virtual ble_error_t setAdvertisingData(const GapAdvertisingData &, const GapAdvertisingData &);
     virtual ble_error_t startAdvertising(const GapAdvertisingParams &);
@@ -160,7 +160,6 @@ private:
     bool _scanning;
     bool _connecting;
     bool isSetAddress;
-    uint8_t *DeviceName;
     uint8_t deviceAppearance[2];
 
     uint8_t local_name_length;
@@ -177,9 +176,9 @@ private:
 
     BlueNRGGap() {
         m_connectionHandle = BLE_CONN_HANDLE_INVALID;
-        addr_type = BLEProtocol::AddressType::PUBLIC;
+        addr_type = BLEProtocol::AddressType::RANDOM_STATIC;
         isSetAddress = false;
-        DeviceName = NULL;     
+        memset(deviceAppearance, 0, sizeof(deviceAppearance));
     }
 
     BlueNRGGap(BlueNRGGap const &);
