@@ -129,10 +129,13 @@
  */
 
 /* service data AD type */
-#define AD_TYPE_SERVICE_DATA					(0x16)	
+#define AD_TYPE_SERVICE_DATA			(0x16)
 
 /* manufaturer specific data AD type */
-#define AD_TYPE_MANUFACTURER_SPECIFIC_DATA		(0xFF)
+#define AD_TYPE_MANUFACTURER_SPECIFIC_DATA	(0xFF)
+
+/* appearance AD type */
+#define AD_TYPE_APPEARANCE			(0x19)
 
 /**
  * @}
