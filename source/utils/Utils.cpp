@@ -20,106 +20,74 @@
 /*!
     @brief  sets values of EN_HIGH_POWER and PA_LEVEL corresponding to dBMLevel of tx power
 
-    @returns    value of tx power in dbm actually set
-
-    @params[in] dBMLevel
-                dBMLevel of tx power to be set
-                
-    @params[in] dBMLevel
-                dBMLevel of tx power to be set                
-                
-    @endcode
 */
 /**************************************************************************/
-double getHighPowerAndPALevelValue(int8_t dBMLevel, int8_t& EN_HIGH_POWER, int8_t& PA_LEVEL) {
-    double dbm = (double) dBMLevel;
-    if(dbm<-18.0) {
-        dbm = -18;
+tBleStatus getHighPowerAndPALevelValue(int8_t dBMLevel, int8_t& EN_HIGH_POWER, int8_t& PA_LEVEL) {
+    tBleStatus ret = BLE_STATUS_SUCCESS;
+
+    if(dBMLevel==-18) {
         EN_HIGH_POWER = 0;
         PA_LEVEL = 0;         
     }
-    else if(dbm>8.0) {
-        dbm = 8;
-        EN_HIGH_POWER = 1;
-        PA_LEVEL = 7;        
-    }
-    
-    // As a policy we are setting tx power level to the higher side
-    if((dbm>-18.0) && (dbm<=-15)) {
-        // set tx power to -15dBM
+    else if(dBMLevel==-15) {
         EN_HIGH_POWER = 0;
+        PA_LEVEL = 1;
+    }
+    else if(dBMLevel==-14) {
+        EN_HIGH_POWER = 1;
         PA_LEVEL = 0;
     }
-    else if((dbm>-15) && (dbm<=-14.7)) {
-        // set tx power to -14.7dBM
+    else if(dBMLevel==-12) {
         EN_HIGH_POWER = 0;
-        PA_LEVEL = 1;         
+        PA_LEVEL = 2;
     }
-    else if((dbm>-14.7) && (dbm<=-11.7)) {
-        // set tx power to -11.7dBM
+    else if(dBMLevel==-11) {
         EN_HIGH_POWER = 1;
-        PA_LEVEL = 1;            
-    }   
-    else if((dbm>-11.7) && (dbm<=-11.4)) {
-        // set tx power to -11.4dBM
+        PA_LEVEL = 1;
+    }
+    else if(dBMLevel==-9) {
         EN_HIGH_POWER = 0;
-        PA_LEVEL = 2;            
+        PA_LEVEL = 3;
     }
-    else if((dbm>-11.4) && (dbm<=-8.4)) {
-        // set tx power to -8.4dBM
+    else if(dBMLevel==-8) {
         EN_HIGH_POWER = 1;
-        PA_LEVEL = 2;           
-    }  
-    else if((dbm>-8.4) && (dbm<=-8.1)) {
-        // set tx power to -8.1dBM
+        PA_LEVEL = 2;
+    }
+    else if(dBMLevel==-6) {
         EN_HIGH_POWER = 0;
-        PA_LEVEL = 3;           
+        PA_LEVEL = 4;
     }
-    else if((dbm>-8.1) && (dbm<=-5.1)) {
-        // set tx power to -5.1dBM
+    else if(dBMLevel==-5) {
         EN_HIGH_POWER = 1;
-        PA_LEVEL = 3;          
-    }   
-    else if((dbm>-5.1) && (dbm<=-4.9)) {
-        // set tx power to -4.9dBM
+        PA_LEVEL = 3;
+    }
+    else if(dBMLevel==-2) {
+        EN_HIGH_POWER = 1;
+        PA_LEVEL = 4;
+    }
+    else if(dBMLevel==0) {
         EN_HIGH_POWER = 0;
-        PA_LEVEL = 4;            
+        PA_LEVEL = 6;
     }
-    else if((dbm>-4.9) && (dbm<=-2.1)) {
-        // set tx power to -2.1dBM
+    else if(dBMLevel==2) {
         EN_HIGH_POWER = 1;
-        PA_LEVEL = 4;          
+        PA_LEVEL = 5;
     }
-    else if((dbm>-2.1) && (dbm<=-1.6)) {
-        // set tx power to -1.6dBM
+    else if(dBMLevel==4) {
+        EN_HIGH_POWER = 1;
+        PA_LEVEL = 6;
+    }
+    else if(dBMLevel==5) {
         EN_HIGH_POWER = 0;
-        PA_LEVEL = 5;           
+        PA_LEVEL = 7;
     }
-    else if((dbm>-1.6) && (dbm<=1.4)) {
-        // set tx power to -1.6dBM
+    else if(dBMLevel==8) {
         EN_HIGH_POWER = 1;
-        PA_LEVEL = 5;           
-    }   
-    else if((dbm>1.4) && (dbm<=1.7)) {
-        // set tx power to 1.7dBM
-        EN_HIGH_POWER = 0;
-        PA_LEVEL = 6;            
+        PA_LEVEL = 7;
     }
-    else if((dbm>1.7) && (dbm<=4.7)) {
-        // set tx power to 4.7dBM
-        EN_HIGH_POWER = 1;
-        PA_LEVEL = 6;            
-    }  
-    else if((dbm>4.7) && (dbm<=5.0)) {
-        // set tx power to 5.0dBM
-        EN_HIGH_POWER = 0;
-        PA_LEVEL = 7;           
+    else {
+        ret = ERR_INVALID_HCI_CMD_PARAMS;
     }
-    else if((dbm>5.0) && (dbm<=8)) {
-        // set tx power to 8.0dBM
-        EN_HIGH_POWER = 1;
-        PA_LEVEL = 7;              
-    }  
-    
-    return dbm;         
+
+    return ret;
 }

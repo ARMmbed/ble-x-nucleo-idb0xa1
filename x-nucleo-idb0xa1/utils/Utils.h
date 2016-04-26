@@ -20,6 +20,7 @@
 #ifndef __UTIL_H__
 #define __UTIL_H__
 
+#include "ble_status.h"
 #include "hal_types.h"
 #include "mbed-drivers/mbed.h"
 
@@ -40,7 +41,7 @@
     }while(0)
 
 
-double getHighPowerAndPALevelValue(int8_t dBMLevel, int8_t& EN_HIGH_POWER, int8_t& PA_LEVEL);
+tBleStatus getHighPowerAndPALevelValue(int8_t dBMLevel, int8_t& EN_HIGH_POWER, int8_t& PA_LEVEL);
 
 #endif // __UTIL_H__
 		
