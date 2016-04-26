@@ -144,25 +144,27 @@ void btleInit(bool isSetAddress, uint8_t role)
     /* The Nucleo board must be configured as SERVER */
     //check if isSetAddress is set then set address.
     // ANDREA
+#if 0
     if(isSetAddress)
     {
         Gap::Address_t bleAddr;
         Gap::AddressType_t addr_type;
 
         BlueNRGGap::getInstance().getAddress(&addr_type, bleAddr);
-        
+
         ret = aci_hal_write_config_data(CONFIG_DATA_PUBADDR_OFFSET,
                                         CONFIG_DATA_PUBADDR_LEN,
                                         bleAddr);
     } else {
         
         const Gap::Address_t BLE_address_BE = {0xFD,0x66,0x05,0x13,0xBE,0xBA};
-        BlueNRGGap::getInstance().setAddress(BLEProtocol::AddressType::PUBLIC, BLE_address_BE);
+        BlueNRGGap::getInstance().setAddress(BLEProtocol::AddressType::RANDOM_STATIC, BLE_address_BE);
         
         ret = aci_hal_write_config_data(CONFIG_DATA_PUBADDR_OFFSET,
                                         CONFIG_DATA_PUBADDR_LEN,
                                         BLE_address_BE);
     }
+#endif
     
     ret = aci_gatt_init();
     if(ret){
@@ -389,7 +391,7 @@ extern "C" {
                         Gap::AddressType_t ownAddrType;
                         BlueNRGGap::getInstance().getAddress(&ownAddrType, ownAddr);
 
-                        Gap::AddressType_t peerAddrType = BLEProtocol::AddressType::PUBLIC;
+                        Gap::AddressType_t peerAddrType = BLEProtocol::AddressType::RANDOM_STATIC;
                         Gap::Role_t role;
                         
                         evt_le_connection_complete *cc = (evt_le_connection_complete *)evt->data;
