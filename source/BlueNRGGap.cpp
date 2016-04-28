@@ -424,7 +424,7 @@ ble_error_t BlueNRGGap::startAdvertising(const GapAdvertisingParams &params)
     }
 
     advtInterval = params.getIntervalInADVUnits();
-    printf("advtInterval=%ld advType=%d\n\r", advtInterval, params.getAdvertisingType());
+    PRINTF("advtInterval=%ld advType=%d\n\r", advtInterval, params.getAdvertisingType());
 
     ret = aci_gap_set_discoverable(params.getAdvertisingType(), // AdvType
                                    advtInterval,                // AdvIntervMin
@@ -439,9 +439,9 @@ ble_error_t BlueNRGGap::startAdvertising(const GapAdvertisingParams &params)
                                    0);                          // SlaveConnIntervMax
 
     
-    printf("!!!setting discoverable (servUuidlength=0x%x)\n\r", servUuidlength);
+    PRINTF("!!!setting discoverable (servUuidlength=0x%x)\n\r", servUuidlength);
     if(BLE_STATUS_SUCCESS!=ret) {
-       printf("error occurred while setting discoverable (ret=0x%x)\n\r", ret);
+       PRINTF("error occurred while setting discoverable (ret=0x%x)\n\r", ret);
        switch (ret) {
          case BLE_STATUS_INVALID_PARAMS:
            return BLE_ERROR_INVALID_PARAM;
@@ -730,7 +730,7 @@ ble_error_t BlueNRGGap::setAddress(AddressType_t type, const Address_t address)
         ret = aci_hal_write_config_data(CONFIG_DATA_PUBADDR_OFFSET,
                                         CONFIG_DATA_PUBADDR_LEN,
                                         address);
-        printf("setAddress (ret=0x%02X)\n\r", ret);
+        PRINTF("setAddress (ret=0x%02X)\n\r", ret);
     }
     
     return BLE_ERROR_NONE;
@@ -1139,10 +1139,10 @@ ble_error_t BlueNRGGap::startRadioScan(const GapScanningParams &scanningParams)
   // Observer role is not supported by X-NUCLEO-IDB04A1, return BLE_ERROR_NOT_IMPLEMENTED
   switch (ret) {
     case BLE_STATUS_INVALID_CID:
-      printf("Observation Procedure not implemented!!!\n\r");
+      PRINTF("Observation Procedure not implemented!!!\n\r");
       return BLE_ERROR_NOT_IMPLEMENTED;
     default:
-      printf("Observation Procedure failed (0x%02X)\n\r", ret);
+      PRINTF("Observation Procedure failed (0x%02X)\n\r", ret);
       return BLE_ERROR_UNSPECIFIED;
   }
 
@@ -1154,7 +1154,7 @@ ble_error_t BlueNRGGap::stopScan() {
   ret = aci_gap_terminate_gap_procedure(GAP_OBSERVATION_PROC);
   
   if (ret != BLE_STATUS_SUCCESS) {
-    printf("GAP Terminate Gap Procedure failed\n");
+    PRINTF("GAP Terminate Gap Procedure failed\n");
     return BLE_ERROR_UNSPECIFIED; 
   } else {
     PRINTF("Discovery Procedure Terminated\n");
@@ -1226,7 +1226,7 @@ ble_error_t BlueNRGGap::createConnection ()
   _connecting = false;
   
   if (ret != BLE_STATUS_SUCCESS) {
-    printf("Error while starting connection (ret=0x%02X).\n\r", ret);
+    PRINTF("Error while starting connection (ret=0x%02X).\n\r", ret);
     return BLE_ERROR_UNSPECIFIED;
   } else {
     PRINTF("Connection started.\n");
