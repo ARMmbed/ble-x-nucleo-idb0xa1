@@ -121,7 +121,7 @@ void HCI_Process(void)
   tHciDataPacket * hciReadPacket = NULL;
   
 #ifdef POOL_CNT
-  printf("betzw(%s, %d): nr_hciReadPktPool = %u (lowest = %u)\r\n", __func__, __LINE__, 
+  PRINTF("betzw(%s, %d): nr_hciReadPktPool = %u (lowest = %u)\r\n", __func__, __LINE__, 
 	 nr_hciReadPktPool, lowest_nr_hciReadPktPool);
 #endif // POOL_CNT
 
