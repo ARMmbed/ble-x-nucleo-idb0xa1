@@ -25,6 +25,16 @@
 
 #define OCF_HAL_WRITE_CONFIG_DATA   0x000C
 
+#define OCF_HAL_READ_CONFIG_DATA   0x000D
+typedef __packed struct _hal_read_config_data_cp{
+    uint8_t offset;
+} PACKED hal_read_config_data_cp;
+#define HAL_READ_CONFIG_DATA_RP_SIZE 1
+typedef __packed struct _hal_read_config_data_rp{
+    uint8_t status;
+    uint8_t data[HCI_MAX_PAYLOAD_SIZE-HAL_READ_CONFIG_DATA_RP_SIZE];
+} PACKED hal_read_config_data_rp;
+
 #define OCF_HAL_SET_TX_POWER_LEVEL          0x000F
 typedef __packed struct _hal_set_tx_power_level_cp{
 	uint8_t	en_high_power;
@@ -33,6 +43,12 @@ typedef __packed struct _hal_set_tx_power_level_cp{
 #define HAL_SET_TX_POWER_LEVEL_CP_SIZE 2
 
 #define OCF_HAL_DEVICE_STANDBY          0x0013
+
+#define OCF_HAL_LE_TX_TEST_PACKET_NUMBER    0x0014
+typedef __packed struct _hal_le_tx_test_packet_number_rp{
+  uint8_t status;
+  uint32_t number_of_packets;
+} PACKED hal_le_tx_test_packet_number_rp;
 
 #define OCF_HAL_TONE_START                  0x0015
 typedef __packed struct _hal_tone_start_cp{

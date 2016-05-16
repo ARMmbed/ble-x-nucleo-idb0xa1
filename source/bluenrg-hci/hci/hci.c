@@ -535,7 +535,8 @@ int hci_le_set_advertising_parameters(uint16_t min_interval, uint16_t max_interv
   adv_cp.advtype = advtype;
   adv_cp.own_bdaddr_type = own_bdaddr_type;
   adv_cp.direct_bdaddr_type = direct_bdaddr_type;
-  Osal_MemCpy(adv_cp.direct_bdaddr,direct_bdaddr,sizeof(adv_cp.direct_bdaddr));
+  if(direct_bdaddr != NULL)
+    Osal_MemCpy(adv_cp.direct_bdaddr,direct_bdaddr,sizeof(adv_cp.direct_bdaddr));
   adv_cp.chan_map = chan_map;
   adv_cp.filter = filter;
   
@@ -814,6 +815,23 @@ int hci_le_create_connection(uint16_t interval,	uint16_t window, uint8_t initiat
   if (hci_send_req(&rq, FALSE) < 0)
     return BLE_STATUS_TIMEOUT;
   
+  return status;
+}
+
+int hci_le_create_connection_cancel(void)
+{
+  struct hci_request rq;
+  uint8_t status;
+
+  Osal_MemSet(&rq, 0, sizeof(rq));
+  rq.ogf = OGF_LE_CTL;
+  rq.ocf = OCF_LE_CREATE_CONN_CANCEL;
+  rq.rparam = &status;
+  rq.rlen = 1;
+
+  if (hci_send_req(&rq, FALSE) < 0)
+    return BLE_STATUS_TIMEOUT;
+
   return status;
 }
 

@@ -159,9 +159,9 @@ ble_error_t BlueNRGDevice::init(BLE::InstanceID_t instanceID, FunctionPointerWit
     @brief  Resets the BLE HW, removing any existing services and
             characteristics
     @param[in] void
-    @returns    ble_error_t
+    @returns    void
 */
-ble_error_t BlueNRGDevice::reset(void)
+void BlueNRGDevice::reset(void)
 {
     wait_us(500);
 
@@ -173,10 +173,7 @@ ble_error_t BlueNRGDevice::reset(void)
 
     /* Wait for the radio to come back up */
     wait_us(500);
-    
-    isInitialized = false;
 
-    return BLE_ERROR_NONE;
 }
 
 /*!
@@ -260,7 +257,34 @@ ble_error_t  BlueNRGDevice::shutdown(void) {
         return BLE_ERROR_INITIALIZATION_INCOMPLETE;
     }
 
-    return reset();
+    /* Reset the BlueNRG device first */
+    reset();
+
+    /* Shutdown the BLE API and BlueNRG glue code */
+    ble_error_t error;
+
+    /* GattServer instance */
+    error = BlueNRGGattServer::getInstance().reset();
+    if (error != BLE_ERROR_NONE) {
+       return error;
+    }
+
+    /* GattClient instance */
+    error = BlueNRGGattClient::getInstance().reset();
+    if (error != BLE_ERROR_NONE) {
+        return error;
+    }
+
+    /* Gap instance */
+    error = BlueNRGGap::getInstance().reset();
+    if (error != BLE_ERROR_NONE) {
+        return error;
+    }
+
+    isInitialized = false;
+
+    return BLE_ERROR_NONE;
+
 }
 																							
 /**

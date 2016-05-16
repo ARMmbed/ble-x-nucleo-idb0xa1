@@ -28,14 +28,16 @@ public:
              Gap::Handle_t            connectionHandleIn,
              DiscoveredCharacteristic::Properties_t    propsIn,
              GattAttribute::Handle_t  declHandleIn,
-             GattAttribute::Handle_t  valueHandleIn);
+             GattAttribute::Handle_t  valueHandleIn,
+             GattAttribute::Handle_t  lastHandleIn);
   
   void setup(BlueNRGGattClient         *gattcIn,
              Gap::Handle_t            connectionHandleIn,
              UUID   uuidIn,
              DiscoveredCharacteristic::Properties_t    propsIn,
              GattAttribute::Handle_t  declHandleIn,
-             GattAttribute::Handle_t  valueHandleIn);
+             GattAttribute::Handle_t  valueHandleIn,
+             GattAttribute::Handle_t  lastHandleIn);
 };
 
 #endif /* __BLUENRG_DISCOVERED_CHARACTERISTIC_H__ */

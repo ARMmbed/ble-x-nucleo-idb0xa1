@@ -29,10 +29,7 @@
   * CODING INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
   *
   * <h2><center>&copy; COPYRIGHT 2013 STMicroelectronics</center></h2>
-  */ 
-  
- 
-// ANDREA: Changed some types (e.g., tHalUint8 --> uint8_t)
+  */
  
 /** @defgroup BlueNRGGATTSERVER
  *  @brief BlueNRG BLE_API GattServer Adaptation
@@ -124,14 +121,21 @@ ble_error_t BlueNRGGattServer::addService(GattService &service)
     //iterate to include all characteristics
     for (uint8_t i = 0; i < charsCount; i++) {
         GattCharacteristic *p_char = service.getCharacteristic(i);
-        uint16_t char_uuid = (p_char->getValueAttribute().getUUID()).getShortUUID();   
-        
+        uint16_t char_uuid = (p_char->getValueAttribute().getUUID()).getShortUUID();
+
         uint8_t int_8_uuid[2];
         STORE_LE_16(int_8_uuid, char_uuid);
-        
+
+        type = (p_char->getValueAttribute().getUUID()).shortOrLong();
+
         if(type==UUID::UUID_TYPE_LONG) {
             base_char_uuid = (p_char->getValueAttribute().getUUID()).getBaseUUID();
-            
+#ifdef DEBUG
+            for(uint8_t j=0; j<16; j++) {
+                PRINTF("base_char_uuid[%d] 0x%02x ", j, base_char_uuid[j]);
+            }
+            PRINTF("\n\r");
+#endif
             COPY_UUID_128(char_base_uuid,base_char_uuid[15],base_char_uuid[14],int_8_uuid[1],int_8_uuid[0],base_char_uuid[11],base_char_uuid[10],base_char_uuid[9],base_char_uuid[8],base_char_uuid[7],base_char_uuid[6],base_char_uuid[5],base_char_uuid[4],base_char_uuid[3],base_char_uuid[2],base_char_uuid[1],base_char_uuid[0]);
         }
         
@@ -168,7 +172,8 @@ ble_error_t BlueNRGGattServer::addService(GattService &service)
                                      1 /*isVariable*/,
                                      &bleCharacteristic);
             
-            PRINTF("aci_gatt_add_char UUID_TYPE_16 props=%d MaxLength=%d ret=%d\n\r", p_char->getProperties(), p_char->getValueAttribute().getMaxLength(), ret);
+            PRINTF("aci_gatt_add_char UUID_TYPE_16 props=%d MaxLength=%d ret=%d\n\r",
+                    p_char->getProperties(), p_char->getValueAttribute().getMaxLength(), ret);
 
         } else if(type==UUID::UUID_TYPE_LONG) {
             ret =  aci_gatt_add_char(service.getHandle(),
@@ -182,20 +187,21 @@ ble_error_t BlueNRGGattServer::addService(GattService &service)
                                      1 /*isVariable*/,
                                      &bleCharacteristic);
             
-            PRINTF("aci_gatt_add_char UUID_TYPE_128 props=%d MaxLength=%d ret=%d\n\r", p_char->getProperties(), p_char->getValueAttribute().getMaxLength(), ret);
+            PRINTF("aci_gatt_add_char UUID_TYPE_128 props=%d MaxLength=%d ret=%d\n\r",
+                    p_char->getProperties(), p_char->getValueAttribute().getMaxLength(), ret);
         }
-
-        /* Update the characteristic handle */
-        //uint16_t charHandle = characteristicCount;   
         
-        bleCharHanldeMap.insert(std::pair<uint16_t, uint16_t>(bleCharacteristic, servHandle)); 
+        bleCharHandleMap.insert(std::pair<uint16_t, uint16_t>(bleCharacteristic, servHandle));
         
         p_characteristics[characteristicCount++] = p_char;
-        p_char->getValueAttribute().setHandle(bleCharacteristic);    //Set the characteristic count as the corresponding char handle
-        PRINTF("added bleCharacteristic handle =%u\n\r", bleCharacteristic);
+        /* Set the characteristic value handle */
+        p_char->getValueAttribute().setHandle(bleCharacteristic+BlueNRGGattServer::CHAR_VALUE_HANDLE);
+        PRINTF("added bleCharacteristic (value handle =%u)\n\r", p_char->getValueAttribute().getHandle());
 
         if ((p_char->getValueAttribute().getValuePtr() != NULL) && (p_char->getValueAttribute().getLength() > 0)) {
-            write(p_char->getValueAttribute().getHandle(), p_char->getValueAttribute().getValuePtr(), p_char->getValueAttribute().getLength(), false /* localOnly */);
+            write(p_char->getValueAttribute().getHandle(),
+                  p_char->getValueAttribute().getValuePtr(),
+                  p_char->getValueAttribute().getLength(), false /* localOnly */);
         }
 
         // add descriptors now
@@ -206,10 +212,19 @@ ble_error_t BlueNRGGattServer::addService(GattService &service)
             GattAttribute *descriptor = p_char->getDescriptor(descIndex);
             uint16_t shortUUID = descriptor->getUUID().getShortUUID();
             const uint8_t uuidArray[] = {(uint8_t)((shortUUID>>8)&0xFF), (uint8_t)((shortUUID&0xFF))};
-            ret = aci_gatt_add_char_desc(service.getHandle(), p_char->getValueAttribute().getHandle(), 
-            CHAR_DESC_TYPE_16_BIT, uuidArray, descriptor->getMaxLength(), descriptor->getLength(),
-            descriptor->getValuePtr(), CHAR_DESC_SECURITY_PERMISSION, CHAR_DESC_ACCESS_PERMISSION, GATT_NOTIFY_ATTRIBUTE_WRITE,
-            MIN_ENCRY_KEY_SIZE, CHAR_ATTRIBUTE_LEN_IS_FIXED, &descHandle);
+            ret = aci_gatt_add_char_desc(service.getHandle(),
+                                         bleCharacteristic,
+                                         CHAR_DESC_TYPE_16_BIT,
+                                         uuidArray,
+                                         descriptor->getMaxLength(),
+                                         descriptor->getLength(),
+                                         descriptor->getValuePtr(),
+                                         CHAR_DESC_SECURITY_PERMISSION,
+                                         CHAR_DESC_ACCESS_PERMISSION,
+                                         GATT_NOTIFY_ATTRIBUTE_WRITE,
+                                         MIN_ENCRY_KEY_SIZE,
+                                         CHAR_ATTRIBUTE_LEN_IS_FIXED,
+                                         &descHandle);
             PRINTF("Adding Descriptor descriptor handle=%d ret=%d\n\r", descHandle, ret);
             if(ret==(tBleStatus)0) {
                 PRINTF("Descriptor added successfully, descriptor handle=%d\n\r", descHandle);
@@ -252,11 +267,12 @@ ble_error_t BlueNRGGattServer::addService(GattService &service)
     @endcode
 */
 /**************************************************************************/
-ble_error_t BlueNRGGattServer::read(GattAttribute::Handle_t charHandle, uint8_t buffer[], uint16_t *lengthP)
+ble_error_t BlueNRGGattServer::read(GattAttribute::Handle_t attributeHandle, uint8_t buffer[], uint16_t *lengthP)
 {
   tBleStatus ret;
+  uint16_t charHandle = attributeHandle-BlueNRGGattServer::CHAR_VALUE_HANDLE;
 
-  ret = aci_gatt_read_handle_value(charHandle+CHAR_VALUE_OFFSET, *lengthP, lengthP, buffer);
+  ret = aci_gatt_read_handle_value(charHandle, *lengthP, lengthP, buffer);
 
   if(ret == BLE_STATUS_SUCCESS) {
     return BLE_ERROR_NONE;
@@ -294,8 +310,10 @@ ble_error_t BlueNRGGattServer::read(GattAttribute::Handle_t charHandle, uint8_t 
     @endcode
 */
 /**************************************************************************/
-// <<<ANDREA>>>
-ble_error_t BlueNRGGattServer::read(Gap::Handle_t connectionHandle, GattAttribute::Handle_t attributeHandle, uint8_t buffer[], uint16_t *lengthP) {
+ble_error_t BlueNRGGattServer::read(Gap::Handle_t connectionHandle,
+                                    GattAttribute::Handle_t attributeHandle,
+                                    uint8_t buffer[],
+                                    uint16_t *lengthP) {
 
   /* avoid compiler warnings about unused variables */
   (void)connectionHandle;
@@ -306,7 +324,10 @@ ble_error_t BlueNRGGattServer::read(Gap::Handle_t connectionHandle, GattAttribut
   return BLE_ERROR_NONE;
 }
 
-ble_error_t BlueNRGGattServer::write(Gap::Handle_t connectionHandle, GattAttribute::Handle_t, const uint8_t[], uint16_t, bool localOnly) {
+ble_error_t BlueNRGGattServer::write(Gap::Handle_t connectionHandle,
+                                     GattAttribute::Handle_t,
+                                     const uint8_t[],
+                                     uint16_t, bool localOnly) {
   /* avoid compiler warnings about unused variables */
   (void)connectionHandle;
   (void)localOnly;
@@ -314,21 +335,20 @@ ble_error_t BlueNRGGattServer::write(Gap::Handle_t connectionHandle, GattAttribu
   return BLE_ERROR_NONE;
 }
     
-ble_error_t BlueNRGGattServer::write(GattAttribute::Handle_t charHandle, const uint8_t buffer[], uint16_t len, bool localOnly)
+ble_error_t BlueNRGGattServer::write(GattAttribute::Handle_t attributeHandle, const uint8_t buffer[], uint16_t len, bool localOnly)
 {
     /* avoid compiler warnings about unused variables */
     (void)localOnly;
 
     tBleStatus ret;
-    //uint8_t buff[2];
 
-    PRINTF("updating bleCharacteristic charHandle =%u, corresponding serviceHanle= %u len=%d\n\r", charHandle, bleCharHanldeMap.find(charHandle)->second, len);  
-    /*
-    for(int i=0; i<len; i++) {
-        PRINTF("buffer[%d]=%d\n\r", i, buffer[i]);
-    }
-    */
-    ret = aci_gatt_update_char_value(bleCharHanldeMap.find(charHandle)->second, charHandle, 0, len, buffer);
+    uint16_t charHandle = attributeHandle-BlueNRGGattServer::CHAR_VALUE_HANDLE;
+
+    PRINTF("updating bleCharacteristic valueHandle=%u,\
+            corresponding serviceHandle=%u len=%d\n\r",
+            attributeHandle, bleCharHandleMap.find(charHandle)->second, len);
+
+    ret = aci_gatt_update_char_value(bleCharHandleMap.find(charHandle)->second, charHandle, 0, len, buffer);
 
     if (ret != BLE_STATUS_SUCCESS){
       PRINTF("Error while updating characteristic (ret=0x%x).\n\r", ret);
@@ -357,8 +377,8 @@ ble_error_t BlueNRGGattServer::write(GattAttribute::Handle_t charHandle, const u
 /*!
     @brief  Reads a value according to the handle provided
 
-    @param[in]  charHandle
-                The handle of the GattCharacteristic to read from
+    @param[in]  attributeHandle
+                The handle of the attribute to read from
 
     @returns    ble_error_t
 
@@ -372,15 +392,14 @@ ble_error_t BlueNRGGattServer::write(GattAttribute::Handle_t charHandle, const u
     @endcode
 */
 /**************************************************************************/
-ble_error_t BlueNRGGattServer::Read_Request_CB(uint16_t handle)
+ble_error_t BlueNRGGattServer::Read_Request_CB(uint16_t attributeHandle)
 {
-    //signed short refvalue;
     uint16_t gapConnectionHandle = BlueNRGGap::getInstance().getConnectionHandle();
     
     GattReadCallbackParams readParams;
-    readParams.handle = handle;                
+    readParams.handle = attributeHandle;
 
-    //PRINTF("readParams.charHandle = %d\n\r", readParams.charHandle);
+    //PRINTF("readParams.handle = %d\n\r", readParams.handle);
     HCIDataReadEvent(&readParams);
     
     //EXIT:
@@ -396,8 +415,8 @@ ble_error_t BlueNRGGattServer::Read_Request_CB(uint16_t handle)
 /*!
     @brief  Returns the GattCharacteristic according to the handle provided
 
-    @param[in]  charHandle
-                The handle of the GattCharacteristic
+    @param[in]  attrHandle
+                The handle of the attribute
 
     @returns    ble_error_t
 
@@ -417,10 +436,10 @@ GattCharacteristic* BlueNRGGattServer::getCharacteristicFromHandle(uint16_t attr
     int i;
     uint16_t handle, handle_1;
 
-    PRINTF("BlueNRGGattServer::getCharacteristicFromHandle()>>Attribute Handle received %d\n\r",attrHandle);
+    PRINTF("BlueNRGGattServer::getCharacteristicFromHandle()>>Attr Handle received %d\n\r",attrHandle);
     for(i=0; i<characteristicCount; i++)
     {
-        handle = p_characteristics[i]->getValueAttribute().getHandle();
+        handle = p_characteristics[i]->getValueAttribute().getHandle()-BlueNRGGattServer::CHAR_VALUE_HANDLE;
         PRINTF("handle(%d)=%d\n\r", i, handle);
         if(i==characteristicCount-1)//Last Characteristic check
         {
@@ -432,7 +451,7 @@ GattCharacteristic* BlueNRGGattServer::getCharacteristicFromHandle(uint16_t attr
             }            
         }
         else {
-            handle_1 = p_characteristics[i+1]->getValueAttribute().getHandle();
+            handle_1 = p_characteristics[i+1]->getValueAttribute().getHandle()-BlueNRGGattServer::CHAR_VALUE_HANDLE;
             //Testing if attribute handle is between two Characteristic Handles
             if(attrHandle>=handle && attrHandle<handle_1)
             {
@@ -467,4 +486,30 @@ void BlueNRGGattServer::HCIDataSentEvent(unsigned count) {
 ble_error_t BlueNRGGattServer::initializeGATTDatabase(void)   {
     // <TODO>    
     return (ble_error_t)0;       
+}
+
+/**************************************************************************/
+/*!
+    @brief  Clear BlueNRGGattServer's state.
+
+    @returns    ble_error_t
+
+    @retval     BLE_ERROR_NONE
+                Everything executed properly
+*/
+/**************************************************************************/
+ble_error_t BlueNRGGattServer::reset(void)
+{
+    /* Clear all state that is from the parent, including private members */
+    if (GattServer::reset() != BLE_ERROR_NONE) {
+        return BLE_ERROR_INVALID_STATE;
+    }
+
+    /* Clear class members */
+    memset(p_characteristics,        0, sizeof(p_characteristics));
+    memset(bleCharacteristicHandles, 0, sizeof(bleCharacteristicHandles));
+    serviceCount = 0;
+    characteristicCount = 0;
+
+    return BLE_ERROR_NONE;
 }

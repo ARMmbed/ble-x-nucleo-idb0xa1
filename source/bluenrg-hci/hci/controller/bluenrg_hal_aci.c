@@ -67,6 +67,35 @@ tBleStatus aci_hal_write_config_data(uint8_t offset,
   return 0;
 }
 
+tBleStatus aci_hal_read_config_data(uint8_t offset, uint16_t data_len, uint8_t *data_len_out_p, uint8_t *data)
+{
+  struct hci_request rq;
+  hal_read_config_data_cp cp;
+  hal_read_config_data_rp rp;
+
+  cp.offset = offset;
+
+  Osal_MemSet(&rq, 0, sizeof(rq));
+  rq.ogf = OGF_VENDOR_CMD;
+  rq.ocf = OCF_HAL_READ_CONFIG_DATA;
+  rq.cparam = &cp;
+  rq.clen = sizeof(cp);
+  rq.rparam = &rp;
+  rq.rlen = sizeof(rp);
+
+  if (hci_send_req(&rq, FALSE) < 0)
+    return BLE_STATUS_TIMEOUT;
+
+  if(rp.status)
+    return rp.status;
+
+  *data_len_out_p = rq.rlen-1;
+
+  Osal_MemCpy(data, rp.data, MIN(data_len, *data_len_out_p));
+
+  return 0;
+}
+
 tBleStatus aci_hal_set_tx_power_level(uint8_t en_high_power, uint8_t pa_level)
 {
   struct hci_request rq;

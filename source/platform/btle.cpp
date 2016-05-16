@@ -48,7 +48,6 @@ extern "C" {
 
 
 /* C File Includes ------------------------------------------------------------------*/
-// ANDREA: Updated includes and changed some types (e.g., tHalUint8 --> uint8_t)
 #include <stdio.h>
 #include <string.h>
 #include "hci.h"
@@ -100,6 +99,8 @@ uint8_t bnrg_expansion_board = IDB04A1; /* at startup, suppose the X-NUCLEO-IDB0
 void btleInit(bool isSetAddress, uint8_t role)
 {
     PRINTF("btleInit>>\n\r");
+    /* Avoid compiler warnings about unused variables. */
+    (void)isSetAddress;
     
     int ret;
     uint8_t  hwVersion;
@@ -143,7 +144,6 @@ void btleInit(bool isSetAddress, uint8_t role)
 
     /* The Nucleo board must be configured as SERVER */
     //check if isSetAddress is set then set address.
-    // ANDREA
 #if 0
     if(isSetAddress)
     {
@@ -165,13 +165,21 @@ void btleInit(bool isSetAddress, uint8_t role)
                                         BLE_address_BE);
     }
 #endif
+
+    const Gap::Address_t BLE_address_BE = {0xFD,0x66,0x05,0x13,0xBE,0xBA};
+    BlueNRGGap::getInstance().setAddress(BLEProtocol::AddressType::RANDOM_STATIC, BLE_address_BE);
     
     ret = aci_gatt_init();
     if(ret){
         PRINTF("GATT_Init failed.\n");
     }
     if (bnrg_expansion_board == IDB05A1) {
-        ret = aci_gap_init_IDB05A1(GAP_PERIPHERAL_ROLE_IDB05A1|GAP_CENTRAL_ROLE_IDB05A1|GAP_OBSERVER_ROLE_IDB05A1, 0, 0x07, &service_handle, &dev_name_char_handle, &appearance_char_handle);
+        ret = aci_gap_init_IDB05A1(GAP_PERIPHERAL_ROLE_IDB05A1|GAP_CENTRAL_ROLE_IDB05A1|GAP_OBSERVER_ROLE_IDB05A1,
+                                   0,
+                                   0x18,
+                                   &service_handle,
+                                   &dev_name_char_handle,
+                                   &appearance_char_handle);
     } else {
         ret = aci_gap_init_IDB04A1(role, &service_handle, &dev_name_char_handle, &appearance_char_handle);
     }
@@ -180,7 +188,7 @@ void btleInit(bool isSetAddress, uint8_t role)
         PRINTF("GAP_Init failed.\n");
     }
 
-    //ANDREA -- FIXME: Security and passkey set by default    
+    //FIXME: Security and passkey set by default
     ret = aci_gap_set_auth_requirement(MITM_PROTECTION_REQUIRED,
                                        OOB_AUTH_DATA_ABSENT,
                                        NULL,
@@ -202,7 +210,6 @@ void btleInit(bool isSetAddress, uint8_t role)
     /*ret = aci_gatt_update_char_value(service_handle, dev_name_char_handle, 0,
                             strlen(name), (tHalUint8 *)name);*/
 
-    // Andrea: mbedOS
 #ifdef AST_FOR_MBED_OS
     minar::Scheduler::postCallback(btle_handler);
 #endif
@@ -211,7 +218,7 @@ void btleInit(bool isSetAddress, uint8_t role)
 
 /**************************************************************************/
 /*!
-    @brief  Andrea: mbedOS
+    @brief  mbedOS
 
     @param[in]  void
     
@@ -282,20 +289,43 @@ void SPI_Poll(void)
     return;
 }
    
-void Attribute_Modified_CB(uint16_t attr_handle, uint8_t data_length, uint8_t *att_data, uint8_t offset)
-{        
+void Attribute_Modified_CB(evt_blue_aci *blue_evt)
+{
+    uint16_t conn_handle;
+    uint16_t attr_handle;
+    uint8_t data_length;
+    uint8_t *att_data;
+    uint8_t offset;
+
+    if (bnrg_expansion_board == IDB05A1) {
+        evt_gatt_attr_modified_IDB05A1 *evt = (evt_gatt_attr_modified_IDB05A1*)blue_evt->data;
+        conn_handle = evt->conn_handle;
+        attr_handle = evt->attr_handle;
+        data_length = evt->data_length;
+        att_data = evt->att_data;
+        offset = evt->offset;
+    } else {
+        evt_gatt_attr_modified_IDB04A1 *evt = (evt_gatt_attr_modified_IDB04A1*)blue_evt->data;
+        conn_handle = evt->conn_handle;
+        attr_handle = evt->attr_handle;
+        data_length = evt->data_length;
+        att_data = evt->att_data;
+        offset = 0;
+    }
+
     //Extract the GattCharacteristic from p_characteristics[] and find the properties mask
     GattCharacteristic *p_char = BlueNRGGattServer::getInstance().getCharacteristicFromHandle(attr_handle);
     if(p_char!=NULL) {
-        GattAttribute::Handle_t charHandle = p_char->getValueAttribute().getHandle();
+        GattAttribute::Handle_t charHandle = p_char->getValueAttribute().getHandle()-BlueNRGGattServer::CHAR_VALUE_HANDLE;
         BlueNRGGattServer::HandleEnum_t currentHandle = BlueNRGGattServer::CHAR_HANDLE;
         PRINTF("CharHandle %d, length: %d, Data: %d\n\r", charHandle, data_length, (uint16_t)att_data[0]);
         PRINTF("getProperties 0x%x\n\r",p_char->getProperties());
-        if(attr_handle == charHandle+CHAR_VALUE_OFFSET) {
+
+        if(attr_handle == charHandle+BlueNRGGattServer::CHAR_VALUE_HANDLE) {
             currentHandle = BlueNRGGattServer::CHAR_VALUE_HANDLE;
         }
 
-        if(attr_handle == charHandle+CHAR_DESC_OFFSET) {
+        if(attr_handle == charHandle+BlueNRGGattServer::CHAR_DESC_HANDLE) {
             currentHandle = BlueNRGGattServer::CHAR_DESC_HANDLE;
         }
         PRINTF("currentHandle %d\n\r", currentHandle);
@@ -303,18 +333,20 @@ void Attribute_Modified_CB(uint16_t attr_handle, uint8_t data_length, uint8_t *a
             (GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_NOTIFY | GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_INDICATE)) &&
             currentHandle == BlueNRGGattServer::CHAR_DESC_HANDLE) {
 
+            GattAttribute::Handle_t charDescHandle = p_char->getValueAttribute().getHandle()+1;
+
             PRINTF("*****NOTIFICATION CASE\n\r");
             //Now Check if data written in Enable or Disable
             if((uint16_t)att_data[0]==1) {
                 //PRINTF("Notify ENABLED\n\r"); 
-                BlueNRGGattServer::getInstance().HCIEvent(GattServerEvents::GATT_EVENT_UPDATES_ENABLED, p_char->getValueAttribute().getHandle());
+                BlueNRGGattServer::getInstance().HCIEvent(GattServerEvents::GATT_EVENT_UPDATES_ENABLED, charDescHandle);
             } else {
                 //PRINTF("Notify DISABLED\n\r"); 
-                BlueNRGGattServer::getInstance().HCIEvent(GattServerEvents::GATT_EVENT_UPDATES_DISABLED, p_char->getValueAttribute().getHandle());
+                BlueNRGGattServer::getInstance().HCIEvent(GattServerEvents::GATT_EVENT_UPDATES_DISABLED, charDescHandle);
             }
         }
                     
-        //Check is attr handle property is WRITEABLE, if yes, generate GATT_EVENT_DATA_WRITTEN Event
+        //Check if attr handle property is WRITEABLE, in the case generate GATT_EVENT_DATA_WRITTEN Event
         if((p_char->getProperties() &
             (GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_WRITE_WITHOUT_RESPONSE | GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_WRITE)) &&
             currentHandle == BlueNRGGattServer::CHAR_VALUE_HANDLE) {
@@ -322,21 +354,22 @@ void Attribute_Modified_CB(uint16_t attr_handle, uint8_t data_length, uint8_t *a
             PRINTF("*****WRITE CASE\n\r");
                    
             GattWriteCallbackParams writeParams;
+            writeParams.connHandle = conn_handle;
             writeParams.handle = p_char->getValueAttribute().getHandle();
             writeParams.writeOp = GattWriteCallbackParams::OP_WRITE_REQ;//Where to find this property in BLUENRG?
             writeParams.len = data_length;
-            writeParams.data = att_data;                                                                                    
-            if (bnrg_expansion_board == IDB05A1) {
-                writeParams.offset = offset;
-            } else {
-                writeParams.offset = 0;
-            }
+            writeParams.data = att_data;
+            writeParams.offset = offset;
+
             BlueNRGGattServer::getInstance().HCIDataWrittenEvent(&writeParams);
 
-            //BlueNRGGattServer::getInstance().handleEvent(GattServerEvents::GATT_EVENT_DATA_WRITTEN, evt->attr_handle);
+            //BlueNRGGattServer::getInstance().handleEvent(GattServerEvents::GATT_EVENT_DATA_WRITTEN, attr_handle);
             //Write the actual Data to the Attr Handle? (uint8_1[])att_data contains the data
             if ((p_char->getValueAttribute().getValuePtr() != NULL) && (p_char->getValueAttribute().getLength() > 0)) {
-                BlueNRGGattServer::getInstance().write(p_char->getValueAttribute().getHandle(), (uint8_t*)att_data, data_length, false);
+                BlueNRGGattServer::getInstance().write(p_char->getValueAttribute().getHandle(),
+                                                       (uint8_t*)att_data,
+                                                       data_length,
+                                                       false);
             }
         } 
     }
@@ -383,7 +416,7 @@ extern "C" {
                 evt_le_meta_event *evt = (evt_le_meta_event *)event_pckt->data;
                 
                 switch(evt->subevent){
-                // ANDREA
+
                 case EVT_LE_CONN_COMPLETE:
                     {                            
                         PRINTF("EVT_LE_CONN_COMPLETE\n");
@@ -448,7 +481,7 @@ extern "C" {
           
           BlueNRGGap::getInstance().Discovery_CB(BlueNRGGap::DEVICE_FOUND,
                                                  pr->evt_type,
-                                                 &pr->bdaddr_type,
+                                                 pr->bdaddr_type,
                                                  pr->bdaddr,
                                                  &pr->data_length,
                                                  &pr->data_RSSI[0],
@@ -469,7 +502,8 @@ extern "C" {
                     {
                         PRINTF("EVT_BLUE_GATT_READ_PERMIT_REQ_OK\n\r");
                         evt_gatt_read_permit_req *pr = (evt_gatt_read_permit_req*)blue_evt->data;
-                        BlueNRGGattServer::getInstance().Read_Request_CB(pr->attr_handle-CHAR_VALUE_OFFSET);                                                
+                        PRINTF("EVT_BLUE_GATT_READ_PERMIT_REQ_OK pr->attr_handle=%u\n\r", pr->attr_handle);
+                        BlueNRGGattServer::getInstance().Read_Request_CB(pr->attr_handle);
                     }
                     break;
                     
@@ -478,13 +512,7 @@ extern "C" {
                         PRINTF("EVT_BLUE_GATT_ATTRIBUTE_MODIFIED\n\r");
                         /* this callback is invoked when a GATT attribute is modified
                             extract callback data and pass to suitable handler function */
-                        if (bnrg_expansion_board == IDB05A1) {
-                            evt_gatt_attr_modified_IDB05A1 *evt = (evt_gatt_attr_modified_IDB05A1*)blue_evt->data;
-                            Attribute_Modified_CB(evt->attr_handle, evt->data_length, evt->att_data, evt->offset);
-                        } else {
-                            evt_gatt_attr_modified_IDB04A1 *evt = (evt_gatt_attr_modified_IDB04A1*)blue_evt->data;
-                            Attribute_Modified_CB(evt->attr_handle, evt->data_length, evt->att_data, 0);
-                        }                  
+                        Attribute_Modified_CB(blue_evt);
                     }
                     break;  
                     
@@ -565,7 +593,17 @@ extern "C" {
                                                               pr->handles_info_list);
           }
           break;
-                case EVT_BLUE_GATT_PROCEDURE_COMPLETE:
+        case EVT_BLUE_ATT_FIND_INFORMATION_RESP:
+          {
+            PRINTF("EVT_BLUE_ATT_FIND_INFORMATION_RESP\n\r");
+            evt_att_find_information_resp *pr = (evt_att_find_information_resp*)blue_evt->data;
+            BlueNRGGattClient::getInstance().discAllCharacDescCB(pr->conn_handle,
+                                                                 pr->event_data_length,
+                                                                 pr->format,
+                                                                 pr->handle_uuid_pair);
+          }
+          break;
+        case EVT_BLUE_GATT_PROCEDURE_COMPLETE:
           {
             //PRINTF("EVT_BLUE_GATT_PROCEDURE_COMPLETE\n\r");
             evt_gatt_procedure_complete *evt = (evt_gatt_procedure_complete*)blue_evt->data;
@@ -582,7 +620,7 @@ extern "C" {
             
             BlueNRGGap::getInstance().Discovery_CB(BlueNRGGap::DEVICE_FOUND,
                                                    pr->evt_type,
-                                                   &pr->bdaddr_type,
+                                                   pr->bdaddr_type,
                                                    pr->bdaddr,
                                                    &pr->data_length,
                                                    &pr->data_RSSI[0],
@@ -593,12 +631,12 @@ extern "C" {
         case EVT_BLUE_GAP_PROCEDURE_COMPLETE:
           {
             evt_gap_procedure_complete *pr = (evt_gap_procedure_complete*)blue_evt->data;
-            //printf("EVT_BLUE_GAP_PROCEDURE_COMPLETE (code=0x%02X)\n\r", pr->procedure_code);
+            //PRINTF("EVT_BLUE_GAP_PROCEDURE_COMPLETE (code=0x%02X)\n\r", pr->procedure_code);
             
             switch(pr->procedure_code) {
             case GAP_OBSERVATION_PROC_IDB05A1:
               
-              BlueNRGGap::getInstance().Discovery_CB(BlueNRGGap::DISCOVERY_COMPLETE, 0, NULL, NULL, NULL, NULL, NULL);
+              BlueNRGGap::getInstance().Discovery_CB(BlueNRGGap::DISCOVERY_COMPLETE, 0, 0, NULL, NULL, NULL, NULL);
               break;
             }
           }

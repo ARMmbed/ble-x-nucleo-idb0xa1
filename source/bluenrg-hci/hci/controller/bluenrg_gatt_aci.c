@@ -317,7 +317,7 @@ tBleStatus aci_gatt_update_char_value(uint16_t servHandle,
 				      uint16_t charHandle,
 				      uint8_t charValOffset,
 				      uint8_t charValueLen,   
-				      const uint8_t *charValue)
+				      const void *charValue)
 {
   struct hci_request rq;
   uint8_t status;
@@ -1361,7 +1361,7 @@ tBleStatus aci_gatt_set_desc_value(uint16_t servHandle,
 				   uint16_t charDescHandle,
 				   uint16_t charDescValOffset,
 				   uint8_t charDescValueLen,   
-				   const uint8_t *charDescValue)
+				   const void *charDescValue)
 {
   struct hci_request rq;
   uint8_t status;

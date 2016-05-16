@@ -163,6 +163,8 @@ int hci_le_create_connection(uint16_t interval,	uint16_t window, uint8_t initiat
                              const tBDAddr peer_bdaddr,	uint8_t	own_bdaddr_type, uint16_t min_interval,	uint16_t max_interval,
                              uint16_t latency, uint16_t supervision_timeout, uint16_t min_ce_length, uint16_t max_ce_length);
 
+int hci_le_create_connection_cancel(void);
+
 int hci_read_transmit_power_level(uint16_t *conn_handle, uint8_t type, int8_t *tx_level);
 
 int hci_read_rssi(uint16_t *conn_handle, int8_t *rssi);

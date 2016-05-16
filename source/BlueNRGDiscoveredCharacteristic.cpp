@@ -21,12 +21,14 @@ void BlueNRGDiscoveredCharacteristic::setup(BlueNRGGattClient *gattcIn,
                                             Gap::Handle_t     connectionHandleIn,
                                             DiscoveredCharacteristic::Properties_t    propsIn,
                                             GattAttribute::Handle_t  declHandleIn,
-                                            GattAttribute::Handle_t  valueHandleIn)
+                                            GattAttribute::Handle_t  valueHandleIn,
+                                            GattAttribute::Handle_t  lastHandleIn)
 {
     gattc       = gattcIn;
     connHandle  = connectionHandleIn;
     declHandle  = declHandleIn;
     valueHandle = valueHandleIn;
+    lastHandle  = lastHandleIn;
 
     props._broadcast       = propsIn.broadcast();
     props._read            = propsIn.read();
@@ -42,13 +44,15 @@ void BlueNRGDiscoveredCharacteristic::setup(BlueNRGGattClient         *gattcIn,
                                             UUID   uuidIn,
                                             DiscoveredCharacteristic::Properties_t    propsIn,
                                             GattAttribute::Handle_t  declHandleIn,
-                                            GattAttribute::Handle_t  valueHandleIn)
+                                            GattAttribute::Handle_t  valueHandleIn,
+                                            GattAttribute::Handle_t  lastHandleIn)
 {
     gattc       = gattcIn;
     connHandle  = connectionHandleIn;
     uuid        = uuidIn;
     declHandle  = declHandleIn;
     valueHandle = valueHandleIn;
+    lastHandle  = lastHandleIn;
 
     props._broadcast       = propsIn.broadcast();
     props._read            = propsIn.read();

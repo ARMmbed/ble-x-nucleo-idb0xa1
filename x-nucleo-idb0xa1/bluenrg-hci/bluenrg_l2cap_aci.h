@@ -123,6 +123,10 @@ typedef __packed struct _evt_l2cap_conn_upd_resp{
  * within 30 seconds.
  */
 #define EVT_BLUE_L2CAP_PROCEDURE_TIMEOUT      (0x0801)
+typedef __packed struct _evt_l2cap_procedure_timeout{
+  uint16_t conn_handle;         /**< The connection handle related to the event. */
+  uint8_t  event_data_length;  /**< Length of following data. It should be always 0 for this event. */
+} PACKED evt_l2cap_procedure_timeout;
 
 /**
  * The event is given by the L2CAP layer when a connection update request is received from the slave.

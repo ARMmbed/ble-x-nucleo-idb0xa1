@@ -206,7 +206,14 @@ tBleStatus aci_gap_set_limited_discoverable(uint8_t AdvType, uint16_t AdvIntervM
  * @brief Put the Device in general discoverable mode (as defined in GAP specification volume 3, section 9.2.4).
  * @note  The device will be discoverable until the Host issue Bluehci_Gap_Set_Non_Discoverable command.
  * 		  The Adv_Interval_Min and Adv_Interval_Max parameters are optional. If both are set to 0, the GAP uses
- * 		  the default values for advertising intervals (1.28 s and 2.56 s respectively).
+ * 		  the default values for advertising intervals for IDB04A1 (1.28 s and 2.56 s respectively).
+ *        For IDB05A1:
+ *        When using connectable undirected advertising events:\n
+ *        @li Adv_Interval_Min = 30 ms
+ *        @li Adv_Interval_Max = 60 ms
+ *        \nWhen using non-connectable advertising events or scannable undirected advertising events:\n
+ *        @li Adv_Interval_Min = 100 ms
+ *        @li Adv_Interval_Max = 150 ms
  * 		  Host can set the Local Name, a Service UUID list and the Slave Connection Interval Range. If provided,
  * 		  these data will be inserted into the advertising packet payload as AD data. These parameters are optional
  * 		  in this command. These values can be also set using aci_gap_update_adv_data() separately.
@@ -229,8 +236,8 @@ tBleStatus aci_gap_set_limited_discoverable(uint8_t AdvType, uint16_t AdvIntervM
  *              const char local_name[] = {AD_TYPE_COMPLETE_LOCAL_NAME,'B','l','u','e','N','R','G'};
  *              const uint8_t serviceUUIDList[] = {AD_TYPE_16_BIT_SERV_UUID,0x34,0x12};
  *
- *              ret = aci_gap_set_discoverable(ADV_IND, (ADV_INTERVAL_MIN_MS*1000)/0.625,
- *                                                     (ADV_INTERVAL_MAX_MS*1000)/0.625,
+ *              ret = aci_gap_set_discoverable(ADV_IND, (ADV_INTERVAL_MIN_MS*1000)/625,
+ *                                                     (ADV_INTERVAL_MAX_MS*1000)/625,
  *                                                     STATIC_RANDOM_ADDR, NO_WHITE_LIST_USE,
  *                                                     sizeof(local_name), local_name,
  *                                                     0, NULL,
@@ -591,7 +598,7 @@ tBleStatus aci_gap_allow_rebond_IDB04A1(void);
  *        due to any of the above  reasons, @ref EVT_BLUE_GAP_PROCEDURE_COMPLETE event is returned with
  *        the procedure code set to @ref GAP_LIMITED_DISCOVERY_PROC.
  *        The device found when the procedure is ongoing is returned to the upper layers through the
- *        event @ref EVT_BLUE_GAP_DEVICE_FOUND.
+ *        event @ref EVT_BLUE_GAP_DEVICE_FOUND (for IDB04A1) and @ref EVT_LE_ADVERTISING_REPORT (for IDB05A1).
  * @param scanInterval Time interval from when the Controller started its last LE scan until it begins
  * 					   the subsequent LE scan. The scan interval should be a number in the range
  * 					   0x0004 to 0x4000. This corresponds to a time range 2.5 msec to 10240 msec.
@@ -618,7 +625,7 @@ tBleStatus aci_gap_start_limited_discovery_proc(uint16_t scanInterval, uint16_t 
  * 		  or a timeout happens. When the procedure is terminated due to any of the above reasons,
  * 		  @ref EVT_BLUE_GAP_PROCEDURE_COMPLETE event is returned with the procedure code set to
  * 		  @ref GAP_GENERAL_DISCOVERY_PROC. The device found when the procedure is ongoing is returned to
- * 		  the upper layers through the event @ref EVT_BLUE_GAP_DEVICE_FOUND.
+ * 		  the upper layers through the event @ref EVT_BLUE_GAP_DEVICE_FOUND (for IDB04A1) and @ref EVT_LE_ADVERTISING_REPORT (for IDB05A1).
  * @param scanInterval Time interval from when the Controller started its last LE scan until it begins
  * 					   the subsequent LE scan. The scan interval should be a number in the range
  * 					   0x0004 to 0x4000. This corresponds to a time range 2.5 msec to 10240 msec.
@@ -766,7 +773,7 @@ tBleStatus aci_gap_start_auto_conn_establish_proc_IDB04A1(uint16_t scanInterval,
  * @brief Start a general connection establishment procedure.
  * @note  The host enables scanning in the controller with the scanner filter policy set
  *        to accept all advertising packets and from the scanning results all the devices
- *        are sent to the upper layer using the event @ref EVT_BLUE_GAP_DEVICE_FOUND.
+ *        are sent to the upper layer using the event @ref EVT_BLUE_GAP_DEVICE_FOUND (for IDB04A1) and @ref EVT_LE_ADVERTISING_REPORT (for IDB05A1).
  *        The upper layer then has to select one of the devices to which it wants to connect
  *        by issuing the command aci_gap_create_connection(). The procedure is terminated
  *        when a connection is established or the upper layer terminates the procedure by
@@ -805,7 +812,7 @@ tBleStatus aci_gap_start_general_conn_establish_proc_IDB04A1(uint8_t scan_type, 
  * @note  The GAP adds the specified device addresses into white list and enables scanning in
  * 		  the controller with the scanner filter policy set to accept packets only from
  * 		  devices in whitelist. All the devices found are sent to the upper layer by the
- * 		  event @ref EVT_BLUE_GAP_DEVICE_FOUND. The upper layer then has to select one of the
+ * 		  event @ref EVT_BLUE_GAP_DEVICE_FOUND (for IDB04A1) and @ref EVT_LE_ADVERTISING_REPORT (for IDB05A1). The upper layer then has to select one of the
  * 		  devices to which it wants to connect by issuing the command aci_gap_create_connection().
  * 		  On completion of the procedure a  @ref EVT_BLUE_GAP_PROCEDURE_COMPLETE event is generated
  * 		  with the procedure code set to @ref GAP_SELECTIVE_CONNECTION_ESTABLISHMENT_PROC.
@@ -894,7 +901,7 @@ tBleStatus aci_gap_create_connection(uint16_t scanInterval, uint16_t scanWindow,
 				     uint16_t max_conn_length);
 
 /**
- * @brief Terminate the specified GATT procedure. @ref EVT_BLUE_GAP_PROCEDURE_COMPLETE event is
+ * @brief Terminate the specified GAP procedure. @ref EVT_BLUE_GAP_PROCEDURE_COMPLETE event is
  *  	  returned with the procedure code set to the corresponding procedure.
  * @param procedure_code One of the procedure codes (@ref gap_procedure_codes "GAP procedure codes").
  * @return Value indicating success or error code.

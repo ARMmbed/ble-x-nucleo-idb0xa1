@@ -29,9 +29,7 @@
   * CODING INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
   *
   * <h2><center>&copy; COPYRIGHT 2013 STMicroelectronics</center></h2>
-  */ 
-  
-// ANDREA: Changed some types (e.g., tHalUint8 --> uint8_t)
+  */
  
 #ifndef __BLUENRG_GATT_SERVER_H__
 #define __BLUENRG_GATT_SERVER_H__
@@ -45,11 +43,6 @@
 #include <map>
 
 #define BLE_TOTAL_CHARACTERISTICS 10
-
-// If the char has handle 'x', then the value declaration will have the handle 'x+1'
-// If the char has handle 'x', then the char descriptor declaration will have the handle 'x+2'
-#define CHAR_VALUE_OFFSET 1
-#define CHAR_DESC_OFFSET 2
 
 using namespace std;
 
@@ -68,7 +61,6 @@ public:
     };
     
     /* Functions that must be implemented from GattServer */
-    // <<<ANDREA>>>
     virtual ble_error_t addService(GattService &);
     virtual ble_error_t read(GattAttribute::Handle_t attributeHandle, uint8_t buffer[], uint16_t *lengthP);
     virtual ble_error_t read(Gap::Handle_t connectionHandle, GattAttribute::Handle_t attributeHandle, uint8_t buffer[], uint16_t *lengthP);
@@ -79,12 +71,13 @@ public:
     virtual bool isOnDataReadAvailable() const {
         return true;
     }
-    // <<<ANDREA>>>
+
+    virtual ble_error_t reset(void);
     
     /* BlueNRG Functions */
     void eventCallback(void);
     //void hwCallback(void *pckt);
-    ble_error_t Read_Request_CB(uint16_t handle);
+    ble_error_t Read_Request_CB(uint16_t attributeHandle);
     GattCharacteristic* getCharacteristicFromHandle(uint16_t charHandle);
     void HCIDataWrittenEvent(const GattWriteCallbackParams *params);
     void HCIDataReadEvent(const GattReadCallbackParams *params);
@@ -97,7 +90,7 @@ private:
     uint8_t characteristicCount;
     uint16_t servHandle, charHandle;
 
-    std::map<uint16_t, uint16_t> bleCharHanldeMap;  // 1st argument is characteristic, 2nd argument is service
+    std::map<uint16_t, uint16_t> bleCharHandleMap;  // 1st argument is characteristic, 2nd argument is service
     GattCharacteristic *p_characteristics[BLE_TOTAL_CHARACTERISTICS];
     uint16_t bleCharacteristicHandles[BLE_TOTAL_CHARACTERISTICS];
 

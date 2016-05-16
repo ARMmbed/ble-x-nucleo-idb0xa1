@@ -39,6 +39,7 @@
 #include "btle.h"
 #include "ble/GattClient.h"
 #include "ble/DiscoveredService.h"
+#include "ble/CharacteristicDescriptorDiscovery.h"
 #include "BlueNRGDiscoveredCharacteristic.h"
 
 using namespace std;
@@ -57,10 +58,11 @@ public:
     enum {
       GATT_IDLE,
       GATT_SERVICE_DISCOVERY,
-      GATT_CHARS_DISCOVERY_COMPLETE,
-      GATT_DISCOVERY_TERMINATED,
-            GATT_READ_CHAR,
-            GATT_WRITE_CHAR
+      GATT_CHAR_DESC_DISCOVERY,
+      //GATT_CHARS_DISCOVERY_COMPLETE,
+      //GATT_DISCOVERY_TERMINATED,
+      GATT_READ_CHAR,
+      GATT_WRITE_CHAR
     };
     
     /* Functions that must be implemented from GattClient */
@@ -90,7 +92,13 @@ public:
                               GattAttribute::Handle_t  attributeHandle,
                               size_t                   length,
                               const uint8_t           *value) const;
-    
+    virtual ble_error_t discoverCharacteristicDescriptors(
+        const DiscoveredCharacteristic& characteristic,
+        const CharacteristicDescriptorDiscovery::DiscoveryCallback_t& discoveryCallback,
+        const CharacteristicDescriptorDiscovery::TerminationCallback_t& terminationCallback);
+
+    virtual ble_error_t reset(void);
+
     void gattProcedureCompleteCB(Gap::Handle_t connectionHandle, uint8_t error_code);
 
     void primaryServicesCB(Gap::Handle_t connectionHandle,
@@ -113,7 +121,12 @@ public:
                               uint8_t event_data_length,
                               uint16_t attr_handle,
                               uint8_t *attr_value);
-    
+
+    void discAllCharacDescCB(Gap::Handle_t connHandle,
+                             uint8_t event_data_length,
+                             uint8_t format,
+                             uint8_t *handle_uuid_pair);
+
     void charReadCB(Gap::Handle_t connHandle,
                     uint8_t event_data_length,
                     uint8_t* attribute_value);
@@ -138,6 +151,8 @@ protected:
     ServiceDiscovery::ServiceCallback_t  serviceDiscoveryCallback;
     ServiceDiscovery::CharacteristicCallback_t characteristicDiscoveryCallback;
     ServiceDiscovery::TerminationCallback_t terminationCallback;
+    CharacteristicDescriptorDiscovery::DiscoveryCallback_t charDescDiscoveryCallback;
+    CharacteristicDescriptorDiscovery::TerminationCallback_t charDescTerminationCallback;
 
 private:
 
@@ -150,12 +165,16 @@ private:
   
   GattReadCallbackParams readCBParams;
   GattWriteCallbackParams writeCBParams;
-  
+
+  // The char for which the descriptor discovery has been launched  
+  DiscoveredCharacteristic _characteristic;
+
   UUID _matchingServiceUUID;
   UUID _matchingCharacteristicUUIDIn;
   uint8_t _currentState;
   uint8_t _numServices, _servIndex;
   uint8_t _numChars;
+  uint8_t _numCharDesc;
   
 };
 

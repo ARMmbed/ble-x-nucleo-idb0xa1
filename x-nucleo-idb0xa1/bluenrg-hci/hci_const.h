@@ -14,7 +14,6 @@
 #include "hal_types.h"
 #include "clock.h"
 #include "link_layer.h"
-
 #include "hci.h"
 
 #define DEFAULT_TIMEOUT (CLOCK_SECOND/10)
@@ -287,7 +286,7 @@ typedef __packed struct _le_read_channel_map_rp{
   uint8_t  status;
   uint16_t handle;
   uint8_t  map[5];
-}  le_read_channel_map_rp;
+} PACKED le_read_channel_map_rp;
 #define LE_READ_CHANNEL_MAP_RP_SIZE 8
 
 #define OCF_LE_READ_REMOTE_USED_FEATURES	0x0016

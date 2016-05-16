@@ -47,10 +47,13 @@ tBleStatus aci_gatt_init(void);
  *        service (including the service attribute, include attribute, characteristic attribute,
  *        characteristic value attribute and characteristic descriptor attribute). Handle of the
  *        created service is returned.
+ * @note  Service declaration is taken from the service pool. The attributes for characteristics and descriptors
+ *            are allocated from the attribute pool.
  * @param service_uuid_type Type of service UUID (16-bit or 128-bit). See @ref UUID_Types "UUID Types".
  * @param[in] service_uuid 16-bit or 128-bit UUID based on the UUID Type field
  * @param service_type Primary or secondary service. See @ref Service_type "Service Type".
  * @param max_attr_records Maximum number of attribute records that can be added to this service
+ *                         (including the service declaration itself)
  * @param[out] serviceHandle Handle of the Service. When this service is added to the service,
  * 							 a handle is allocated by the server to this service. Server also
  * 							 allocates a range of handles for this service from serviceHandle to
@@ -227,7 +230,7 @@ tBleStatus aci_gatt_update_char_value(uint16_t servHandle,
 				      uint16_t charHandle,
 				      uint8_t charValOffset,
 				      uint8_t charValueLen,   
-				      const uint8_t *charValue);
+				      const void *charValue);
 /**
  * @brief Delete the specified characteristic from the service.
  * @param servHandle Handle of the service to which characteristic belongs
@@ -704,7 +707,7 @@ tBleStatus aci_gatt_set_desc_value(uint16_t servHandle,
 				   uint16_t charDescHandle,
 				   uint16_t charDescValOffset,
 				   uint8_t charDescValueLen,
-				   const uint8_t *charDescValue);
+				   const void *charDescValue);
 
 /**
  * @brief Reads the value of the attribute handle specified from the local GATT database.
@@ -1033,6 +1036,28 @@ typedef __packed struct _evt_gatt_read_multi_permit_req{
   uint8_t  data_length; /**< Length of data field. */
   uint8_t  data[VARIABLE_SIZE]; /**< The handles of the attributes that have been requested by the client for a read. */
 } PACKED evt_gatt_read_multi_permit_req;
+
+/**
+ * This event is raised when the number of available TX buffers is above a threshold TH (TH = 2).
+ * The event will be given only if a previous ACI command returned with BLE_STATUS_INSUFFICIENT_RESOURCES.
+ * On receiving this event, the application can continue to send notifications by calling aci_gatt_update_char_value().
+ * See @ref evt_gatt_tx_pool_vailable.
+ *
+ */
+#define EVT_BLUE_GATT_TX_POOL_AVAILABLE_IDB05A1   (0x0C16)
+typedef __packed struct _evt_gatt_tx_pool_available{
+  uint16_t conn_handle; /**< Handle of the connection on which there was the request to read the attribute. */
+  uint16_t available_buffers; /**< Length of data field. */
+} PACKED evt_gatt_tx_pool_available;
+
+/**
+ * This event is raised on the server when the client confirms the reception of an indication.
+ */
+#define EVT_BLUE_GATT_SERVER_CONFIRMATION_EVENT_IDB05A1 (0x0C17)
+typedef __packed struct _evt_gatt_server_confirmation{
+  uint16_t conn_handle; /**< Handle of the connection on which there was the request to read the attribute. */
+  uint16_t reserved; /**< Not used. */
+} PACKED evt_gatt_server_confirmation;
 
 /**
  * @}

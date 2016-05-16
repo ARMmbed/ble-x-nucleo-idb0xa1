@@ -43,6 +43,18 @@ tBleStatus aci_hal_write_config_data(uint8_t offset,
                                     const uint8_t *val);
 
 /**
+ * @brief This command requests the value in the low level configure data structure.
+ *        The number of read bytes changes for different Offset.
+ * @param offset Offset in the data structure. The starting member in the data structure will have an offset 0.\n
+ * 				 See @ref Config_vals.
+ * @param data_len Length of the data buffer
+ * @param[out] data_len_out_p length of the data returned by the read.
+ * @param[out] data Read data
+ * @return Value indicating success or error code.
+ */
+tBleStatus aci_hal_read_config_data(uint8_t offset, uint16_t data_len, uint8_t *data_len_out_p, uint8_t *data);
+
+/**
  * @brief This command sets the TX power level of the BlueNRG.
  * @note  By controlling the EN_HIGH_POWER and the PA_LEVEL, the combination of the 2 determines
  *        the output power level (dBm).
@@ -61,6 +73,18 @@ tBleStatus aci_hal_write_config_data(uint8_t offset,
  * @return Value indicating success or error code.
  */
 tBleStatus aci_hal_set_tx_power_level(uint8_t en_high_power, uint8_t pa_level);
+
+/**
+ * @brief This command returns the number of packets sent in Direct Test Mode.
+ * @note  When the Direct TX test is started, a 32-bit counter is used to count how many packets
+ *        have been transmitted. This command can be used to check how many packets have been sent
+ *        during the Direct TX test.\n
+ *        The counter starts from 0 and counts upwards. The counter can wrap and start from 0 again.
+ *        The counter is not cleared until the next Direct TX test starts.
+ * @param[out] number_of_packets Number of packets sent during the last Direct TX test.
+ * @return Value indicating success or error code.
+ */
+tBleStatus aci_hal_le_tx_test_packet_number(uint32_t *number_of_packets);
 
 /**
  * @brief Put the device in standby mode.
@@ -118,6 +142,8 @@ tBleStatus aci_hal_tone_stop(void);
 #define CONFIG_DATA_LL_WITHOUT_HOST         (0x2C) /**< Switch on/off Link Layer only mode. Set to 1 to disable Host.
  	 	 	 	 	 	 	 	 	 	 	 	 	 It can be written only if aci_hal_write_config_data() is the first command
  	 	 	 	 	 	 	 	 	 	 	 	 	 after reset. */
+
+#define CONFIG_DATA_RANDOM_ADDRESS_IDB05A1  (0x80) /**< Stored static random address. Read-only (IDB05A1 only) */
 
 /**
  * Select the BlueNRG roles and mode configurations.\n

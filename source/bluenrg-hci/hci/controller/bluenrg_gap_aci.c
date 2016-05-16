@@ -119,7 +119,7 @@ tBleStatus aci_gap_set_limited_discoverable(uint8_t AdvType, uint16_t AdvIntervM
   uint8_t buffer[40];
   uint8_t indx = 0;
     
-  if((unsigned int)(LocalNameLen + ServiceUUIDLen + 14) > sizeof(buffer))
+  if((unsigned int)(LocalNameLen+ServiceUUIDLen+14) > sizeof(buffer))
     return BLE_STATUS_INVALID_PARAMS;
 
   buffer[indx] = AdvType;
@@ -1300,7 +1300,8 @@ tBleStatus aci_gap_get_bonded_devices(uint8_t *num_devices, uint8_t *device_list
   }
   
   *num_devices = rp.num_addr;
-  Osal_MemCpy(device_list, rp.dev_list, MIN(device_list_size,rp.num_addr*7));
+  if(device_list != NULL)
+    Osal_MemCpy(device_list, rp.dev_list, MIN(device_list_size,rp.num_addr*7));
   
   return 0;
 }

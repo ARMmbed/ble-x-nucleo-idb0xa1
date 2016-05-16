@@ -76,7 +76,7 @@ public:
     virtual const SecurityManager& getSecurityManager() const {
         return *sm;
     }
-    ble_error_t reset(void);
+    void reset(void);
     virtual bool hasInitialized(void) const {
         return isInitialized;
     }
