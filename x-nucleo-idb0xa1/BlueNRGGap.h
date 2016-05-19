@@ -194,7 +194,7 @@ private:
 
         /* Set the whitelist policy filter modes to IGNORE_WHITELIST */
         advertisingPolicyMode = Gap::ADV_POLICY_IGNORE_WHITELIST;
-        scanningPolicyMode    = Gap::SCAN_POLICY_FILTER_ALL_ADV;//Gap::SCAN_POLICY_IGNORE_WHITELIST;
+        scanningPolicyMode    = Gap::SCAN_POLICY_IGNORE_WHITELIST;
 
         isSetAddress = false;
         memset(deviceAppearance, 0, sizeof(deviceAppearance));
