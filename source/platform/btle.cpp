@@ -263,6 +263,7 @@ tBleStatus btleStartRadioScan(uint8_t scan_type,
   // Observer role is not supported by X-NUCLEO-IDB04A1, return BLE_ERROR_NOT_IMPLEMENTED
   if(bnrg_expansion_board == IDB05A1) {
       PRINTF("scan_interval=%d scan_window=%d\n\r", scan_interval, scan_window);
+      PRINTF("scan_type=%d own_address_type=%d\n\r", scan_type, own_address_type);
       ret = aci_gap_start_observation_procedure(scan_interval,
                                                 scan_window,
                                                 scan_type,
@@ -605,7 +606,6 @@ extern "C" {
           break;
         case EVT_BLUE_GATT_PROCEDURE_COMPLETE:
           {
-            //PRINTF("EVT_BLUE_GATT_PROCEDURE_COMPLETE\n\r");
             evt_gatt_procedure_complete *evt = (evt_gatt_procedure_complete*)blue_evt->data;
             PRINTF("EVT_BLUE_GATT_PROCEDURE_COMPLETE error_code=%d\n\r", evt->error_code);
             BlueNRGGattClient::getInstance().gattProcedureCompleteCB(evt->conn_handle, evt->error_code);
@@ -614,7 +614,6 @@ extern "C" {
           
         case EVT_BLUE_GAP_DEVICE_FOUND:
           {
-            PRINTF("EVT_BLUE_GAP_DEVICE_FOUND\n\r");
             evt_gap_device_found *pr = (evt_gap_device_found*)blue_evt->data;
             PRINTF("EVT_BLUE_GAP_DEVICE_FOUND evt_type=%d\n\r", pr->evt_type);
             

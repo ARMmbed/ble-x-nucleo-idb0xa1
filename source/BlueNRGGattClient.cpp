@@ -766,6 +766,7 @@ ble_error_t BlueNRGGattClient::discoverCharacteristicDescriptors(
   GattAttribute::Handle_t valueHandle = characteristic.getValueHandle();
   GattAttribute::Handle_t lastHandle = characteristic.getLastHandle();
 
+  PRINTF("Starting aci_gatt_disc_all_charac_descriptors...\n\r");
   ret = aci_gatt_disc_all_charac_descriptors(connHandle, valueHandle, lastHandle);
 
   if (ret == BLE_STATUS_SUCCESS) {
