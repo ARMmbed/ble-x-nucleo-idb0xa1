@@ -179,8 +179,10 @@ private:
 
     uint16_t scanInterval;
     uint16_t scanWindow;
+    uint16_t advInterval;
     uint16_t conn_min_interval;
     uint16_t conn_max_interval;
+    void setAdvParameters(void);
     void setConnectionParameters(void);
 
     Gap::AdvertisingPolicyMode_t advertisingPolicyMode;

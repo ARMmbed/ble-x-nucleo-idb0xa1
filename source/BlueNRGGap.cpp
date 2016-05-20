@@ -50,8 +50,6 @@
 const uint8_t *scan_response_payload = NULL;
 uint8_t scan_rsp_length = 0;
 
-uint32_t advtInterval = BLUENRG_GAP_ADV_INTERVAL_MAX;
-
 /*
  * Utility to process GAP specific events (e.g., Advertising timeout)
  */
@@ -255,8 +253,7 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
             case GapAdvertisingData::ADVERTISING_INTERVAL:               /**< Advertising Interval */
                 {
                 PRINTF("Advertising type: ADVERTISING_INTERVAL\n\r");
-                advtInterval = (uint16_t)(*loadPtr.getUnitAtIndex(index).getDataPtr());
-                PRINTF("advtInterval=%d\n\r", (int)advtInterval);
+                //uint32_t advInt = (uint32_t)(*loadPtr.getUnitAtIndex(index).getDataPtr());
                 break;
                 }
             case GapAdvertisingData::MANUFACTURER_SPECIFIC_DATA:        /**< Manufacturer Specific Data */                             
@@ -457,13 +454,14 @@ ble_error_t BlueNRGGap::startAdvertising(const GapAdvertisingParams &params)
         hci_le_set_scan_resp_data(0, NULL);
     }
 
-    advtInterval = params.getIntervalInADVUnits();
-    PRINTF("advtInterval=%ld advType=%d\n\r", advtInterval, params.getAdvertisingType());
+    //advInterval = params.getIntervalInADVUnits();
+    setAdvParameters();
+    PRINTF("advInterval=%d advType=%d\n\r", advInterval, params.getAdvertisingType());
 
     /* Setting discoverable mode */
     ret = aci_gap_set_discoverable(params.getAdvertisingType(), // AdvType
-                                   advtInterval,                // AdvIntervMin
-                                   advtInterval,                // AdvIntervMax
+                                   advInterval,                 // AdvIntervMin
+                                   advInterval,                 // AdvIntervMax
                                    addr_type,                   // OwnAddrType
                                    advFilterPolicy,             // AdvFilterPolicy
                                    local_name_length,           // LocalNameLen
@@ -1269,6 +1267,25 @@ void BlueNRGGap::getPermittedTxPowerValues(const int8_t **valueArrayPP, size_t *
 
 /**************************************************************************/
 /*!
+    @brief  Set advertising parameters according to the current state
+            Parameters value is set taking into account guidelines of the BlueNRG
+            time slots allocation
+*/
+/**************************************************************************/
+void BlueNRGGap::setAdvParameters(void)
+{
+  uint32_t advIntMS;
+
+  if(state.connected == 1) {
+    advIntMS = (conn_min_interval*1.25)-GUARD_INT;
+    advInterval = _advParams.MSEC_TO_ADVERTISEMENT_DURATION_UNITS(advIntMS);
+  } else {
+    advInterval = _advParams.getIntervalInADVUnits();
+  }
+}
+
+/**************************************************************************/
+/*!
     @brief  Set connection parameters according to the current state (ADV and/or SCAN)
             Parameters value is set taking into account guidelines of the BlueNRG
             time slots allocation
@@ -1278,17 +1295,21 @@ void BlueNRGGap::setConnectionParameters(void)
 {
   if (state.advertising == 1) {
 
-    if (_scanningParams.getInterval() < _advParams.getInterval()) {
-      scanInterval = _advParams.getIntervalInADVUnits();
-      scanWindow = _advParams.getIntervalInADVUnits();
+    if (_scanningParams.getInterval() < advInterval) {
+      PRINTF("state.adv=1 scanInterval<advInterval\r\n");
+      scanInterval = advInterval;
+      scanWindow = advInterval;
     } else {
+      PRINTF("state.adv=1 scanInterval>=advInterval\r\n");
       scanInterval = _scanningParams.getInterval();
       scanWindow = _scanningParams.getWindow();
     }
-    conn_min_interval = (_advParams.getInterval()+GUARD_INT)/1.25;
-    conn_max_interval = (_advParams.getInterval()+GUARD_INT)/1.25;
+    conn_min_interval = (_advParams.ADVERTISEMENT_DURATION_UNITS_TO_MS(advInterval)+GUARD_INT)/1.25;
+    conn_max_interval = (_advParams.ADVERTISEMENT_DURATION_UNITS_TO_MS(advInterval)+GUARD_INT)/1.25;
 
   } else {
+
+    PRINTF("state.adv = 0\r\n");
 
     scanInterval = _scanningParams.getInterval();
     scanWindow = _scanningParams.getWindow();
