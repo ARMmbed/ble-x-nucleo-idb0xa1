@@ -244,10 +244,9 @@ ble_error_t BlueNRGGattServer::addService(GattService &service)
 
 /**************************************************************************/
 /*!
-    @brief  Reads the value of a characteristic, based on the service
-            and characteristic index fields
+    @brief  Reads the value of a characteristic, based on char handle
 
-    @param[in]  charHandle
+    @param[in]  attributeHandle
                 The handle of the GattCharacteristic to read from
     @param[in]  buffer
                 Buffer to hold the the characteristic's value
@@ -287,15 +286,17 @@ ble_error_t BlueNRGGattServer::read(GattAttribute::Handle_t attributeHandle, uin
 
 /**************************************************************************/
 /*!
-    @brief  Updates the value of a characteristic, based on the service
-            and characteristic index fields
+    @brief  Reads the value of a characteristic, based on the connection
+            and char handle
 
-    @param[in]  charHandle
+    @param[in]  connectionHandle
+                The handle of the connection
+    @param[in]  attributeHandle
                 The handle of the GattCharacteristic to write to
     @param[in]  buffer
                 Data to use when updating the characteristic's value
                 (raw byte array in LSB format)
-    @param[in]  len
+    @param[in]  lengthP
                 The number of bytes in buffer
 
     @returns    ble_error_t
@@ -348,6 +349,10 @@ ble_error_t BlueNRGGattServer::write(GattAttribute::Handle_t attributeHandle, co
             corresponding serviceHandle=%u len=%d\n\r",
             attributeHandle, bleCharHandleMap.find(charHandle)->second, len);
 
+    /*
+     * If notifications (or indications) are enabled on that characteristic, a notification (or indication)
+     * will be sent to the client after sending this command to the BlueNRG.
+     */
     ret = aci_gatt_update_char_value(bleCharHandleMap.find(charHandle)->second, charHandle, 0, len, buffer);
 
     if (ret != BLE_STATUS_SUCCESS){
@@ -359,15 +364,6 @@ ble_error_t BlueNRGGattServer::write(GattAttribute::Handle_t attributeHandle, co
         default:
           return BLE_STACK_BUSY;
       }
-    }
-
-    //Generate Data Sent Event Here? (GattServerEvents::GATT_EVENT_DATA_SENT)  //FIXME: Is this correct?
-    //Check if characteristic property is NOTIFY|INDICATE, if yes generate event
-    GattCharacteristic *p_char = BlueNRGGattServer::getInstance().getCharacteristicFromHandle(charHandle);
-    if(p_char->getProperties() &  (GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_NOTIFY
-                | GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_INDICATE)) {
-        PRINTF("Generate event after updating\n\r");
-        BlueNRGGattServer::getInstance().handleEvent(GattServerEvents::GATT_EVENT_DATA_SENT, charHandle);
     }
 
     return BLE_ERROR_NONE;
