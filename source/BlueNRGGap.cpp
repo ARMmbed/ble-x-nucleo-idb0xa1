@@ -1304,8 +1304,14 @@ void BlueNRGGap::setConnectionParameters(void)
       scanInterval = _scanningParams.getInterval();
       scanWindow = _scanningParams.getWindow();
     }
-    conn_min_interval = (_advParams.ADVERTISEMENT_DURATION_UNITS_TO_MS(advInterval)+GUARD_INT)/1.25;
-    conn_max_interval = (_advParams.ADVERTISEMENT_DURATION_UNITS_TO_MS(advInterval)+GUARD_INT)/1.25;
+
+    if(advInterval>(MAX_INT_CONN-(GUARD_INT/1.25))) { //(4000-GUARD_INT)ms
+        conn_min_interval = MAX_INT_CONN;
+        conn_max_interval = MAX_INT_CONN;
+    } else {
+        conn_min_interval = (_advParams.ADVERTISEMENT_DURATION_UNITS_TO_MS(advInterval)+GUARD_INT)/1.25;
+        conn_max_interval = (_advParams.ADVERTISEMENT_DURATION_UNITS_TO_MS(advInterval)+GUARD_INT)/1.25;
+    }
 
   } else {
 
@@ -1313,14 +1319,19 @@ void BlueNRGGap::setConnectionParameters(void)
 
     scanInterval = _scanningParams.getInterval();
     scanWindow = _scanningParams.getWindow();
-    conn_min_interval = SCAN_DURATION_UNITS_TO_MSEC(scanInterval)/1.25;
-    conn_max_interval = SCAN_DURATION_UNITS_TO_MSEC(scanInterval)/1.25;
-
+    if(SCAN_DURATION_UNITS_TO_MSEC(scanInterval)>(MAX_INT_CONN*1.25) ||
+       SCAN_DURATION_UNITS_TO_MSEC(scanInterval)<(MIN_INT_CONN*1.25)) { //(4000)ms || (7.5)ms
+        conn_min_interval = DEF_INT_CONN;
+        conn_max_interval = DEF_INT_CONN;
+    } else {
+        conn_min_interval = SCAN_DURATION_UNITS_TO_MSEC(scanInterval)/1.25;
+        conn_max_interval = SCAN_DURATION_UNITS_TO_MSEC(scanInterval)/1.25;
+    }
   }
   PRINTF("scanInterval=%u[msec]\r\n",SCAN_DURATION_UNITS_TO_MSEC(scanInterval));
   PRINTF("scanWindow()=%u[msec]\r\n",SCAN_DURATION_UNITS_TO_MSEC(scanWindow));
-  PRINTF("conn_min_interval[msec]=%u\r\n",(unsigned)(conn_min_interval*1.25));
-  PRINTF("conn_max_interval[msec]=%u\r\n",(unsigned)(conn_max_interval*1.25));
+  PRINTF("conn_min_interval=%u[msec]\r\n",(unsigned)(conn_min_interval*1.25));
+  PRINTF("conn_max_interval=%u[msec]\r\n",(unsigned)(conn_max_interval*1.25));
 
 }
 

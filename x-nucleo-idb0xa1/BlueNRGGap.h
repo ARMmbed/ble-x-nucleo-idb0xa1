@@ -62,6 +62,9 @@
 #define CONN_L1        (0x0008)
 #define CONN_L2        (0x0008)
 #define GUARD_INT      5 //msec
+#define MIN_INT_CONN   0x0006 //=>7.5msec
+#define MAX_INT_CONN   0x0C80 //=>4000msec
+#define DEF_INT_CONN   0x0140 //=>400msec (default value for connection interval)
 
 #define LOCAL_NAME_MAX_SIZE 9 //8 + 1(AD_DATA_TYPE)
 #define UUID_BUFFER_SIZE 17 //Either 8*2(16-bit UUIDs) or 4*4(32-bit UUIDs) or 1*16(128-bit UUIDs) +1(AD_DATA_TYPE)
