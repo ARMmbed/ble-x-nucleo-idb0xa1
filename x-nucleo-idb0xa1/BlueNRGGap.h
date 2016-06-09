@@ -176,6 +176,9 @@ private:
     Timeout advTimeout;
     bool AdvToFlag;
 
+    const uint8_t *scan_response_payload;
+    uint8_t scan_rsp_length;
+
     static uint16_t SCAN_DURATION_UNITS_TO_MSEC(uint16_t duration) {
         return (duration * 625) / 1000;
     }

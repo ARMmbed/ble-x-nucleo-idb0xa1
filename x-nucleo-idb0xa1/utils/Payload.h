@@ -67,6 +67,7 @@ class Payload {
 public:
     Payload(const uint8_t *tokenString, uint8_t string_ength);
     Payload();
+    ~Payload();
     uint8_t getPayloadUnitCount();
     
     uint8_t getIDAtIndex(int index);  
@@ -180,7 +181,11 @@ public:
     
     int getPayloadUnitCount() { return payloadUnitCount; }
     
-    
+    ~PayloadPtr() {
+        if(unit) delete[] unit;
+
+        unit = NULL;
+    }
 };    
 
 #endif // __PAYLOAD_H__

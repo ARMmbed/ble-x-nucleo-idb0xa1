@@ -47,8 +47,6 @@
 //Local Variables
 //const char *local_name = NULL;
 //uint8_t local_name_length = 0;
-const uint8_t *scan_response_payload = NULL;
-uint8_t scan_rsp_length = 0;
 
 /*
  * Utility to process GAP specific events (e.g., Advertising timeout)
@@ -111,8 +109,9 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
         local_name_length = 0;
         servUuidlength = 0;
         AdvLen = 0;
-    } else { 
-        PayloadPtr loadPtr(advData.getPayload(), advData.getPayloadLen());        
+    } else {
+        PayloadPtr loadPtr(advData.getPayload(), advData.getPayloadLen());
+
         for(uint8_t index=0; index<loadPtr.getPayloadUnitCount(); index++) {                  
             loadPtr.getUnitAtIndex(index);
 
@@ -157,7 +156,8 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
                 }
                 
                 for(unsigned i=0; i<buffSize; i++) {
-                    PRINTF("loadPtr.getUnitAtIndex(index).getDataPtr()[%d] = 0x%x\n\r", i, loadPtr.getUnitAtIndex(index).getDataPtr()[i]);
+                    PRINTF("loadPtr.getUnitAtIndex(index).getDataPtr()[%d] = 0x%x\n\r",
+                            i, loadPtr.getUnitAtIndex(index).getDataPtr()[i]);
                 }
 #endif /* DEBUG */
                 break;
@@ -224,7 +224,8 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
                 }
 #ifdef DEBUG
                 for(int i=0; i<buffSize+1; i++) {
-                    PRINTF("Advertising type: SERVICE_DATA loadPtr.getUnitAtIndex(index).getDataPtr()[%d] = 0x%x\n\r", i, loadPtr.getUnitAtIndex(index).getDataPtr()[i]);
+                    PRINTF("Advertising type: SERVICE_DATA loadPtr.getUnitAtIndex(index).getDataPtr()[%d] = 0x%x\n\r",
+                            i, loadPtr.getUnitAtIndex(index).getDataPtr()[i]);
                 }
 #endif
                 AdvLen = buffSize+2; // the total ADV DATA LEN should include two more bytes: the buffer size byte; and the Service Data Type Value byte
@@ -279,12 +280,15 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
                 memcpy(AdvData+2, loadPtr.getUnitAtIndex(index).getDataPtr(), buffSize);
                 break;
                 }
-                
-            }          
-        }
+            } // end switch
+
+        } //end for
+
         //Set the SCAN_RSP Payload
-        scan_response_payload = scanResponse.getPayload();
-        scan_rsp_length = scanResponse.getPayloadLen();
+        if(scanResponse.getPayloadLen() > 0) {
+          scan_response_payload = scanResponse.getPayload();
+          scan_rsp_length = scanResponse.getPayloadLen();
+        }
         
         // Update the ADV data if we are already in ADV mode
         if(AdvLen > 0 && state.advertising == 1) {

@@ -98,4 +98,21 @@ uint8_t* Payload::getSerializedAdDataAtIndex(int index) {
         serializedAdData[i+1] = data[i];
     }
     return serializedAdData;
-}  
+}
+
+Payload::~Payload() {
+    int i = 0;
+
+    if(payload) {
+        while(i<payloadUnitCount) {
+            if(payload->data) {
+                delete[] payload->data;
+                payload->data = NULL;
+            }
+        }
+        delete[] payload;
+        payload = NULL;
+    }
+
+}
+
