@@ -268,7 +268,7 @@ tBleStatus btleStartRadioScan(uint8_t scan_type,
                                                 scan_window,
                                                 scan_type,
                                                 own_address_type,
-                                                1); // 1 to filter duplicates
+                                                0); // 1 to filter duplicates
   } else {
       ret = BLE_STATUS_INVALID_CID;
   }
