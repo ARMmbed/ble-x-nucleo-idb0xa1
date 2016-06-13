@@ -99,6 +99,7 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
     PRINTF("BlueNRGGap::setAdvertisingData\n\r");
     /* Make sure we don't exceed the advertising payload length */
     if (advData.getPayloadLen() > GAP_ADVERTISING_DATA_MAX_PAYLOAD) {
+        PRINTF("Exceeded the advertising payload length\n\r");
         return BLE_ERROR_BUFFER_OVERFLOW;
     }
 
@@ -234,23 +235,7 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
                 memcpy(AdvData+2, loadPtr.getUnitAtIndex(index).getDataPtr(), buffSize);
                 break;
                 }
-            case GapAdvertisingData::APPEARANCE:			/**< Appearance */
-                {
-                PRINTF("Advertising type: APPEARANCE\n\r");
-                uint8_t buffSize = *loadPtr.getUnitAtIndex(index).getLenPtr()-1;
-                if(buffSize>ADV_DATA_MAX_SIZE-2) {
-                    return BLE_ERROR_PARAM_OUT_OF_RANGE;
-                }
-                GapAdvertisingData::Appearance appearanceP;
-                memcpy(deviceAppearance, loadPtr.getUnitAtIndex(index).getDataPtr(), 2);
-                
-                PRINTF("input: deviceAppearance= 0x%x 0x%x\n\r", deviceAppearance[1], deviceAppearance[0]);
 
-                appearanceP = (GapAdvertisingData::Appearance)(deviceAppearance[1]<<8|deviceAppearance[0]);
-                /* Align the GAP Service Appearance Char value coherently */
-                setAppearance(appearanceP);
-                break;
-                }
             case GapAdvertisingData::ADVERTISING_INTERVAL:               /**< Advertising Interval */
                 {
                 PRINTF("Advertising type: ADVERTISING_INTERVAL\n\r");
@@ -289,7 +274,11 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
           scan_response_payload = scanResponse.getPayload();
           scan_rsp_length = scanResponse.getPayloadLen();
         }
-        
+
+        /* Align the GAP Service Appearance Char value coherently */
+        STORE_LE_16(deviceAppearance, advData.getAppearance());
+        setAppearance((GapAdvertisingData::Appearance)(deviceAppearance[1]<<8|deviceAppearance[0]));
+
         // Update the ADV data if we are already in ADV mode
         if(AdvLen > 0 && state.advertising == 1) {
  
@@ -539,9 +528,16 @@ ble_error_t BlueNRGGap::startAdvertising(const GapAdvertisingParams &params)
     } // AdvLen>0
 
     if(deviceAppearance != 0) {
-      PRINTF("deviceAppearance != 0\n\r");
       uint8_t appearance[] = {3, AD_TYPE_APPEARANCE, deviceAppearance[0], deviceAppearance[1]};
-      aci_gap_update_adv_data(4, appearance);
+      ret = aci_gap_update_adv_data(4, appearance);
+      if(BLE_STATUS_SUCCESS!=ret) {
+          switch (ret) {
+            case BLE_STATUS_TIMEOUT:
+              return BLE_STACK_BUSY;
+            default:
+              return BLE_ERROR_UNSPECIFIED;
+          }
+      }
     }
 
     state.advertising = 1;
