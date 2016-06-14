@@ -196,6 +196,8 @@ private:
 
     Whitelist_t whitelistAddresses;
 
+    ble_error_t updateAdvertisingData(void);
+
     BlueNRGGap() {
         m_connectionHandle = BLE_CONN_HANDLE_INVALID;
         addr_type = BLEProtocol::AddressType::RANDOM_STATIC;

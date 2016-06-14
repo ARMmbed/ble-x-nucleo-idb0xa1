@@ -286,10 +286,15 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
             if(BLE_STATUS_SUCCESS!=ret) {
                 PRINTF("error occurred while adding adv data (ret=0x%x)\n", ret);
                 switch (ret) {
-                    case BLE_STATUS_TIMEOUT:
-                        return BLE_STACK_BUSY;
-                    default:
-                        return BLE_ERROR_UNSPECIFIED;
+                  case BLE_STATUS_TIMEOUT:
+                    return BLE_STACK_BUSY;
+                  case ERR_INVALID_HCI_CMD_PARAMS:
+                  case BLE_STATUS_INVALID_PARAMS:
+                    return BLE_ERROR_INVALID_PARAM;
+                  case BLE_STATUS_FAILED:
+                    return BLE_ERROR_PARAM_OUT_OF_RANGE;
+                  default:
+                    return BLE_ERROR_UNSPECIFIED;
                 }
             }
         }
@@ -363,6 +368,7 @@ static void advTimeoutCB(void)
 ble_error_t BlueNRGGap::startAdvertising(const GapAdvertisingParams &params)
 {
     tBleStatus ret;
+    ble_error_t rc;
 
     /* Make sure we support the advertising type */
     if (params.getAdvertisingType() == GapAdvertisingParams::ADV_CONNECTABLE_DIRECTED) {
@@ -482,62 +488,11 @@ ble_error_t BlueNRGGap::startAdvertising(const GapAdvertisingParams &params)
        }
     }
 
-    // Before updating the ADV data, delete COMPLETE_LOCAL_NAME and TX_POWER_LEVEL fields (if present)
-    if(AdvLen > 0) {
-      if(local_name_length > 0) {
-        PRINTF("!!!calling aci_gap_delete_ad_type AD_TYPE_COMPLETE_LOCAL_NAME!!!\n");
-        ret = aci_gap_delete_ad_type(AD_TYPE_COMPLETE_LOCAL_NAME);
-        if (BLE_STATUS_SUCCESS!=ret){
-          PRINTF("aci_gap_delete_ad_type failed return=%d\n", ret);
-          switch (ret) {
-            case BLE_STATUS_TIMEOUT:
-              return BLE_STACK_BUSY;
-            default:
-              return BLE_ERROR_UNSPECIFIED;
-          }
-        }
-      }
-
-      // If ADV Data Type is SERVICE DATA or MANUFACTURER SPECIFIC DATA,
-      // we need to delete it to make the needed room in ADV payload
-      if(AdvData[1]==AD_TYPE_SERVICE_DATA || AdvData[1]==AD_TYPE_MANUFACTURER_SPECIFIC_DATA) {
-        PRINTF("!!!calling aci_gap_delete_ad_type(AD_TYPE_TX_POWER_LEVEL)!!!\n");
-        ret = aci_gap_delete_ad_type(AD_TYPE_TX_POWER_LEVEL);
-        if (BLE_STATUS_SUCCESS!=ret){
-          PRINTF("aci_gap_delete_ad_type failed return=%d\n", ret);
-          switch (ret) {
-            case BLE_STATUS_TIMEOUT:
-              return BLE_STACK_BUSY;
-            default:
-              return BLE_ERROR_UNSPECIFIED;
-          }
-        }
-      }
-   
-      ret = aci_gap_update_adv_data(AdvLen, AdvData);
-      if(BLE_STATUS_SUCCESS!=ret) {
-        PRINTF("error occurred while adding adv data (ret=0x%x)\n", ret);
-          switch (ret) {
-            case BLE_STATUS_TIMEOUT:
-              return BLE_STACK_BUSY;
-            default:
-              return BLE_ERROR_UNSPECIFIED;
-          }
-      }
-
-    } // AdvLen>0
-
-    if(deviceAppearance != 0) {
-      uint8_t appearance[] = {3, AD_TYPE_APPEARANCE, deviceAppearance[0], deviceAppearance[1]};
-      ret = aci_gap_update_adv_data(4, appearance);
-      if(BLE_STATUS_SUCCESS!=ret) {
-          switch (ret) {
-            case BLE_STATUS_TIMEOUT:
-              return BLE_STACK_BUSY;
-            default:
-              return BLE_ERROR_UNSPECIFIED;
-          }
-      }
+    // Stop Advertising if an error occurs while updating ADV data
+    rc = updateAdvertisingData();
+    if(rc != BLE_ERROR_NONE) {
+      aci_gap_set_non_discoverable();
+      return rc;
     }
 
     state.advertising = 1;
@@ -551,8 +506,78 @@ ble_error_t BlueNRGGap::startAdvertising(const GapAdvertisingParams &params)
         advTimeout.attach(advTimeoutCB, params.getTimeout() * 1000);
 #endif
     }
-    
+
     return BLE_ERROR_NONE;
+}
+
+ble_error_t BlueNRGGap::updateAdvertisingData(void)
+{
+    tBleStatus ret;
+
+    // Before updating the ADV data, delete COMPLETE_LOCAL_NAME and TX_POWER_LEVEL fields (if present)
+    if(AdvLen > 0) {
+      if(local_name_length > 0) {
+        ret = aci_gap_delete_ad_type(AD_TYPE_COMPLETE_LOCAL_NAME);
+        if (BLE_STATUS_SUCCESS!=ret){
+          PRINTF("aci_gap_delete_ad_type failed return=%d\n", ret);
+          switch (ret) {
+            case BLE_STATUS_TIMEOUT:
+              return BLE_STACK_BUSY;
+            case ERR_COMMAND_DISALLOWED:
+              return BLE_ERROR_OPERATION_NOT_PERMITTED;
+            case ERR_INVALID_HCI_CMD_PARAMS:
+              return BLE_ERROR_INVALID_PARAM;
+            default:
+              return BLE_ERROR_UNSPECIFIED;
+          }
+        }
+      }
+
+      // If ADV Data Type is SERVICE DATA or MANUFACTURER SPECIFIC DATA,
+      // we need to delete it to make the needed room in ADV payload
+      if(AdvData[1]==AD_TYPE_SERVICE_DATA || AdvData[1]==AD_TYPE_MANUFACTURER_SPECIFIC_DATA) {
+        ret = aci_gap_delete_ad_type(AD_TYPE_TX_POWER_LEVEL);
+        if (BLE_STATUS_SUCCESS!=ret){
+          PRINTF("aci_gap_delete_ad_type failed return=%d\n", ret);
+          switch (ret) {
+            case BLE_STATUS_TIMEOUT:
+              return BLE_STACK_BUSY;
+            case ERR_COMMAND_DISALLOWED:
+              return BLE_ERROR_OPERATION_NOT_PERMITTED;
+            case ERR_INVALID_HCI_CMD_PARAMS:
+              return BLE_ERROR_INVALID_PARAM;
+            default:
+              return BLE_ERROR_UNSPECIFIED;
+          }
+        }
+      }
+
+      ret = aci_gap_update_adv_data(AdvLen, AdvData);
+      if(BLE_STATUS_SUCCESS!=ret) {
+          PRINTF("error occurred while adding adv data (ret=0x%x)\n\r", ret);
+          switch (ret) {
+            case BLE_STATUS_TIMEOUT:
+              return BLE_STACK_BUSY;
+            case ERR_INVALID_HCI_CMD_PARAMS:
+            case BLE_STATUS_INVALID_PARAMS:
+              return BLE_ERROR_INVALID_PARAM;
+            case BLE_STATUS_FAILED:
+              return BLE_ERROR_PARAM_OUT_OF_RANGE;
+            default:
+              return BLE_ERROR_UNSPECIFIED;
+          }
+      }
+
+    } // AdvLen>0
+
+    if(deviceAppearance != 0) {
+      uint8_t appearance[] = {3, AD_TYPE_APPEARANCE, deviceAppearance[0], deviceAppearance[1]};
+      // just ignore error code while setting appearance
+      aci_gap_update_adv_data(4, appearance);
+    }
+
+    return BLE_ERROR_NONE;
+
 }
 
 /**************************************************************************/
@@ -1121,7 +1146,9 @@ void BlueNRGGap::Discovery_CB(Reason_t reason,
     
       PRINTF("data_length=%d adv peerAddr[%02x %02x %02x %02x %02x %02x] \r\n",
              *data_length, addr[5], addr[4], addr[3], addr[2], addr[1], addr[0]);
-      processAdvertisementReport(addr, *RSSI, isScanResponse, type, *data_length, data);
+      if(!_connecting) {
+        processAdvertisementReport(addr, *RSSI, isScanResponse, type, *data_length, data);
+      }
       PRINTF("!!!After processAdvertisementReport\n\r");
     }
     break;
@@ -1213,7 +1240,7 @@ ble_error_t BlueNRGGap::stopScan() {
   ret = aci_gap_terminate_gap_procedure(GAP_OBSERVATION_PROC);
   
   if (ret != BLE_STATUS_SUCCESS) {
-    PRINTF("GAP Terminate Gap Procedure failed\n");
+    PRINTF("GAP Terminate Gap Procedure failed(ret=0x%x)\n", ret);
     return BLE_ERROR_UNSPECIFIED; 
   } else {
     PRINTF("Discovery Procedure Terminated\n");
@@ -1355,15 +1382,16 @@ ble_error_t BlueNRGGap::createConnection ()
 				  (unsigned char*)_peerAddr,
 				  addr_type,
 				  conn_min_interval, conn_max_interval, 0,
-				  SUPERV_TIMEOUT, CONN_L1 , CONN_L1);
+				  SUPERV_TIMEOUT, CONN_L1, CONN_L1);
 
-  _connecting = false;
+  //_connecting = false;
   
   if (ret != BLE_STATUS_SUCCESS) {
     PRINTF("Error while starting connection (ret=0x%02X).\n\r", ret);
     return BLE_ERROR_UNSPECIFIED;
   } else {
     PRINTF("Connection started.\n");
+    _connecting = false;
     return BLE_ERROR_NONE;
   }
 }
