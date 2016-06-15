@@ -642,31 +642,22 @@ ble_error_t BlueNRGGap::stopAdvertising(void)
     @endcode
 */
 /**************************************************************************/
-ble_error_t BlueNRGGap::disconnect(Gap::DisconnectionReason_t reason)
+ble_error_t BlueNRGGap::disconnect(Handle_t connectionHandle, Gap::DisconnectionReason_t reason)
 {
-    /* avoid compiler warnings about unused variables */
-    (void)reason;
-
     tBleStatus ret;
-    //For Reason codes check BlueTooth HCI Spec
-    
-    if(m_connectionHandle != BLE_CONN_HANDLE_INVALID) {
-        ret = aci_gap_terminate(m_connectionHandle, 0x16);//0x16 Connection Terminated by Local Host. 
 
-        if (BLE_STATUS_SUCCESS != ret){
-            PRINTF("Error in GAP termination (ret=0x%x)!!\n\r", ret) ;
-            switch (ret) {
-              case ERR_COMMAND_DISALLOWED:
-                return BLE_ERROR_OPERATION_NOT_PERMITTED;
-              case BLE_STATUS_TIMEOUT:
-                return BLE_STACK_BUSY;
-              default:
-                return BLE_ERROR_UNSPECIFIED;
-            }
+    ret = aci_gap_terminate(connectionHandle, reason);
+
+    if (BLE_STATUS_SUCCESS != ret){
+        PRINTF("Error in GAP termination (ret=0x%x)!!\n\r", ret) ;
+        switch (ret) {
+          case ERR_COMMAND_DISALLOWED:
+            return BLE_ERROR_OPERATION_NOT_PERMITTED;
+          case BLE_STATUS_TIMEOUT:
+            return BLE_STACK_BUSY;
+          default:
+            return BLE_ERROR_UNSPECIFIED;
         }
-        
-        //PRINTF("Disconnected from localhost!!\n\r") ;
-        m_connectionHandle = BLE_CONN_HANDLE_INVALID;
     }
     
     return BLE_ERROR_NONE;
@@ -691,49 +682,24 @@ ble_error_t BlueNRGGap::disconnect(Gap::DisconnectionReason_t reason)
     @endcode
 */
 /**************************************************************************/
-ble_error_t BlueNRGGap::disconnect(Handle_t connectionHandle, Gap::DisconnectionReason_t reason)
+ble_error_t BlueNRGGap::disconnect(Gap::DisconnectionReason_t reason)
 {
-    /* avoid compiler warnings about unused variables */
-    (void)reason;
-
-    tBleStatus ret;
-    //For Reason codes check BlueTooth HCI Spec
-    
-    if(connectionHandle != BLE_CONN_HANDLE_INVALID) {
-        ret = aci_gap_terminate(connectionHandle, 0x16);//0x16 Connection Terminated by Local Host. 
-
-        if (BLE_STATUS_SUCCESS != ret){
-            PRINTF("Error in GAP termination (ret=0x%x)!!\n\r", ret) ;
-            switch (ret) {
-              case ERR_COMMAND_DISALLOWED:
-                return BLE_ERROR_OPERATION_NOT_PERMITTED;
-              case BLE_STATUS_TIMEOUT:
-                return BLE_STACK_BUSY;
-              default:
-                return BLE_ERROR_UNSPECIFIED;
-            }
-        }
-        
-        //PRINTF("Disconnected from localhost!!\n\r") ;
-        m_connectionHandle = BLE_CONN_HANDLE_INVALID;
-    }
-    
-    return BLE_ERROR_NONE;
+    return disconnect(m_connectionHandle, reason);
 }
 
 /**************************************************************************/
 /*!
     @brief  Sets the 16-bit connection handle
     
-    @param[in]  con_handle
+    @param[in]  conn_handle
                 Connection Handle which is set in the Gap Instance
                 
     @returns    void
 */
 /**************************************************************************/
-void BlueNRGGap::setConnectionHandle(uint16_t con_handle)
+void BlueNRGGap::setConnectionHandle(uint16_t conn_handle)
 {
-    m_connectionHandle = con_handle;
+    m_connectionHandle = conn_handle;
 }
 
 /**************************************************************************/
@@ -771,7 +737,7 @@ uint16_t BlueNRGGap::getConnectionHandle(void)
     @endcode
 */
 /**************************************************************************/
-ble_error_t BlueNRGGap::setAddress(AddressType_t type, const Address_t address)
+ble_error_t BlueNRGGap::setAddress(AddressType_t type, const BLEProtocol::AddressBytes_t address)
 {
     tBleStatus ret;
 
@@ -787,8 +753,10 @@ ble_error_t BlueNRGGap::setAddress(AddressType_t type, const Address_t address)
                                         CONFIG_DATA_PUBADDR_LEN,
                                         address);
         if(ret != BLE_STATUS_SUCCESS) {
-            return BLE_ERROR_UNSPECIFIED;
+            return BLE_ERROR_OPERATION_NOT_PERMITTED;
         }
+    } else {
+        return BLE_ERROR_OPERATION_NOT_PERMITTED;
     }
     
     return BLE_ERROR_NONE;
