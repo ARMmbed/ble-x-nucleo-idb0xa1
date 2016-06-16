@@ -833,7 +833,7 @@ ble_error_t BlueNRGGap::getPreferredConnectionParams(ConnectionParams_t *params)
     /* avoid compiler warnings about unused variables */
     (void)params;
 
-    return BLE_ERROR_NONE;
+    return BLE_ERROR_NOT_IMPLEMENTED;
 }
 
 
@@ -855,7 +855,7 @@ ble_error_t BlueNRGGap::setPreferredConnectionParams(const ConnectionParams_t *p
     /* avoid compiler warnings about unused variables */
     (void)params;
 
-    return BLE_ERROR_NONE;
+    return BLE_ERROR_NOT_IMPLEMENTED;
 }
 
 /**************************************************************************/
