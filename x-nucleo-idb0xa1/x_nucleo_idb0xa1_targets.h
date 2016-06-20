@@ -65,7 +65,7 @@
 /* NOTE: Stack Mode 0x04 allows Simultaneous Scanning and Advertisement (SSAdv)
          Define macro 'SSADV' to enable it
 */
-//#define SSADV
+#define SSADV
 #if defined(SSADV)
 #define IDB0XA1_STACK_MODE (0x04)
 #else
