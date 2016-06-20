@@ -51,6 +51,7 @@
 
 extern "C" {
     #include "hci.h"
+    #include "bluenrg_utils.h"
 }
 
 #define HEADER_SIZE 5
@@ -108,6 +109,13 @@ BlueNRGDevice::BlueNRGDevice(PinName mosi,
     nCS_ = 1;
 
     wait_us(500);
+
+    // Set the interrupt handler for the device
+    irq_.mode(PullDown); // set irq mode
+    irq_.rise(&HCI_Isr);
+
+    // Prepare communication between the host and the BlueNRG SPI interface
+    HCI_Init();
 }
 
 /**************************************************************************/
@@ -119,12 +127,50 @@ BlueNRGDevice::~BlueNRGDevice(void)
 {
 }
 
+/**
+  * @brief  Get BlueNRG HW version in bootloader mode
+  * @param  hw_version The HW version is written to this parameter
+  * @retval It returns BLE_STATUS_SUCCESS on success or an error code otherwise
+  */
+uint8_t BlueNRGDevice::getUpdaterHardwareVersion(uint8_t *hw_version)
+{
+	uint8_t status;
+
+	status = getBlueNRGUpdaterHWVersion(hw_version);
+
+	return (status);
+}
 
 /**
-    @brief  Initialises anything required to start using BLE
-    @param[in] void
-    @returns    ble_error_t
-*/
+  * @brief  Flash a new firmware using internal bootloader.
+  * @param  fw_image     Pointer to the firmware image (raw binary data,
+  *                      little-endian).
+  * @param  fw_size      Size of the firmware image. The firmware image size shall
+  *                      be multiple of 4 bytes.
+  * @retval int      It returns BLE_STATUS_SUCCESS on success, or a number
+  *                  not equal to 0 in case of error
+  *                  (ACI_ERROR, UNSUPPORTED_VERSION, WRONG_IMAGE_SIZE, CRC_ERROR)
+  */
+int BlueNRGDevice::updateFirmware(const uint8_t *fw_image, uint32_t fw_size)
+{
+	int status = program_device(fw_image, fw_size);
+	
+	return (status);
+}
+
+
+/**
+  * @brief  Initialises anything required to start using BLE
+  * @param[in] instanceID
+  *              The ID of the instance to initialize.
+  * @param[in] callback
+  *              A callback for when initialization completes for a BLE
+  *              instance. This is an optional parameter set to NULL when not
+  *              supplied.
+  *
+  * @return BLE_ERROR_NONE if the initialization procedure was started
+  *         successfully.
+  */
 ble_error_t BlueNRGDevice::init(BLE::InstanceID_t instanceID, FunctionPointerWithContext<BLE::InitializationCompleteCallbackContext *> callback)
 {
 	if (isInitialized) {
@@ -135,12 +181,9 @@ ble_error_t BlueNRGDevice::init(BLE::InstanceID_t instanceID, FunctionPointerWit
         	callback.call(&context);
         	return BLE_ERROR_ALREADY_INITIALIZED;
     	}
-
-	// Set the interrupt handler for the device
-	irq_.mode(PullDown); // betzw: set irq mode
-	irq_.rise(&HCI_Isr);
 	
 	/* ToDo: Clear memory contents, reset the SD, etc. */
+	// Init the BlueNRG/BlueNRG-MS stack
 	// By default, we set the device GAP role to PERIPHERAL
 	btleInit(BlueNRGGap::getInstance().getIsSetAddress(), GAP_PERIPHERAL_ROLE_IDB04A1);
 	

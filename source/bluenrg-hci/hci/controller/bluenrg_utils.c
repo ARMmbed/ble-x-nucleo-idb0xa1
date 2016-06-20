@@ -15,6 +15,7 @@
 #define BASE_ADDRESS 0x10010000
 
 #define FW_OFFSET       (2*1024)  // 2 KB
+#define FW_OFFSET_MS    0
 #define FULL_STACK_SIZE (66*1024) // 66 KB
 #define BOOTLOADER_SIZE (2*1024)  // 2 kB
 #define SECTOR_SIZE     (2*1024)  // 2 KB
@@ -92,6 +93,7 @@ int program_device(const uint8_t *fw_image, uint32_t fw_size)
   uint8_t number_sectors, module;
   uint32_t address, j;
   uint32_t crc, crc2, crc_size;
+  uint32_t fw_offset = FW_OFFSET;
   
   BlueNRG_HW_Bootloader();
   HCI_Process(); // To receive the EVT_INITIALIZED
@@ -101,6 +103,14 @@ int program_device(const uint8_t *fw_image, uint32_t fw_size)
   
   if(version < SUPPORTED_BOOTLOADER_VERSION_MIN || version > SUPPORTED_BOOTLOADER_VERSION_MAX)
     return BLE_UTIL_UNSUPPORTED_VERSION;
+  
+  if(aci_updater_hw_version(&version))
+    return BLE_UTIL_ACI_ERROR;
+  
+  if(version==0x31){
+    // It does not contain bootloader inside first sector. It may contain code.
+    fw_offset = FW_OFFSET_MS;
+  }
   
   if (fw_size != FULL_STACK_SIZE)
     return BLE_UTIL_WRONG_IMAGE_SIZE;
@@ -121,11 +131,11 @@ int program_device(const uint8_t *fw_image, uint32_t fw_size)
   /***********************************************************************
   * Erase and Program sectors
   ************************************************************************/  
-  for(unsigned int i = FW_OFFSET; i < (number_sectors * SECTOR_SIZE); i += SECTOR_SIZE) {
+  for(int i = fw_offset; i < (number_sectors * SECTOR_SIZE); i += SECTOR_SIZE) {
     num_erase_retries = 0;
     while (num_erase_retries++ < MAX_ERASE_RETRIES) {
       aci_updater_erase_sector(BASE_ADDRESS + i);
-      if ((i/SECTOR_SIZE) < (unsigned int)(number_sectors-1))
+      if ((i/SECTOR_SIZE) < (number_sectors-1))
 	data_size = DATA_SIZE;
       else
 	data_size = MIN_WRITE_BLOCK_SIZE;	
@@ -146,7 +156,7 @@ int program_device(const uint8_t *fw_image, uint32_t fw_size)
   ************************************************************************/
   module = fw_size % SECTOR_SIZE;
   crc_size = SECTOR_SIZE;
-  for(int i = SECTOR_SIZE; i < (number_sectors*SECTOR_SIZE); i += SECTOR_SIZE){
+  for(int i = fw_offset; i < (number_sectors*SECTOR_SIZE); i += SECTOR_SIZE){
     address = BASE_ADDRESS + i;
     if(aci_updater_calc_crc(address, 1, &crc))
       return BLE_UTIL_ACI_ERROR;
@@ -214,8 +224,12 @@ void parse_IFR_data_config(const uint8_t data[64], IFR_config2_TypeDef *IFR_conf
 
 int IFR_validate(IFR_config2_TypeDef *IFR_config)
 {
-  if(IFR_config->stack_mode < 1 || IFR_config->stack_mode > 3)
-    return BLE_UTIL_PARSE_ERROR; // Unknown Stack Mode
+#if BLUENRG_MS
+  if(IFR_config->stack_mode < 1 || IFR_config->stack_mode > 4)
+#else
+    if(IFR_config->stack_mode < 1 || IFR_config->stack_mode > 3)
+#endif
+      return BLE_UTIL_PARSE_ERROR; // Unknown Stack Mode
   if(IFR_config->master_sca > 7)
     return BLE_UTIL_PARSE_ERROR; // Invalid Master SCA
   if(IFR_config->month > 12 || IFR_config->month < 1)
@@ -360,9 +374,7 @@ uint8_t getBlueNRGVersion(uint8_t *hwVersion, uint16_t *fwVersion)
     *fwVersion |= ((lmp_pal_subversion >> 4) & 0xF) << 4; // Minor Version Number
     *fwVersion |= lmp_pal_subversion & 0xF;               // Patch Version Number
   }
-
-  HCI_Process(); // To receive the BlueNRG EVT
-
+  
   return status;
 }
 
@@ -378,6 +390,21 @@ uint8_t getBlueNRGUpdaterVersion(uint8_t *version)
   if(*version < SUPPORTED_BOOTLOADER_VERSION_MIN || *version > SUPPORTED_BOOTLOADER_VERSION_MAX)
     return BLE_UTIL_UNSUPPORTED_VERSION;
 
+  BlueNRG_RST();
+  HCI_Process(); // To receive the EVT_INITIALIZED
+
+  return BLE_STATUS_SUCCESS;
+}
+
+uint8_t getBlueNRGUpdaterHWVersion(uint8_t *version)
+{
+
+  BlueNRG_HW_Bootloader();
+  HCI_Process(); // To receive the EVT_INITIALIZED
+
+  if(aci_updater_hw_version(version))
+    return BLE_UTIL_ACI_ERROR;
+  
   BlueNRG_RST();
   HCI_Process(); // To receive the EVT_INITIALIZED
 

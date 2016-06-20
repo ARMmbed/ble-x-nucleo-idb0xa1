@@ -182,6 +182,13 @@ uint8_t getBlueNRGVersion(uint8_t *hwVersion, uint16_t *fwVersion);
 uint8_t getBlueNRGUpdaterVersion(uint8_t *version);
 
 /**
+  * @brief  Get BlueNRG HW version in bootloader mode
+  * @param  version This parameter returns the updater HW version.
+  * @retval Status of the call
+  */
+uint8_t getBlueNRGUpdaterHWVersion(uint8_t *version);
+
+/**
   * @brief  Verifies if the bootloader is patched or not. This function shall be used to fix a bug on
   *         the HW bootloader related to the 32 MHz external crystal oscillator.
   * @retval TRUE if the HW bootloader is already patched, FALSE otherwise

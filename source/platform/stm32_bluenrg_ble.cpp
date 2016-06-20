@@ -122,8 +122,14 @@ void Hal_Write_Serial(const void* data1, const void* data2, int32_t n_bytes1,
  */
 void BlueNRG_HW_Bootloader(void)
 {
-    // FIXME: this is not implemented yet
-    while (1);
+	// Reset BlueNRG SPI interface
+    BlueNRG_RST();
+    
+    // Send an ACI command to reboot BlueNRG in bootloader mode
+	// The safest way to get in bootloader mode is keeping high
+	// the interrupt pin during reset, but this would require many
+	// changes to the current mbed driver
+	aci_updater_start();
 }
 
 /**

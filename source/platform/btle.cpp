@@ -90,11 +90,9 @@ uint8_t bnrg_expansion_board = IDB04A1; /* at startup, suppose the X-NUCLEO-IDB0
 
 /**************************************************************************/
 /*!
-    @brief  Initialises BTLE and the underlying HW/Device
+    @brief  Init the BTLE stack with the specified role
     @param  isSetAddress boolean if address has been set
-    @param  mosi MOSI Pin
-    @param  miso MISO Pin
-    @param  sclk clock Pin
+    @param  role The device role
     @returns void
 */
 /**************************************************************************/
@@ -108,13 +106,6 @@ void btleInit(bool isSetAddress, uint8_t role)
     uint8_t  hwVersion;
     uint16_t fwVersion;
     uint16_t service_handle, dev_name_char_handle, appearance_char_handle;
-
-    /* Delay needed only to be able to acces the JTAG interface after reset
-    if it will be disabled later. */
-    Clock_Wait(500);
-
-    /* Initialize the BlueNRG HCI */
-    HCI_Init();
 
     /* Reset BlueNRG SPI interface */
     BlueNRG_RST();
