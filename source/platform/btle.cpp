@@ -42,6 +42,8 @@
 #include "BlueNRGGattClient.h"
 #include "Utils.h"
 
+#include "x_nucleo_idb0xa1_targets.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -71,8 +73,8 @@ extern "C" {
 #define IDB04A1 0
 #define IDB05A1 1
 
-// Stack Mode 0x04 allows Simultaneous Scanning and Advertisement (SSAdv)
-#define STACK_MODE (0x04)
+/* See file 'x_nucleo_idb0xa1_targets.h' for details regarding the IDB0XA1 STACK_MODE */
+#define STACK_MODE IDB0XA1_STACK_MODE
 
 void HCI_Input(tHciDataPacket * hciReadPacket);
 

@@ -62,4 +62,14 @@
 #define IDB0XA1_PIN_SPI_SCK    (D3)
 #endif // !defined(IDB0XA1_D13_PATCH)
 
+/* NOTE: Stack Mode 0x04 allows Simultaneous Scanning and Advertisement (SSAdv)
+         Define macro 'SSADV' to enable it
+*/
+//#define SSADV
+#if defined(SSADV)
+#define IDB0XA1_STACK_MODE (0x04)
+#else
+#define IDB0XA1_STACK_MODE (0x02)
+#endif
+
 #endif // _X_NUCLEO_IDB0XA1_TARGETS_H_
