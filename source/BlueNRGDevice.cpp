@@ -110,12 +110,12 @@ BlueNRGDevice::BlueNRGDevice(PinName mosi,
 
     wait_us(500);
 
+    // Prepare communication between the host and the BlueNRG SPI interface
+    HCI_Init();
+
     // Set the interrupt handler for the device
     irq_.mode(PullDown); // set irq mode
     irq_.rise(&HCI_Isr);
-
-    // Prepare communication between the host and the BlueNRG SPI interface
-    HCI_Init();
 }
 
 /**************************************************************************/
