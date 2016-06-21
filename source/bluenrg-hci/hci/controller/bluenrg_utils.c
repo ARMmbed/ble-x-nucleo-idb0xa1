@@ -131,11 +131,11 @@ int program_device(const uint8_t *fw_image, uint32_t fw_size)
   /***********************************************************************
   * Erase and Program sectors
   ************************************************************************/  
-  for(int i = fw_offset; i < (number_sectors * SECTOR_SIZE); i += SECTOR_SIZE) {
+  for(unsigned int i = fw_offset; i < (number_sectors * SECTOR_SIZE); i += SECTOR_SIZE) {
     num_erase_retries = 0;
     while (num_erase_retries++ < MAX_ERASE_RETRIES) {
       aci_updater_erase_sector(BASE_ADDRESS + i);
-      if ((i/SECTOR_SIZE) < (number_sectors-1))
+      if ((i/SECTOR_SIZE) < (unsigned int)(number_sectors-1))
 	data_size = DATA_SIZE;
       else
 	data_size = MIN_WRITE_BLOCK_SIZE;	

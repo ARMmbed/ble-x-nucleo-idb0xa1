@@ -1164,7 +1164,7 @@ tBleStatus aci_gap_resolve_private_address_IDB05A1(const tBDAddr private_address
   if(rp.status)
     return rp.status;
   
-  Osal_MemCpy(actual_address, rp.address, sizeof(actual_address));  
+  Osal_MemCpy(actual_address, rp.address, 6);  
 
   return 0;
 }
