@@ -165,13 +165,15 @@ private:
     uint8_t deviceAppearance[2];
 
     uint8_t local_name_length;
-    uint8_t local_name[LOCAL_NAME_MAX_SIZE];
+    uint8_t local_name[ADV_DATA_MAX_SIZE];//LOCAL_NAME_MAX_SIZE];
 
     uint8_t servUuidlength;
     uint8_t servUuidData[UUID_BUFFER_SIZE];
 
     uint8_t AdvLen;
     uint8_t AdvData[ADV_DATA_MAX_SIZE];
+
+    uint8_t txPowLevSet;
     
     Timeout advTimeout;
     bool AdvToFlag;
@@ -186,6 +188,8 @@ private:
     uint16_t scanInterval;
     uint16_t scanWindow;
     uint16_t advInterval;
+    uint16_t slaveConnIntervMin;
+    uint16_t slaveConnIntervMax;
     uint16_t conn_min_interval;
     uint16_t conn_max_interval;
     void setAdvParameters(void);
@@ -198,7 +202,7 @@ private:
 
     ble_error_t updateAdvertisingData(void);
 
-    BlueNRGGap() {
+    BlueNRGGap(): txPowLevSet(0) {
         m_connectionHandle = BLE_CONN_HANDLE_INVALID;
         addr_type = BLEProtocol::AddressType::RANDOM_STATIC;
 

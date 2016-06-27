@@ -137,6 +137,9 @@
 /* appearance AD type */
 #define AD_TYPE_APPEARANCE			(0x19)
 
+/* advertising interval AD type */
+#define AD_TYPE_ADVERTISING_INTERVAL		(0x1A)
+
 /**
  * @}
  */

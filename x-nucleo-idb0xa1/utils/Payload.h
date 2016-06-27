@@ -134,7 +134,7 @@ public:
     void printDataAsString()   {
         int i = 0;
         PRINTF("AdData=");
-        for(i=0; i<*lenPtr; i++) {
+        for(i=0; i<*lenPtr-1; i++) {
             PRINTF("%c", dataPtr[i]);
         }
         PRINTF("\n");

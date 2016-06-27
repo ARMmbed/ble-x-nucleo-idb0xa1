@@ -108,6 +108,7 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
         PRINTF("advData.getPayloadLen() == 0\n\r");
         //return BLE_ERROR_PARAM_OUT_OF_RANGE;
         local_name_length = 0;
+        txPowLevSet = 0;
         servUuidlength = 0;
         AdvLen = 0;
     } else {
@@ -181,6 +182,7 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
                 {
                 PRINTF("Advertising type: COMPLETE_LOCAL_NAME\n\r");
                 loadPtr.getUnitAtIndex(index).printDataAsString();
+                loadPtr.getUnitAtIndex(index).printDataAsHex();
                 local_name_length = *loadPtr.getUnitAtIndex(index).getLenPtr()-1;
                 // The total length should include the Data Type Value
                 if(local_name_length>ADV_DATA_MAX_SIZE-1) {
@@ -188,7 +190,7 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
                 }
                 local_name[0] = (uint8_t)(*loadPtr.getUnitAtIndex(index).getAdTypePtr()); //Data Type Value
                 memcpy(local_name+1, (uint8_t*)loadPtr.getUnitAtIndex(index).getDataPtr(), local_name_length-1);
-                PRINTF("Advertising type: COMPLETE_LOCAL_NAME local_name=%s local_name_length=%d\n\r", local_name, local_name_length);
+                PRINTF("Advertising type: COMPLETE_LOCAL_NAME local_name=%s local_name_length=%d\n\r", local_name+1, local_name_length);
 
                 break;
                 }
@@ -197,13 +199,17 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
                 PRINTF("Advertising type: TX_POWER_LEVEL\n\r");     
                 int8_t enHighPower = 0;
                 int8_t paLevel = 0;
-#ifdef DEBUG
+
                 int8_t dbm = *loadPtr.getUnitAtIndex(index).getDataPtr();
-                int8_t dbmActuallySet = getHighPowerAndPALevelValue(dbm, enHighPower, paLevel);
+                tBleStatus ret = getHighPowerAndPALevelValue(dbm, enHighPower, paLevel);
+#ifdef DEBUG
+                PRINTF("dbm=%d, ret=%d\n\r", dbm, ret);
+                PRINTF("enHighPower=%d, paLevel=%d\n\r", enHighPower, paLevel);
 #endif
-                PRINTF("dbm=%d, dbmActuallySet=%d\n\r", dbm, dbmActuallySet);
-                PRINTF("enHighPower=%d, paLevel=%d\n\r", enHighPower, paLevel);                    
-                aci_hal_set_tx_power_level(enHighPower, paLevel);
+                if(ret == BLE_STATUS_SUCCESS) {
+                  aci_hal_set_tx_power_level(enHighPower, paLevel);
+                  txPowLevSet = 1;
+                }
                 break;
                 }
             case GapAdvertisingData::DEVICE_ID:                          /**< Device ID */
@@ -212,6 +218,11 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
                 }
             case GapAdvertisingData::SLAVE_CONNECTION_INTERVAL_RANGE:    /**< Slave :Connection Interval Range */
                 {
+                PRINTF("Advertising type: SLAVE_CONNECTION_INTERVAL_RANGE\n\r");
+                uint8_t *ptr = loadPtr.getUnitAtIndex(index).getDataPtr();
+                slaveConnIntervMin = ptr[0]|ptr[1]<<8;
+                slaveConnIntervMax = ptr[2]|ptr[3]<<8;
+
                 break;
                 }
             case GapAdvertisingData::SERVICE_DATA:                       /**< Service Data */
@@ -229,17 +240,22 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
                             i, loadPtr.getUnitAtIndex(index).getDataPtr()[i]);
                 }
 #endif
-                AdvLen = buffSize+2; // the total ADV DATA LEN should include two more bytes: the buffer size byte; and the Service Data Type Value byte
-                AdvData[0] = buffSize+1; // the fisrt byte is the data buffer size (type+data)
-                AdvData[1] = AD_TYPE_SERVICE_DATA;
-                memcpy(AdvData+2, loadPtr.getUnitAtIndex(index).getDataPtr(), buffSize);
+                // the total ADV DATA LEN should include two more bytes: the buffer size byte; and the Service Data Type Value byte
+                AdvData[AdvLen++] = buffSize+1; // the fisrt byte is the data buffer size (type+data)
+                AdvData[AdvLen++] = AD_TYPE_SERVICE_DATA;
+                memcpy(&AdvData[AdvLen], loadPtr.getUnitAtIndex(index).getDataPtr(), buffSize);
+                AdvLen += buffSize;
                 break;
                 }
 
             case GapAdvertisingData::ADVERTISING_INTERVAL:               /**< Advertising Interval */
                 {
-                PRINTF("Advertising type: ADVERTISING_INTERVAL\n\r");
-                //uint32_t advInt = (uint32_t)(*loadPtr.getUnitAtIndex(index).getDataPtr());
+                printf("Advertising type: ADVERTISING_INTERVAL\n\r");
+                uint8_t buffSize = *loadPtr.getUnitAtIndex(index).getLenPtr()-1;
+                AdvData[AdvLen++] = buffSize+1; // the fisrt byte is the data buffer size (type+data)
+                AdvData[AdvLen++] = AD_TYPE_ADVERTISING_INTERVAL;
+                memcpy(&AdvData[AdvLen], loadPtr.getUnitAtIndex(index).getDataPtr(), buffSize);
+                AdvLen += buffSize;
                 break;
                 }
             case GapAdvertisingData::MANUFACTURER_SPECIFIC_DATA:        /**< Manufacturer Specific Data */                             
@@ -259,10 +275,11 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
 				i, loadPtr.getUnitAtIndex(index).getDataPtr()[i]);
                 }
 #endif
-                AdvLen = buffSize+2; // the total ADV DATA LEN should include two more bytes: the buffer size byte; and the Manufacturer Specific Data Type Value byte
-                AdvData[0] = buffSize+1; // the fisrt byte is the data buffer size (type+data)
-                AdvData[1] = AD_TYPE_MANUFACTURER_SPECIFIC_DATA;
-                memcpy(AdvData+2, loadPtr.getUnitAtIndex(index).getDataPtr(), buffSize);
+                // the total ADV DATA LEN should include two more bytes: the buffer size byte; and the Manufacturer Specific Data Type Value byte
+                AdvData[AdvLen++] = buffSize+1; // the fisrt byte is the data buffer size (type+data)
+                AdvData[AdvLen++] = AD_TYPE_MANUFACTURER_SPECIFIC_DATA;
+                memcpy(&AdvData[AdvLen], loadPtr.getUnitAtIndex(index).getDataPtr(), buffSize);
+                AdvLen += buffSize;
                 break;
                 }
             } // end switch
@@ -467,8 +484,8 @@ ble_error_t BlueNRGGap::startAdvertising(const GapAdvertisingParams &params)
                                    (const char*)local_name,     // LocalName
                                    servUuidlength,              // ServiceUUIDLen
                                    servUuidData,                // ServiceUUIDList
-                                   0,                           // SlaveConnIntervMin
-                                   0);                          // SlaveConnIntervMax
+                                   slaveConnIntervMin,          // SlaveConnIntervMin
+                                   slaveConnIntervMax);         // SlaveConnIntervMax
 
     
     PRINTF("!!!setting discoverable (servUuidlength=0x%x)\n\r", servUuidlength);
@@ -476,6 +493,7 @@ ble_error_t BlueNRGGap::startAdvertising(const GapAdvertisingParams &params)
        PRINTF("error occurred while setting discoverable (ret=0x%x)\n\r", ret);
        switch (ret) {
          case BLE_STATUS_INVALID_PARAMS:
+         case ERR_INVALID_HCI_CMD_PARAMS:
            return BLE_ERROR_INVALID_PARAM;
          case ERR_COMMAND_DISALLOWED:
            return BLE_ERROR_OPERATION_NOT_PERMITTED;
@@ -486,6 +504,13 @@ ble_error_t BlueNRGGap::startAdvertising(const GapAdvertisingParams &params)
          default:
            return BLE_ERROR_UNSPECIFIED;
        }
+    }
+
+    // Since AD_TYPE_TX_POWER_LEVEL has not been set by application, we delete it
+    if(!txPowLevSet) {
+      PRINTF("Deleting TX POW LEV\n");
+      aci_gap_delete_ad_type(AD_TYPE_TX_POWER_LEVEL);
+      txPowLevSet = 0;
     }
 
     // Stop Advertising if an error occurs while updating ADV data
@@ -514,7 +539,7 @@ ble_error_t BlueNRGGap::updateAdvertisingData(void)
 {
     tBleStatus ret;
 
-    // Before updating the ADV data, delete COMPLETE_LOCAL_NAME and TX_POWER_LEVEL fields (if present)
+    // Before updating the ADV data, delete COMPLETE_LOCAL_NAME field
     if(AdvLen > 0) {
       if(local_name_length > 0) {
         ret = aci_gap_delete_ad_type(AD_TYPE_COMPLETE_LOCAL_NAME);
@@ -533,9 +558,8 @@ ble_error_t BlueNRGGap::updateAdvertisingData(void)
         }
       }
 
-      // If ADV Data Type is SERVICE DATA or MANUFACTURER SPECIFIC DATA,
-      // we need to delete it to make the needed room in ADV payload
-      if(AdvData[1]==AD_TYPE_SERVICE_DATA || AdvData[1]==AD_TYPE_MANUFACTURER_SPECIFIC_DATA) {
+      // ...and TX_POWER_LEVEL field to make the needed room in ADV payload
+      if(txPowLevSet) {
         ret = aci_gap_delete_ad_type(AD_TYPE_TX_POWER_LEVEL);
         if (BLE_STATUS_SUCCESS!=ret){
           PRINTF("aci_gap_delete_ad_type failed return=%d\n", ret);
