@@ -103,6 +103,10 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
         return BLE_ERROR_BUFFER_OVERFLOW;
     }
 
+    // Reset the length of the ADV payload each time
+    // since we get fields of argument 'advData' iteratively
+    AdvLen = 0;
+
     /* Make sure we have a payload! */
     if (advData.getPayloadLen() == 0) {
         PRINTF("advData.getPayloadLen() == 0\n\r");
@@ -110,9 +114,16 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
         local_name_length = 0;
         txPowLevSet = 0;
         servUuidlength = 0;
-        AdvLen = 0;
     } else {
         PayloadPtr loadPtr(advData.getPayload(), advData.getPayloadLen());
+
+        /* Align the GAP Service Appearance Char value coherently
+           This setting is duplicate (see below GapAdvertisingData::APPEARANCE)
+           since BLE API has an overloaded function for appearance
+        */
+        STORE_LE_16(deviceAppearance, advData.getAppearance());
+        setAppearance((GapAdvertisingData::Appearance)(deviceAppearance[1]<<8|deviceAppearance[0]));
+
 
         for(uint8_t index=0; index<loadPtr.getPayloadUnitCount(); index++) {                  
             loadPtr.getUnitAtIndex(index);
@@ -182,7 +193,6 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
                 {
                 PRINTF("Advertising type: COMPLETE_LOCAL_NAME\n\r");
                 loadPtr.getUnitAtIndex(index).printDataAsString();
-                loadPtr.getUnitAtIndex(index).printDataAsHex();
                 local_name_length = *loadPtr.getUnitAtIndex(index).getLenPtr()-1;
                 // The total length should include the Data Type Value
                 if(local_name_length>ADV_DATA_MAX_SIZE-1) {
@@ -248,6 +258,21 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
                 break;
                 }
 
+            case GapAdvertisingData::APPEARANCE:			/**< Appearance */
+                {
+                PRINTF("Advertising type: APPEARANCE\n\r");
+
+                GapAdvertisingData::Appearance appearanceP;
+                memcpy(deviceAppearance, loadPtr.getUnitAtIndex(index).getDataPtr(), 2);
+
+                PRINTF("input: deviceAppearance= 0x%x 0x%x\n\r", deviceAppearance[1], deviceAppearance[0]);
+
+                appearanceP = (GapAdvertisingData::Appearance)(deviceAppearance[1]<<8|deviceAppearance[0]);
+                /* Align the GAP Service Appearance Char value coherently */
+                setAppearance(appearanceP);
+                break;
+                }
+
             case GapAdvertisingData::ADVERTISING_INTERVAL:               /**< Advertising Interval */
                 {
                 printf("Advertising type: ADVERTISING_INTERVAL\n\r");
@@ -291,10 +316,6 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
           scan_response_payload = scanResponse.getPayload();
           scan_rsp_length = scanResponse.getPayloadLen();
         }
-
-        /* Align the GAP Service Appearance Char value coherently */
-        STORE_LE_16(deviceAppearance, advData.getAppearance());
-        setAppearance((GapAdvertisingData::Appearance)(deviceAppearance[1]<<8|deviceAppearance[0]));
 
         // Update the ADV data if we are already in ADV mode
         if(AdvLen > 0 && state.advertising == 1) {
@@ -1018,7 +1039,7 @@ ble_error_t BlueNRGGap::setAppearance(GapAdvertisingData::Appearance appearance)
     uint8_t deviceAppearance[2];
 
     STORE_LE_16(deviceAppearance, appearance);                 
-    PRINTF("input: incoming = %d deviceAppearance= 0x%x 0x%x\n\r", appearance, deviceAppearance[1], deviceAppearance[0]);
+    PRINTF("setAppearance= 0x%x 0x%x\n\r", deviceAppearance[1], deviceAppearance[0]);
     
     ret = aci_gatt_update_char_value(g_gap_service_handle,
                                      g_appearance_char_handle,
