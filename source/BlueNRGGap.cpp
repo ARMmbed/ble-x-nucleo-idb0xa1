@@ -844,6 +844,11 @@ ble_error_t BlueNRGGap::getAddress(AddressType_t *typeP, Address_t address)
     uint8_t bdaddr[BDADDR_SIZE];
     uint8_t data_len_out;
 
+    if (type == BLEProtocol::AddressType::RANDOM_PRIVATE_NON_RESOLVABLE ||
+        type == BLEProtocol::AddressType::RANDOM_PRIVATE_RESOLVABLE) {
+        return BLE_ERROR_OPERATION_NOT_PERMITTED;
+    }
+
     if(typeP != NULL) {
         *typeP = addr_type;
     }

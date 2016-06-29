@@ -163,7 +163,7 @@ void btleInit(bool isSetAddress, uint8_t role)
     BlueNRGGap::getInstance().setAddress(BLEProtocol::AddressType::RANDOM_STATIC, BLE_address_BE);
     
     ret = aci_gatt_init();
-    if(ret){
+    if(ret != BLE_STATUS_SUCCESS){
         PRINTF("GATT_Init failed.\n");
     }
     if (bnrg_expansion_board == IDB05A1) {
@@ -190,8 +190,8 @@ void btleInit(bool isSetAddress, uint8_t role)
                                        USE_FIXED_PIN_FOR_PAIRING,
                                        123456,
                                        BONDING);
-    if (ret == BLE_STATUS_SUCCESS) {
-        PRINTF("Auth Req set successfully.\n");
+    if (ret != BLE_STATUS_SUCCESS) {
+        PRINTF("Auth Req set failed.\n");
     }
     
     aci_hal_set_tx_power_level(1,4);
