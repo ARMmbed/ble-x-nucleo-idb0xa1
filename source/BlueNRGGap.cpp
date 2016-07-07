@@ -275,7 +275,7 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
 
             case GapAdvertisingData::ADVERTISING_INTERVAL:               /**< Advertising Interval */
                 {
-                printf("Advertising type: ADVERTISING_INTERVAL\n\r");
+                PRINTF("Advertising type: ADVERTISING_INTERVAL\n\r");
                 uint8_t buffSize = *loadPtr.getUnitAtIndex(index).getLenPtr()-1;
                 AdvData[AdvLen++] = buffSize+1; // the fisrt byte is the data buffer size (type+data)
                 AdvData[AdvLen++] = AD_TYPE_ADVERTISING_INTERVAL;
@@ -323,7 +323,7 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
     int err = hci_le_set_advertising_data(advData.getPayloadLen(), advData.getPayload());
 
     if (err) {
-        printf("error while setting the payload\r\n");
+        PRINTF("error while setting the payload\r\n");
         return BLE_ERROR_UNSPECIFIED;
     }
 
@@ -501,9 +501,9 @@ ble_error_t BlueNRGGap::startAdvertising(const GapAdvertisingParams &params)
     );
 
     if (err) {
-        PRINTF("impossible to set advertising parameters\n\r");
-        PRINTF("advInterval min: %u, advInterval max: %u\n\r", advInterval, advInterval + 1);
-        PRINTF("advType: %u, advFilterPolicy: %u\n\r", params.getAdvertisingType(), advFilterPolicy);
+        printf("impossible to set advertising parameters\n\r");
+        printf("advInterval min: %u, advInterval max: %u\n\r", advInterval, advInterval + 1);
+        printf("advType: %u, advFilterPolicy: %u\n\r", params.getAdvertisingType(), advFilterPolicy);
         return BLE_ERROR_INVALID_PARAM;
     }
 
@@ -1351,6 +1351,8 @@ void BlueNRGGap::setAdvParameters(void)
   if(state.connected == 1) {
     advIntMS = (conn_min_interval*1.25)-GUARD_INT;
     advInterval = _advParams.MSEC_TO_ADVERTISEMENT_DURATION_UNITS(advIntMS);
+
+    printf("conn_min_interval is equal to %u\r\n", conn_min_interval);
   } else {
     advInterval = _advParams.getIntervalInADVUnits();
   }
@@ -1565,4 +1567,9 @@ ble_error_t BlueNRGGap::reset(void)
     scanningPolicyMode    = Gap::SCAN_POLICY_IGNORE_WHITELIST;
 
     return BLE_ERROR_NONE;
+}
+
+void BlueNRGGap::setConnectionInterval(uint16_t interval) {
+    conn_min_interval = interval;
+    conn_max_interval = interval;
 }

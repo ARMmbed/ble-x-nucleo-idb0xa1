@@ -153,6 +153,8 @@ public:
 
     virtual ble_error_t startRadioScan(const GapScanningParams &scanningParams);
 
+    void setConnectionInterval(uint16_t interval);
+
 private:
     uint16_t m_connectionHandle;
     AddressType_t addr_type;

@@ -17,7 +17,7 @@
 
 /**
   ******************************************************************************
-  * @file    btle.cpp 
+  * @file    btle.cpp
   * @author  STMicroelectronics
   * @brief   Implementation BlueNRG Init and helper functions.
   ******************************************************************************
@@ -31,7 +31,7 @@
   * CODING INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
   *
   * <h2><center>&copy; COPYRIGHT 2013 STMicroelectronics</center></h2>
-  */ 
+  */
 
 
 #include "btle.h"
@@ -101,7 +101,7 @@ void btleInit(bool isSetAddress, uint8_t role)
     PRINTF("btleInit>>\n\r");
     /* Avoid compiler warnings about unused variables. */
     (void)isSetAddress;
-    
+
     int ret;
     uint8_t  hwVersion;
     uint16_t fwVersion;
@@ -113,7 +113,7 @@ void btleInit(bool isSetAddress, uint8_t role)
     /* get the BlueNRG HW and FW versions */
     getBlueNRGVersion(&hwVersion, &fwVersion);
 
-    /* 
+    /*
      * Reset BlueNRG again otherwise we won't
      * be able to change its MAC address.
      * aci_hal_write_config_data() must be the first
@@ -149,10 +149,10 @@ void btleInit(bool isSetAddress, uint8_t role)
                                         CONFIG_DATA_PUBADDR_LEN,
                                         bleAddr);
     } else {
-        
+
         const Gap::Address_t BLE_address_BE = {0xFD,0x66,0x05,0x13,0xBE,0xBA};
         BlueNRGGap::getInstance().setAddress(BLEProtocol::AddressType::RANDOM_STATIC, BLE_address_BE);
-        
+
         ret = aci_hal_write_config_data(CONFIG_DATA_PUBADDR_OFFSET,
                                         CONFIG_DATA_PUBADDR_LEN,
                                         BLE_address_BE);
@@ -161,7 +161,7 @@ void btleInit(bool isSetAddress, uint8_t role)
 
     const Gap::Address_t BLE_address_BE = {0xFD,0x66,0x05,0x13,0xBE,0xBA};
     BlueNRGGap::getInstance().setAddress(BLEProtocol::AddressType::RANDOM_STATIC, BLE_address_BE);
-    
+
     ret = aci_gatt_init();
     if(ret != BLE_STATUS_SUCCESS){
         PRINTF("GATT_Init failed.\n");
@@ -176,7 +176,7 @@ void btleInit(bool isSetAddress, uint8_t role)
     } else {
         ret = aci_gap_init_IDB04A1(role, &service_handle, &dev_name_char_handle, &appearance_char_handle);
     }
-    
+
     if(ret != BLE_STATUS_SUCCESS){
         PRINTF("GAP_Init failed.\n");
     }
@@ -193,13 +193,13 @@ void btleInit(bool isSetAddress, uint8_t role)
     if (ret != BLE_STATUS_SUCCESS) {
         PRINTF("Auth Req set failed.\n");
     }
-    
+
     aci_hal_set_tx_power_level(1,4);
-    
+
     g_gap_service_handle = service_handle;
     g_appearance_char_handle = appearance_char_handle;
-    g_device_name_char_handle = dev_name_char_handle; 
-    //Device Name is set from Accumulate Adv Data Payload or through setDeviceName API  
+    g_device_name_char_handle = dev_name_char_handle;
+    //Device Name is set from Accumulate Adv Data Payload or through setDeviceName API
     /*ret = aci_gatt_update_char_value(service_handle, dev_name_char_handle, 0,
                             strlen(name), (tHalUint8 *)name);*/
 
@@ -214,7 +214,7 @@ void btleInit(bool isSetAddress, uint8_t role)
     @brief  mbedOS
 
     @param[in]  void
-    
+
     @returns
 */
 /**************************************************************************/
@@ -274,7 +274,7 @@ tBleStatus btleStartRadioScan(uint8_t scan_type,
     @brief  Not Used
 
     @param[in]  void
-    
+
     @returns
 */
 void SPI_Poll(void)
@@ -282,7 +282,7 @@ void SPI_Poll(void)
     //HAL_GPIO_EXTI_Callback_Poll(BNRG_SPI_EXTI_PIN);
     return;
 }
-   
+
 void Attribute_Modified_CB(evt_blue_aci *blue_evt)
 {
     uint16_t conn_handle;
@@ -323,7 +323,7 @@ void Attribute_Modified_CB(evt_blue_aci *blue_evt)
             currentHandle = BlueNRGGattServer::CHAR_DESC_HANDLE;
         }
         PRINTF("currentHandle %d\n\r", currentHandle);
-        if((p_char->getProperties() & 
+        if((p_char->getProperties() &
             (GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_NOTIFY | GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_INDICATE)) &&
             currentHandle == BlueNRGGattServer::CHAR_DESC_HANDLE) {
 
@@ -332,21 +332,21 @@ void Attribute_Modified_CB(evt_blue_aci *blue_evt)
             PRINTF("*****NOTIFICATION CASE\n\r");
             //Now Check if data written in Enable or Disable
             if((uint16_t)att_data[0]==1) {
-                //PRINTF("Notify ENABLED\n\r"); 
+                //PRINTF("Notify ENABLED\n\r");
                 BlueNRGGattServer::getInstance().HCIEvent(GattServerEvents::GATT_EVENT_UPDATES_ENABLED, charDescHandle);
             } else {
-                //PRINTF("Notify DISABLED\n\r"); 
+                //PRINTF("Notify DISABLED\n\r");
                 BlueNRGGattServer::getInstance().HCIEvent(GattServerEvents::GATT_EVENT_UPDATES_DISABLED, charDescHandle);
             }
         }
-                    
+
         //Check if attr handle property is WRITEABLE, in the case generate GATT_EVENT_DATA_WRITTEN Event
         if((p_char->getProperties() &
             (GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_WRITE_WITHOUT_RESPONSE | GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_WRITE)) &&
             currentHandle == BlueNRGGattServer::CHAR_VALUE_HANDLE) {
-                    
+
             PRINTF("*****WRITE CASE\n\r");
-                   
+
             GattWriteCallbackParams writeParams;
             writeParams.connHandle = conn_handle;
             writeParams.handle = p_char->getValueAttribute().getHandle();
@@ -365,7 +365,7 @@ void Attribute_Modified_CB(evt_blue_aci *blue_evt)
                                                        data_length,
                                                        false);
             }
-        } 
+        }
     }
 
 }
@@ -380,39 +380,39 @@ extern "C" {
 
     @param[in]  pckt
                 Event Packet sent by the stack to be decoded
-    
+
     @returns
     */
     /**************************************************************************/
     extern void HCI_Event_CB(void *pckt) {
         hci_uart_pckt *hci_pckt = (hci_uart_pckt*)pckt;
         hci_event_pckt *event_pckt = (hci_event_pckt*)hci_pckt->data;
-        
+
         if(hci_pckt->type != HCI_EVENT_PKT)
           return;
 
         switch(event_pckt->evt){
-            
+
         case EVT_DISCONN_COMPLETE:
             {
                 PRINTF("EVT_DISCONN_COMPLETE\n");
-                
+
                 evt_disconn_complete *evt = (evt_disconn_complete*)event_pckt->data;
-                
+
                 BlueNRGGap::getInstance().processDisconnectionEvent(evt->handle, (Gap::DisconnectionReason_t)evt->reason);
             }
             break;
-            
+
         case EVT_LE_META_EVENT:
             {
                 PRINTF("EVT_LE_META_EVENT\n");
-                
+
                 evt_le_meta_event *evt = (evt_le_meta_event *)event_pckt->data;
-                
+
                 switch(evt->subevent){
 
                 case EVT_LE_CONN_COMPLETE:
-                    {                            
+                    {
                         PRINTF("EVT_LE_CONN_COMPLETE\n");
                         Gap::Address_t ownAddr;
                         Gap::AddressType_t ownAddrType;
@@ -420,12 +420,19 @@ extern "C" {
 
                         Gap::AddressType_t peerAddrType = BLEProtocol::AddressType::RANDOM_STATIC;
                         Gap::Role_t role;
-                        
+
                         evt_le_connection_complete *cc = (evt_le_connection_complete *)evt->data;
-                        
+
                         BlueNRGGap::getInstance().setConnectionHandle(cc->handle);
-                        BlueNRGGap::ConnectionParams_t connectionParams;
-                        BlueNRGGap::getInstance().getPreferredConnectionParams(&connectionParams);
+                        BlueNRGGap::ConnectionParams_t connectionParams = {
+                            /* minConnectionInterval = */ cc->interval,
+                            /*  maxConnectionInterval = */ cc->interval,
+                            /* slaveLatency = */ cc->latency,
+                            /* connectionSupervisionTimeout = */ cc->supervision_timeout
+                        };
+
+                        BlueNRGGap::getInstance().setConnectionInterval(cc->interval);
+
                         switch (cc->peer_bdaddr_type) {
                             case PUBLIC_ADDR:
                                 peerAddrType = BLEProtocol::AddressType::PUBLIC;
@@ -439,7 +446,7 @@ extern "C" {
                             case NON_RESOLVABLE_PRIVATE_ADDR:
                                 peerAddrType = BLEProtocol::AddressType::RANDOM_PRIVATE_NON_RESOLVABLE;
                                 break;
-                        }                                             
+                        }
                         //PRINTF("EVT_LE_CONN_COMPLETE LL role=%d\n", cc->role);
                         switch (cc->role) {
 			case 0: //master
@@ -462,17 +469,17 @@ extern "C" {
                                                                          &connectionParams);
                     }
                     break;
-          
+
         case EVT_LE_ADVERTISING_REPORT:
           PRINTF("EVT_LE_ADVERTISING_REPORT\n\r");
           /* FIXME: comment this otherwise it will be obscure and error prone if BlueNRG FW will be updated */
           // This event is generated only by X-NUCLEO-IDB05A1 version but not by X-NUCLEO-IDB04A1 (which generates DEVICE_FOUND EVT)
           // Formally the structure related to both events are identical except that for the ADV REPORT
           // there is one more field (number of reports) which is not forwarded to upper layer.
-          // Thus we need to move one byte over (((uint8_t*)evt->data)+1) before persing the ADV REPORT. 
+          // Thus we need to move one byte over (((uint8_t*)evt->data)+1) before persing the ADV REPORT.
           le_advertising_info *pr = (le_advertising_info*) (((uint8_t*)evt->data)+1);
           PRINTF("EVT_LE_ADVERTISING_REPORT evt_type=%d\n\r", pr->evt_type);
-          
+
           BlueNRGGap::getInstance().Discovery_CB(BlueNRGGap::DEVICE_FOUND,
                                                  pr->evt_type,
                                                  pr->bdaddr_type,
@@ -484,14 +491,14 @@ extern "C" {
                 }
             }
             break;
-            
+
         case EVT_VENDOR:
-            {                
+            {
                 evt_blue_aci *blue_evt = (evt_blue_aci*)event_pckt->data;
                 //PRINTF("EVT_VENDOR %d\n", blue_evt->ecode);
-                
+
                 switch(blue_evt->ecode){
-                           
+
                 case EVT_BLUE_GATT_READ_PERMIT_REQ:
                     {
                         PRINTF("EVT_BLUE_GATT_READ_PERMIT_REQ_OK\n\r");
@@ -500,16 +507,16 @@ extern "C" {
                         BlueNRGGattServer::getInstance().Read_Request_CB(pr->attr_handle);
                     }
                     break;
-                    
-                case EVT_BLUE_GATT_ATTRIBUTE_MODIFIED:         
+
+                case EVT_BLUE_GATT_ATTRIBUTE_MODIFIED:
                     {
                         PRINTF("EVT_BLUE_GATT_ATTRIBUTE_MODIFIED\n\r");
                         /* this callback is invoked when a GATT attribute is modified
                             extract callback data and pass to suitable handler function */
                         Attribute_Modified_CB(blue_evt);
                     }
-                    break;  
-                    
+                    break;
+
                     //Any cases for Data Sent Notifications?
                 case EVT_BLUE_GATT_NOTIFICATION:
                     //This is only relevant for Client Side Event
@@ -518,8 +525,8 @@ extern "C" {
                 case EVT_BLUE_GATT_INDICATION:
                     //This is only relevant for Client Side Event
                     PRINTF("EVT_BLUE_GATT_INDICATION");
-                    break;   
-                    
+                    break;
+
         case EVT_BLUE_ATT_READ_BY_GROUP_TYPE_RESP:
           {
             PRINTF("EVT_BLUE_ATT_READ_BY_GROUP_TYPE_RESP\n\r");
@@ -604,12 +611,12 @@ extern "C" {
             BlueNRGGattClient::getInstance().gattProcedureCompleteCB(evt->conn_handle, evt->error_code);
           }
           break;
-          
+
         case EVT_BLUE_GAP_DEVICE_FOUND:
           {
             evt_gap_device_found *pr = (evt_gap_device_found*)blue_evt->data;
             PRINTF("EVT_BLUE_GAP_DEVICE_FOUND evt_type=%d\n\r", pr->evt_type);
-            
+
             BlueNRGGap::getInstance().Discovery_CB(BlueNRGGap::DEVICE_FOUND,
                                                    pr->evt_type,
                                                    pr->bdaddr_type,
@@ -619,24 +626,24 @@ extern "C" {
                                                    &pr->data_RSSI[pr->data_length]);
           }
           break;
-          
+
         case EVT_BLUE_GAP_PROCEDURE_COMPLETE:
           {
             evt_gap_procedure_complete *pr = (evt_gap_procedure_complete*)blue_evt->data;
             //PRINTF("EVT_BLUE_GAP_PROCEDURE_COMPLETE (code=0x%02X)\n\r", pr->procedure_code);
-            
+
             switch(pr->procedure_code) {
             case GAP_OBSERVATION_PROC_IDB05A1:
-              
+
               BlueNRGGap::getInstance().Discovery_CB(BlueNRGGap::DISCOVERY_COMPLETE, 0, 0, NULL, NULL, NULL, NULL);
               break;
             }
           }
-                    break;                                     
+                    break;
                 }
             }
             break;
-        }    
+        }
         return ;
     }
 
