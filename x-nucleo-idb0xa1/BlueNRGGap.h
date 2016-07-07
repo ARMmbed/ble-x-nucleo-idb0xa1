@@ -16,7 +16,7 @@
 
 /**
   ******************************************************************************
-  * @file    BlueNRGGap.h 
+  * @file    BlueNRGGap.h
   * @author  STMicroelectronics
   * @brief   Header file for BlueNRG BLE_API Gap Class
   ******************************************************************************
@@ -30,8 +30,8 @@
   * CODING INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
   *
   * <h2><center>&copy; COPYRIGHT 2013 STMicroelectronics</center></h2>
-  */ 
-  
+  */
+
 #ifndef __BLUENRG_GAP_H__
 #define __BLUENRG_GAP_H__
 
@@ -88,7 +88,7 @@ public:
         DEVICE_FOUND,
         DISCOVERY_COMPLETE
     };
-    
+
     /* Functions that must be implemented from Gap */
     virtual ble_error_t setAddress(addr_type_t type,   const Address_t address);
     virtual ble_error_t getAddress(addr_type_t *typeP, Address_t address);
@@ -136,9 +136,9 @@ public:
 
     void     setConnectionHandle(uint16_t con_handle);
     uint16_t getConnectionHandle(void);
-    
+
     bool getIsSetAddress();
-    
+
     Timeout getAdvTimeout(void) const {
         return advTimeout;
     }
@@ -146,7 +146,7 @@ public:
         return AdvToFlag;
     }
     void setAdvToFlag(void);
-    
+
     void Process(void);
 
     GapScanningParams* getScanningParams(void);
@@ -174,7 +174,7 @@ private:
     uint8_t AdvData[ADV_DATA_MAX_SIZE];
 
     uint8_t txPowLevSet;
-    
+
     Timeout advTimeout;
     bool AdvToFlag;
 
@@ -216,6 +216,8 @@ private:
 
     BlueNRGGap(BlueNRGGap const &);
     void operator=(BlueNRGGap const &);
+
+    GapAdvertisingData _advData;
 };
 
 #endif // ifndef __BLUENRG_GAP_H__
