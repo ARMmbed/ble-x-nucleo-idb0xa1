@@ -499,6 +499,12 @@ extern "C" {
 
                 switch(blue_evt->ecode){
 
+                // case EVT_BLUE_GATT_WRITE_PERMIT_REQ:
+                //     {
+                //         printf("write request !!!!\r\");
+                //     }
+                //     break;
+
                 case EVT_BLUE_GATT_READ_PERMIT_REQ:
                     {
                         PRINTF("EVT_BLUE_GATT_READ_PERMIT_REQ_OK\n\r");
