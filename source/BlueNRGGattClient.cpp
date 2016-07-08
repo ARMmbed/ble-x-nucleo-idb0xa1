@@ -72,6 +72,13 @@ void BlueNRGGattClient::gattProcedureCompleteCB(Gap::Handle_t connectionHandle, 
   }
 
   if(_currentState == GATT_CHAR_DESC_DISCOVERY) {
+      if(charDescTerminationCallback != NULL) {
+         CharacteristicDescriptorDiscovery::TerminationCallbackParams_t params = {
+                                   _characteristic,
+                                   BLE_ERROR_NONE
+         };
+         charDescTerminationCallback(&params);
+       }
     _currentState = GATT_IDLE;
   }
 
@@ -711,8 +718,12 @@ void BlueNRGGattClient::discAllCharacDescCB(Gap::Handle_t connHandle,
 
   offset = 0;
 
+  PRINTF("\r\ncharacteristic descriptor discovered: data length %u, format %u\r\n",
+    event_data_length, format);
+
+
   for (i=0; i<numCharacDesc; i++) {
-    attHandle = handle_uuid_pair[offset];
+    memcpy(&attHandle, handle_uuid_pair + offset, sizeof(attHandle));
 
     // UUID Type
     if (handle_uuid_length == 4) {
@@ -751,15 +762,6 @@ void BlueNRGGattClient::discAllCharacDescCB(Gap::Handle_t connHandle,
 
     offset += handle_uuid_length;
   }
-
-  if(charDescTerminationCallback != NULL) {
-     CharacteristicDescriptorDiscovery::TerminationCallbackParams_t params = {
-                               _characteristic,
-                               BLE_ERROR_NONE
-     };
-     charDescTerminationCallback(&params);
-   }
-
 }
 
 ble_error_t BlueNRGGattClient::discoverCharacteristicDescriptors(
@@ -780,7 +782,7 @@ ble_error_t BlueNRGGattClient::discoverCharacteristicDescriptors(
   GattAttribute::Handle_t valueHandle = characteristic.getValueHandle();
   GattAttribute::Handle_t lastHandle = characteristic.getLastHandle();
 
-  PRINTF("Starting aci_gatt_disc_all_charac_descriptors...\n\r");
+  PRINTF("Starting aci_gatt_disc_all_charac_descriptors... [%u : %u]\n\r", valueHandle, lastHandle);
   ret = aci_gatt_disc_all_charac_descriptors(connHandle, valueHandle, lastHandle);
 
   if (ret == BLE_STATUS_SUCCESS) {

@@ -273,12 +273,23 @@ ble_error_t BlueNRGGattServer::addService(GattService &service)
 
         for(uint8_t descIndex=0; descIndex<p_char->getDescriptorCount(); descIndex++) {
             GattAttribute *descriptor = p_char->getDescriptor(descIndex);
-            uint16_t shortUUID = descriptor->getUUID().getShortUUID();
-            const uint8_t uuidArray[] = {(uint8_t)((shortUUID>>8)&0xFF), (uint8_t)((shortUUID&0xFF))};
+            uint8_t desc_uuid[16] = { 0 };
+
+
+            uint8_t desc_uuid_type = CHAR_DESC_TYPE_16_BIT;
+            STORE_LE_16(desc_uuid, descriptor->getUUID().getShortUUID());
+
+            if((descriptor->getUUID()).shortOrLong() == UUID::UUID_TYPE_LONG) {
+                desc_uuid_type = CHAR_DESC_TYPE_128_BIT;
+                const uint8_t* base_desc_uuid  = descriptor->getUUID().getBaseUUID();
+
+                COPY_UUID_128(desc_uuid, base_desc_uuid[15], base_desc_uuid[14],base_desc_uuid[13],base_desc_uuid[12], base_desc_uuid[11], base_desc_uuid[10], base_desc_uuid[9], base_desc_uuid[8], base_desc_uuid[7], base_desc_uuid[6], base_desc_uuid[5], base_desc_uuid[4], base_desc_uuid[3], base_desc_uuid[2], base_desc_uuid[1], base_desc_uuid[0]);
+            }
+
             ret = aci_gatt_add_char_desc(service.getHandle(),
                                          bleCharacteristic,
-                                         CHAR_DESC_TYPE_16_BIT,
-                                         uuidArray,
+                                         desc_uuid_type,
+                                         desc_uuid,
                                          descriptor->getMaxLength(),
                                          descriptor->getLength(),
                                          descriptor->getValuePtr(),
