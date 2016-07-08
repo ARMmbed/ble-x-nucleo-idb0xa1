@@ -176,7 +176,7 @@ ble_error_t BlueNRGGattServer::addService(GattService &service)
                     (GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_WRITE_WITHOUT_RESPONSE|
                         GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_WRITE))) {
             PRINTF("Setting up Gatt GATT_NOTIFY_ATTRIBUTE_WRITE Mask\n\r");
-            Gatt_Evt_Mask = Gatt_Evt_Mask | GATT_NOTIFY_WRITE_REQ_AND_WAIT_FOR_APPL_RESP /* | GATT_NOTIFY_ATTRIBUTE_WRITE */;
+            Gatt_Evt_Mask = Gatt_Evt_Mask | GATT_NOTIFY_ATTRIBUTE_WRITE /* | GATT_NOTIFY_WRITE_REQ_AND_WAIT_FOR_APPL_RESP */;
         }
         if((p_char->getProperties() &
                     (GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_READ|
@@ -440,6 +440,7 @@ ble_error_t BlueNRGGattServer::write(GattAttribute::Handle_t attributeHandle, co
     // check that the len of the data to write are compatible with the characteristic
     GattCharacteristic* characteristic = getCharacteristicFromHandle(attributeHandle);
     if (!characteristic) {
+        printf("characteristic not found\r\n");
         return BLE_ERROR_INVALID_PARAM;
     }
 
@@ -448,12 +449,14 @@ ble_error_t BlueNRGGattServer::write(GattAttribute::Handle_t attributeHandle, co
 
     // reject write if the lenght exceed the maximum lenght of this attribute
     if (value_attribute.getMaxLength() < len) {
+        printf("invalid variable length: %u, max length is: %u\r\n", len, value_attribute.getMaxLength());
         return BLE_ERROR_INVALID_PARAM;
     }
 
     // reject write if the attribute size is fixed and the lenght in input is different than the
     // length of the attribute.
-    if (value_attribute.hasVariableLength() == false && value_attribute.getLength() != len) {
+    if (value_attribute.hasVariableLength() == false && value_attribute.getMaxLength() != len) {
+        printf("invalid fixed length: %u, len should be %u\r\n", len, value_attribute.getMaxLength());
         return BLE_ERROR_INVALID_PARAM;
     }
 
