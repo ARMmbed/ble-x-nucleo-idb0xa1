@@ -501,9 +501,9 @@ ble_error_t BlueNRGGap::startAdvertising(const GapAdvertisingParams &params)
     );
 
     if (err) {
-        printf("impossible to set advertising parameters\n\r");
-        printf("advInterval min: %u, advInterval max: %u\n\r", advInterval, advInterval + 1);
-        printf("advType: %u, advFilterPolicy: %u\n\r", params.getAdvertisingType(), advFilterPolicy);
+        PRINTF("impossible to set advertising parameters\n\r");
+        PRINTF("advInterval min: %u, advInterval max: %u\n\r", advInterval, advInterval + 1);
+        PRINTF("advType: %u, advFilterPolicy: %u\n\r", params.getAdvertisingType(), advFilterPolicy);
         return BLE_ERROR_INVALID_PARAM;
     }
 
@@ -1352,7 +1352,7 @@ void BlueNRGGap::setAdvParameters(void)
     advIntMS = (conn_min_interval*1.25)-GUARD_INT;
     advInterval = _advParams.MSEC_TO_ADVERTISEMENT_DURATION_UNITS(advIntMS);
 
-    printf("conn_min_interval is equal to %u\r\n", conn_min_interval);
+    PRINTF("conn_min_interval is equal to %u\r\n", conn_min_interval);
   } else {
     advInterval = _advParams.getIntervalInADVUnits();
   }

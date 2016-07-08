@@ -30,7 +30,7 @@ public:
              GattAttribute::Handle_t  declHandleIn,
              GattAttribute::Handle_t  valueHandleIn,
              GattAttribute::Handle_t  lastHandleIn);
-  
+
   void setup(BlueNRGGattClient         *gattcIn,
              Gap::Handle_t            connectionHandleIn,
              UUID   uuidIn,
@@ -38,6 +38,9 @@ public:
              GattAttribute::Handle_t  declHandleIn,
              GattAttribute::Handle_t  valueHandleIn,
              GattAttribute::Handle_t  lastHandleIn);
+
+
+  void setLastHandle(GattAttribute::Handle_t  lastHandleIn);
 };
 
 #endif /* __BLUENRG_DISCOVERED_CHARACTERISTIC_H__ */

@@ -76,8 +76,17 @@ ble_error_t BlueNRGGattServer::addService(GattService &service)
     const uint8_t *base_uuid;
     const uint8_t *base_char_uuid;
 
-    uint8_t charsCount = 0;
-    uint8_t maxAttrRecords = 0;
+    uint8_t charsCount = service.getCharacteristicCount();
+    const uint8_t available_characteristics = BLE_TOTAL_CHARACTERISTICS - characteristicCount;
+
+    // check that there is enough characteristics left in the
+    // characteristic array.
+    if (charsCount > available_characteristics) {
+        PRINTF("charCount = %u and characteristicCount = %u\r\n", charsCount, available_characteristics);
+        return BLE_ERROR_NO_MEM;
+    }
+
+    const uint16_t maxAttrRecords = computeAttributesRecord(service);
 
     type = (service.getUUID()).shortOrLong();
     PRINTF("AddService(): Type:%d\n\r", type);
@@ -92,17 +101,14 @@ ble_error_t BlueNRGGattServer::addService(GattService &service)
         COPY_UUID_128(primary_base_uuid, base_uuid[15],base_uuid[14],primary_short_uuid[1],primary_short_uuid[0],base_uuid[11],base_uuid[10],base_uuid[9],base_uuid[8],base_uuid[7],base_uuid[6],base_uuid[5],base_uuid[4],base_uuid[3],base_uuid[2],base_uuid[1],base_uuid[0]);
     }
 
-    charsCount = service.getCharacteristicCount();
-    //1(service record)+2records*char+1record*char_desc
-    maxAttrRecords = 1+3*charsCount;
-
     if(type==UUID::UUID_TYPE_SHORT) {
         ret = aci_gatt_add_serv(UUID_TYPE_16,
                                 primary_short_uuid,
                                 PRIMARY_SERVICE,
                                 maxAttrRecords/*7*/,
                                 &servHandle);
-        PRINTF("aci_gatt_add_serv UUID_TYPE_LONG ret=%d\n\r", ret);
+        PRINTF("aci_gatt_add_serv UUID_TYPE_SHORT ret=%d\n\r", ret);
+
     }
     else if(type==UUID::UUID_TYPE_LONG) {
         ret = aci_gatt_add_serv(UUID_TYPE_128,
@@ -112,6 +118,25 @@ ble_error_t BlueNRGGattServer::addService(GattService &service)
                                 &servHandle);
         PRINTF("aci_gatt_add_serv UUID_TYPE_LONG ret=%d\n\r", ret);
     }
+
+    switch (ret) {
+        case BLE_STATUS_SUCCESS:
+            break;
+
+        case BLE_STATUS_INVALID_PARAMETER:
+            return BLE_ERROR_INVALID_PARAM;
+
+        case BLE_STATUS_OUT_OF_HANDLE:
+        case BLE_STATUS_INSUFFICIENT_RESOURCES:
+        case ERR_UNSPECIFIED_ERROR:
+            return BLE_ERROR_NO_MEM;
+
+        case BLE_STATUS_ERROR:
+        default:
+            return BLE_ERROR_INTERNAL_STACK_FAILURE;
+    }
+
+
 
     service.setHandle(servHandle);
     //serviceHandleVector.push_back(servHandle);
@@ -191,6 +216,40 @@ ble_error_t BlueNRGGattServer::addService(GattService &service)
                     p_char->getProperties(), p_char->getValueAttribute().getMaxLength(), ret);
         }
 
+        switch (ret) {
+            case BLE_STATUS_SUCCESS:
+                break;
+
+            case ERR_UNSPECIFIED_ERROR:
+            case BLE_STATUS_INSUFFICIENT_RESOURCES:
+            case BLE_STATUS_OUT_OF_HANDLE:
+                // TODO remove characteristics and the service previously added.
+                // remove service in the stack by using: Aci_Gatt_Del_Service
+                // remove characteristics in the stack by using: Aci_Gatt_Del_Char
+                // update service counter
+                // destroy registered characteristic and updat echaracteristic counter
+                return BLE_ERROR_NO_MEM;
+
+            case BLE_STATUS_INVALID_HANDLE:
+            case BLE_STATUS_INVALID_PARAMETER:
+            case BLE_STATUS_CHARAC_ALREADY_EXISTS:
+            // TODO remove characteristics and the service previously added.
+            // remove service in the stack by using: Aci_Gatt_Del_Service
+            // remove characteristics in the stack by using: Aci_Gatt_Del_Char
+            // update service counter
+            // destroy registered characteristic and updat echaracteristic counter
+                return BLE_ERROR_INVALID_PARAM;
+
+            case BLE_STATUS_ERROR:
+            default:
+            // TODO remove characteristics and the service previously added.
+            // remove service in the stack by using: Aci_Gatt_Del_Service
+            // remove characteristics in the stack by using: Aci_Gatt_Del_Char
+            // update service counter
+            // destroy registered characteristic and updat echaracteristic counter
+                return BLE_ERROR_INTERNAL_STACK_FAILURE;
+        }
+
         bleCharHandleMap.insert(std::pair<uint16_t, uint16_t>(bleCharacteristic, servHandle));
 
         p_characteristics[characteristicCount++] = p_char;
@@ -199,9 +258,13 @@ ble_error_t BlueNRGGattServer::addService(GattService &service)
         PRINTF("added bleCharacteristic (value handle =%u)\n\r", p_char->getValueAttribute().getHandle());
 
         if ((p_char->getValueAttribute().getValuePtr() != NULL) && (p_char->getValueAttribute().getLength() > 0)) {
-            write(p_char->getValueAttribute().getHandle(),
+            ble_error_t err = write(p_char->getValueAttribute().getHandle(),
                   p_char->getValueAttribute().getValuePtr(),
                   p_char->getValueAttribute().getLength(), false /* localOnly */);
+            if (err) {
+                PRINTF("ERROR HERE !!!!\r\n");
+                return err;
+            }
         }
 
         // add descriptors now
@@ -226,12 +289,45 @@ ble_error_t BlueNRGGattServer::addService(GattService &service)
                                          CHAR_ATTRIBUTE_LEN_IS_FIXED,
                                          &descHandle);
             PRINTF("Adding Descriptor descriptor handle=%d ret=%d\n\r", descHandle, ret);
-            if(ret==(tBleStatus)0) {
-                PRINTF("Descriptor added successfully, descriptor handle=%d\n\r", descHandle);
-                descriptor->setHandle(descHandle);
+
+            switch (ret) {
+                case BLE_STATUS_SUCCESS:
+                    PRINTF("Descriptor added successfully, descriptor handle=%d\n\r", descHandle);
+                    descriptor->setHandle(descHandle);
+                    break;
+
+                case ERR_UNSPECIFIED_ERROR:
+                case BLE_STATUS_INSUFFICIENT_RESOURCES:
+                case BLE_STATUS_OUT_OF_HANDLE:
+                    // TODO remove characteristics and the service previously added.
+                    // remove service in the stack by using: Aci_Gatt_Del_Service
+                    // remove characteristics in the stack by using: Aci_Gatt_Del_Char
+                    // update service counter
+                    // destroy registered characteristic and updat echaracteristic counter
+                    return BLE_ERROR_NO_MEM;
+
+                case BLE_STATUS_INVALID_HANDLE:
+                case BLE_STATUS_INVALID_PARAMETER:
+                // TODO remove characteristics and the service previously added.
+                // remove service in the stack by using: Aci_Gatt_Del_Service
+                // remove characteristics in the stack by using: Aci_Gatt_Del_Char
+                // update service counter
+                // destroy registered characteristic and updat echaracteristic counter
+                    return BLE_ERROR_INVALID_PARAM;
+
+                case BLE_STATUS_INVALID_OPERATION:
+                    return BLE_ERROR_OPERATION_NOT_PERMITTED;
+
+                case BLE_STATUS_ERROR:
+                default:
+                // TODO remove characteristics and the service previously added.
+                // remove service in the stack by using: Aci_Gatt_Del_Service
+                // remove characteristics in the stack by using: Aci_Gatt_Del_Char
+                // update service counter
+                // destroy registered characteristic and updat echaracteristic counter
+                    return BLE_ERROR_INTERNAL_STACK_FAILURE;
             }
         }
-
     }
 
     serviceCount++;
@@ -528,4 +624,45 @@ ble_error_t BlueNRGGattServer::reset(void)
     characteristicCount = 0;
 
     return BLE_ERROR_NONE;
+}
+
+
+/// compute the number of attributes needed by this service.
+uint16_t BlueNRGGattServer::computeAttributesRecord(GattService& service) {
+    uint16_t attribute_records = 1;
+
+    for (uint8_t characteristic_index = 0; characteristic_index < service.getCharacteristicCount(); ++characteristic_index) {
+        // add two attributes, one for the characteristic declaration
+        // and the other for the characteristic value.
+        attribute_records += 2;
+
+        const GattCharacteristic* characteristic = service.getCharacteristic(characteristic_index);
+        const uint8_t properties = characteristic->getProperties();
+        // if notify or indicate are present, two attributes are
+        // needed
+        if ((properties & GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_NOTIFY) ||
+            (properties & GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_INDICATE)) {
+            attribute_records += 2;
+        }
+
+        // if broadcast is set, two attributes are needed
+        if (properties & GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_BROADCAST) {
+            attribute_records += 2;
+        }
+
+        // if extended properties flag is set, two attributes are needed
+        if (properties & GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_EXTENDED_PROPERTIES) {
+            attribute_records += 2;
+        }
+
+        attribute_records += characteristic->getDescriptorCount();
+    }
+
+    // for some reason, if there is just a service, this value should
+    // be equal to 5
+    if (attribute_records == 1) {
+        attribute_records = 5;
+    }
+
+    return attribute_records;
 }
