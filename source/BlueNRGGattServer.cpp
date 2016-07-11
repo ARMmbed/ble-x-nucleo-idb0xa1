@@ -455,48 +455,78 @@ ble_error_t BlueNRGGattServer::write(GattAttribute::Handle_t attributeHandle, co
         return BLE_ERROR_INVALID_PARAM;
     }
 
-    // assert the len in input is correct for this characteristic
-    const GattAttribute& value_attribute = characteristic->getValueAttribute();
+    // if the attribute handle is the attribute handle of the characteristic value then
+    // write the value
+    if (attributeHandle == characteristic->getValueHandle()) {
+        // assert the len in input is correct for this characteristic
+        const GattAttribute& value_attribute = characteristic->getValueAttribute();
 
-    // reject write if the lenght exceed the maximum lenght of this attribute
-    if (value_attribute.getMaxLength() < len) {
-        PRINTF("invalid variable length: %u, max length is: %u\r\n", len, value_attribute.getMaxLength());
-        return BLE_ERROR_INVALID_PARAM;
+        // reject write if the lenght exceed the maximum lenght of this attribute
+        if (value_attribute.getMaxLength() < len) {
+            PRINTF("invalid variable length: %u, max length is: %u\r\n", len, value_attribute.getMaxLength());
+            return BLE_ERROR_INVALID_PARAM;
+        }
+
+        // reject write if the attribute size is fixed and the lenght in input is different than the
+        // length of the attribute.
+        if (value_attribute.hasVariableLength() == false && value_attribute.getMaxLength() != len) {
+            PRINTF("invalid fixed length: %u, len should be %u\r\n", len, value_attribute.getMaxLength());
+            return BLE_ERROR_INVALID_PARAM;
+        }
+
+        tBleStatus ret;
+
+        uint16_t charHandle = characteristic->getValueHandle() - BlueNRGGattServer::CHAR_VALUE_HANDLE;
+
+        PRINTF("updating bleCharacteristic valueHandle=%u,\
+                corresponding serviceHandle=%u len=%d\n\r",
+                attributeHandle, bleCharHandleMap.find(charHandle)->second, len);
+
+        /*
+         * If notifications (or indications) are enabled on that characteristic, a notification (or indication)
+         * will be sent to the client after sending this command to the BlueNRG.
+         */
+        ret = aci_gatt_update_char_value(bleCharHandleMap.find(charHandle)->second, charHandle, 0, len, buffer);
+
+        if (ret != BLE_STATUS_SUCCESS){
+          PRINTF("Error while updating characteristic (ret=0x%x).\n\r", ret);
+          switch (ret) {
+            case BLE_STATUS_INVALID_HANDLE:
+            case BLE_STATUS_INVALID_PARAMETER:
+              return BLE_ERROR_INVALID_PARAM;
+            default:
+              return BLE_STACK_BUSY;
+          }
+        }
+
+        return BLE_ERROR_NONE;
+    } else {
+        // write this handle has a descriptor handle
+        uint16_t charHandle = characteristic->getValueHandle() - BlueNRGGattServer::CHAR_VALUE_HANDLE;
+        uint16_t service_handle = bleCharHandleMap.find(charHandle)->second;
+
+        tBleStatus ret = aci_gatt_set_desc_value(
+            service_handle,
+            charHandle,
+            attributeHandle,
+            0,
+        	len,
+        	buffer
+        );
+
+        if (ret != BLE_STATUS_SUCCESS){
+          PRINTF("Error while updating characteristic descriptor (ret=0x%x).\n\r", ret);
+          switch (ret) {
+            case BLE_STATUS_INVALID_HANDLE:
+            case BLE_STATUS_INVALID_PARAMETER:
+              return BLE_ERROR_INVALID_PARAM;
+            default:
+              return BLE_STACK_BUSY;
+          }
+        }
+
+        return BLE_ERROR_NONE;
     }
-
-    // reject write if the attribute size is fixed and the lenght in input is different than the
-    // length of the attribute.
-    if (value_attribute.hasVariableLength() == false && value_attribute.getMaxLength() != len) {
-        PRINTF("invalid fixed length: %u, len should be %u\r\n", len, value_attribute.getMaxLength());
-        return BLE_ERROR_INVALID_PARAM;
-    }
-
-    tBleStatus ret;
-
-    uint16_t charHandle = attributeHandle-BlueNRGGattServer::CHAR_VALUE_HANDLE;
-
-    PRINTF("updating bleCharacteristic valueHandle=%u,\
-            corresponding serviceHandle=%u len=%d\n\r",
-            attributeHandle, bleCharHandleMap.find(charHandle)->second, len);
-
-    /*
-     * If notifications (or indications) are enabled on that characteristic, a notification (or indication)
-     * will be sent to the client after sending this command to the BlueNRG.
-     */
-    ret = aci_gatt_update_char_value(bleCharHandleMap.find(charHandle)->second, charHandle, 0, len, buffer);
-
-    if (ret != BLE_STATUS_SUCCESS){
-      PRINTF("Error while updating characteristic (ret=0x%x).\n\r", ret);
-      switch (ret) {
-        case BLE_STATUS_INVALID_HANDLE:
-        case BLE_STATUS_INVALID_PARAMETER:
-          return BLE_ERROR_INVALID_PARAM;
-        default:
-          return BLE_STACK_BUSY;
-      }
-    }
-
-    return BLE_ERROR_NONE;
 }
 
 /**************************************************************************/

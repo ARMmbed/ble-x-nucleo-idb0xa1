@@ -338,6 +338,7 @@ void Attribute_Modified_CB(evt_blue_aci *blue_evt)
                 //PRINTF("Notify DISABLED\n\r");
                 BlueNRGGattServer::getInstance().HCIEvent(GattServerEvents::GATT_EVENT_UPDATES_DISABLED, charDescHandle);
             }
+            return;
         }
 
         //Check if attr handle property is WRITEABLE, in the case generate GATT_EVENT_DATA_WRITTEN Event
@@ -355,16 +356,28 @@ void Attribute_Modified_CB(evt_blue_aci *blue_evt)
             writeParams.data = att_data;
             writeParams.offset = offset;
 
-            BlueNRGGattServer::getInstance().HCIDataWrittenEvent(&writeParams);
-
             //BlueNRGGattServer::getInstance().handleEvent(GattServerEvents::GATT_EVENT_DATA_WRITTEN, attr_handle);
             //Write the actual Data to the Attr Handle? (uint8_1[])att_data contains the data
             if ((p_char->getValueAttribute().getValuePtr() != NULL) && (p_char->getValueAttribute().getLength() > 0)) {
                 BlueNRGGattServer::getInstance().write(p_char->getValueAttribute().getHandle(),
-                                                       (uint8_t*)att_data,
-                                                       data_length,
-                                                       false);
+                (uint8_t*)att_data,
+                data_length,
+                false);
+
+            BlueNRGGattServer::getInstance().HCIDataWrittenEvent(&writeParams);
             }
+        } else {
+            PRINTF("*****WRITE DESCRIPTOR CASE\n\r");
+
+            GattWriteCallbackParams writeParams;
+            writeParams.connHandle = conn_handle;
+            writeParams.handle = attr_handle;
+            writeParams.writeOp = GattWriteCallbackParams::OP_WRITE_REQ;//Where to find this property in BLUENRG?
+            writeParams.len = data_length;
+            writeParams.data = att_data;
+            writeParams.offset = offset;
+
+            BlueNRGGattServer::getInstance().HCIDataWrittenEvent(&writeParams);
         }
     }
 
