@@ -229,9 +229,7 @@ void BlueNRGDevice::waitForEvent(void)
 	bool must_return = false;
 
 	do {
-		BlueNRGGap::getInstance().Process();
-		
-		HCI_Process();
+        bluenrgDeviceInstance.processEvents();
 		
 		if(must_return) return;
 
@@ -468,4 +466,8 @@ void BlueNRGDevice::disable_irq()
 void BlueNRGDevice::enable_irq()
 {
     irq_.enable_irq();
+}
+
+void BlueNRGDevice::processEvents() {
+    btle_handler();
 }

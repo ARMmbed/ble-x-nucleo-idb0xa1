@@ -203,9 +203,7 @@ void btleInit(bool isSetAddress, uint8_t role)
     /*ret = aci_gatt_update_char_value(service_handle, dev_name_char_handle, 0,
                             strlen(name), (tHalUint8 *)name);*/
 
-#ifdef AST_FOR_MBED_OS
-    minar::Scheduler::postCallback(btle_handler);
-#endif
+    signalEventsToProcess();
     return;
 }
 
@@ -218,15 +216,14 @@ void btleInit(bool isSetAddress, uint8_t role)
     @returns
 */
 /**************************************************************************/
-#ifdef AST_FOR_MBED_OS
 int btle_handler_pending = 0;
 
 void btle_handler(void)
 {
     btle_handler_pending = 0;
+	BlueNRGGap::getInstance().Process();    
     HCI_Process();
 }
-#endif
 
 /* set BLE Version string */
 void setVersionString(uint8_t hwVersion, uint16_t fwVersion)

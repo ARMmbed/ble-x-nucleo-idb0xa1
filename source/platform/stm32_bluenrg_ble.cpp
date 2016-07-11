@@ -172,20 +172,12 @@ void Enable_SPI_IRQ(void)
     bluenrgDeviceInstance.enable_irq();
 }
 
-#ifdef AST_FOR_MBED_OS
-/**
- * Call BTLE callback handler.
- * @param  None
- * @retval None
- */
-void Call_BTLE_Handler(void)
-{
-	if(!btle_handler_pending) {
-		btle_handler_pending = 1;
-		minar::Scheduler::postCallback(btle_handler);
-	}
+void signalEventsToProcess(void)  {
+    if(btle_handler_pending == 0) {
+        btle_handler_pending = 1;
+        bluenrgDeviceInstance.signalEventsToProcess(BLE::DEFAULT_INSTANCE);
+    }
 }
-#endif
 
 /**
  * @brief  Disable SPI IRQ.

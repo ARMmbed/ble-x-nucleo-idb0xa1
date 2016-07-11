@@ -88,6 +88,8 @@ public:
     int32_t spiWrite(uint8_t* data1, uint8_t* data2, uint8_t Nb_bytes1, uint8_t Nb_bytes2);
     void disable_irq();
     void enable_irq();
+
+    virtual void processEvents();
     
 private:
     bool isInitialized;

@@ -179,9 +179,7 @@ void HCI_Isr(void)
         hciReadPacket->data_len = data_len;
         if(HCI_verify(hciReadPacket) == 0) {
           list_insert_tail(&hciReadPktRxQueue, (tListNode *)hciReadPacket);
-#ifdef AST_FOR_MBED_OS
-	  Call_BTLE_Handler();
-#endif
+	      signalEventsToProcess();
         } else {
           list_insert_head(&hciReadPktPool, (tListNode *)hciReadPacket);
 #ifdef POOL_CNT
@@ -199,9 +197,7 @@ void HCI_Isr(void)
     }
     else{
       // HCI Read Packet Pool is empty, wait for a free packet.
-#ifdef AST_FOR_MBED_OS
-      Call_BTLE_Handler();
-#endif
+      signalEventsToProcess();
       readPacketListFull = TRUE;
       Clear_SPI_EXTI_Flag();
       return;
