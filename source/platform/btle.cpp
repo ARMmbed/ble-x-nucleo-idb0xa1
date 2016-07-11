@@ -81,6 +81,7 @@ void HCI_Input(tHciDataPacket * hciReadPacket);
 uint16_t g_gap_service_handle = 0;
 uint16_t g_appearance_char_handle = 0;
 uint16_t g_device_name_char_handle = 0;
+uint16_t g_preferred_connection_parameters_char_handle = 0;
 
 /* Private variables ---------------------------------------------------------*/
 volatile uint8_t set_connectable = 1;
@@ -202,6 +203,15 @@ void btleInit(bool isSetAddress, uint8_t role)
     //Device Name is set from Accumulate Adv Data Payload or through setDeviceName API
     /*ret = aci_gatt_update_char_value(service_handle, dev_name_char_handle, 0,
                             strlen(name), (tHalUint8 *)name);*/
+
+    // update the peripheral preferred conenction parameters handle
+    // if the device is configured as a peripheral
+    // This value is hardcoded at the moment.
+    if ((role & GAP_PERIPHERAL_ROLE_IDB05A1) || (role & GAP_PERIPHERAL_ROLE_IDB04A1) ||
+        (bnrg_expansion_board == IDB05A1 /* role is ignored in this configuration ... */)) {
+        g_preferred_connection_parameters_char_handle = 10;
+    }
+
 
 #ifdef AST_FOR_MBED_OS
     minar::Scheduler::postCallback(btle_handler);

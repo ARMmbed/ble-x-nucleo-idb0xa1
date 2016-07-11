@@ -907,10 +907,37 @@ ble_error_t BlueNRGGap::getAddress(AddressType_t *typeP, Address_t address)
 /**************************************************************************/
 ble_error_t BlueNRGGap::getPreferredConnectionParams(ConnectionParams_t *params)
 {
-    /* avoid compiler warnings about unused variables */
-    (void)params;
+    static const size_t parameter_size = 2;
 
-    return BLE_ERROR_NOT_IMPLEMENTED;
+    if (!g_preferred_connection_parameters_char_handle) {
+        return BLE_ERROR_OPERATION_NOT_PERMITTED;
+    }
+
+    // Peripheral preferred connection parameters are an array of 4 uint16_t
+    uint8_t parameters_packed[parameter_size * 4];
+    uint16_t bytes_read = 0;
+
+    tBleStatus err = aci_gatt_read_handle_value(
+        g_preferred_connection_parameters_char_handle + BlueNRGGattServer::CHAR_VALUE_HANDLE,
+        sizeof(parameters_packed),
+        &bytes_read,
+        parameters_packed
+    );
+
+    PRINTF("getPreferredConnectionParams err=0x%02x (bytes_read=%u)\n\r", err, bytes_read);
+
+    // check that the read succeed and the result have the expected length
+    if (err || bytes_read != sizeof(parameters_packed)) {
+        return BLE_ERROR_UNSPECIFIED;
+    }
+
+    // memcpy field by field
+    memcpy(&params->minConnectionInterval, parameters_packed, parameter_size);
+    memcpy(&params->maxConnectionInterval, &parameters_packed[parameter_size], parameter_size);
+    memcpy(&params->slaveLatency, &parameters_packed[2 * parameter_size], parameter_size);
+    memcpy(&params->connectionSupervisionTimeout, &parameters_packed[3 * parameter_size], parameter_size);
+
+    return BLE_ERROR_NONE;
 }
 
 
@@ -929,10 +956,61 @@ ble_error_t BlueNRGGap::getPreferredConnectionParams(ConnectionParams_t *params)
 /**************************************************************************/
 ble_error_t BlueNRGGap::setPreferredConnectionParams(const ConnectionParams_t *params)
 {
-    /* avoid compiler warnings about unused variables */
-    (void)params;
+    static const size_t parameter_size = 2;
+    uint8_t parameters_packed[parameter_size * 4];
 
-    return BLE_ERROR_NOT_IMPLEMENTED;
+    // ensure that parameters are correct
+    // see BLUETOOTH SPECIFICATION Version 4.2 [Vol 3, Part C]
+    // section 12.3 PERIPHERAL PREFERRED CONNECTION PARAMETERS CHARACTERISTIC
+    if (((0x0006 > params->minConnectionInterval) || (params->minConnectionInterval > 0x0C80)) &&
+        params->minConnectionInterval != 0xFFFF) {
+        return BLE_ERROR_PARAM_OUT_OF_RANGE;
+    }
+
+    if (((params->minConnectionInterval > params->maxConnectionInterval) || (params->maxConnectionInterval > 0x0C80)) &&
+        params->maxConnectionInterval != 0xFFFF) {
+        return BLE_ERROR_PARAM_OUT_OF_RANGE;
+    }
+
+    if (params->slaveLatency > 0x01F3) {
+        return BLE_ERROR_PARAM_OUT_OF_RANGE;
+    }
+
+    if (((0x000A > params->connectionSupervisionTimeout) || (params->connectionSupervisionTimeout > 0x0C80)) &&
+        params->connectionSupervisionTimeout != 0xFFFF) {
+        return BLE_ERROR_PARAM_OUT_OF_RANGE;
+    }
+
+    // copy the parameters inside the byte array
+    memcpy(parameters_packed, &params->minConnectionInterval, parameter_size);
+    memcpy(&parameters_packed[parameter_size], &params->maxConnectionInterval, parameter_size);
+    memcpy(&parameters_packed[2 * parameter_size], &params->slaveLatency, parameter_size);
+    memcpy(&parameters_packed[3 * parameter_size], &params->connectionSupervisionTimeout, parameter_size);
+
+    tBleStatus err = aci_gatt_update_char_value(
+        g_gap_service_handle,
+        g_preferred_connection_parameters_char_handle,
+        /* offset */ 0,
+        sizeof(parameters_packed),
+        parameters_packed
+    );
+
+    if (err) {
+        PRINTF("setPreferredConnectionParams failed (err=0x%x)!!\n\r", err) ;
+        switch (err) {
+          case BLE_STATUS_INVALID_HANDLE:
+          case BLE_STATUS_INVALID_PARAMETER:
+            return BLE_ERROR_INVALID_PARAM;
+          case BLE_STATUS_INSUFFICIENT_RESOURCES:
+            return BLE_ERROR_NO_MEM;
+          case BLE_STATUS_TIMEOUT:
+            return BLE_STACK_BUSY;
+          default:
+            return BLE_ERROR_UNSPECIFIED;
+        }
+    }
+
+    return BLE_ERROR_NONE;
 }
 
 /**************************************************************************/
