@@ -839,7 +839,7 @@ bool BlueNRGGap::getIsSetAddress()
     @endcode
 */
 /**************************************************************************/
-ble_error_t BlueNRGGap::getAddress(AddressType_t *typeP, Address_t address) 
+ble_error_t BlueNRGGap::getAddress(BLEProtocol::AddressType_t *typeP, BLEProtocol::AddressBytes_t address)
 {
     uint8_t bdaddr[BDADDR_SIZE];
     uint8_t data_len_out;

@@ -91,7 +91,7 @@ public:
     
     /* Functions that must be implemented from Gap */
     virtual ble_error_t setAddress(addr_type_t type,   const Address_t address);
-    virtual ble_error_t getAddress(addr_type_t *typeP, Address_t address);
+    virtual ble_error_t getAddress(BLEProtocol::AddressType_t *typeP, BLEProtocol::AddressBytes_t address);
     virtual ble_error_t setAdvertisingData(const GapAdvertisingData &, const GapAdvertisingData &);
     virtual ble_error_t startAdvertising(const GapAdvertisingParams &);
     virtual ble_error_t stopAdvertising(void);
