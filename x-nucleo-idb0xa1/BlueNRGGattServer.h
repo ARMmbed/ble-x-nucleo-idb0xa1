@@ -78,6 +78,10 @@ public:
     void eventCallback(void);
     //void hwCallback(void *pckt);
     ble_error_t Read_Request_CB(uint16_t attributeHandle);
+    uint8_t Write_Request_CB(
+        uint16_t connection_handle, uint16_t attr_handle,
+        uint8_t data_length, const uint8_t* data
+    );
     GattCharacteristic* getCharacteristicFromHandle(uint16_t charHandle);
     void HCIDataWrittenEvent(const GattWriteCallbackParams *params);
     void HCIDataReadEvent(const GattReadCallbackParams *params);

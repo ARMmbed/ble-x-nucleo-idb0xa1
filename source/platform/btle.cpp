@@ -369,13 +369,15 @@ void Attribute_Modified_CB(evt_blue_aci *blue_evt)
             //BlueNRGGattServer::getInstance().handleEvent(GattServerEvents::GATT_EVENT_DATA_WRITTEN, attr_handle);
             //Write the actual Data to the Attr Handle? (uint8_1[])att_data contains the data
             if ((p_char->getValueAttribute().getValuePtr() != NULL) && (p_char->getValueAttribute().getLength() > 0)) {
-                BlueNRGGattServer::getInstance().write(p_char->getValueAttribute().getHandle(),
-                (uint8_t*)att_data,
-                data_length,
-                false);
+                BlueNRGGattServer::getInstance().write(
+                    p_char->getValueAttribute().getHandle(),
+                    (uint8_t*)att_data,
+                    data_length,
+                    false
+                );
+            }
 
             BlueNRGGattServer::getInstance().HCIDataWrittenEvent(&writeParams);
-            }
         } else {
             PRINTF("*****WRITE DESCRIPTOR CASE\n\r");
 
@@ -522,11 +524,31 @@ extern "C" {
 
                 switch(blue_evt->ecode){
 
-                // case EVT_BLUE_GATT_WRITE_PERMIT_REQ:
-                //     {
-                //         printf("write request !!!!\r\");
-                //     }
-                //     break;
+                case EVT_BLUE_GATT_WRITE_PERMIT_REQ:
+                    {
+                        PRINTF("EVT_BLUE_GATT_WRITE_PERMIT_REQ\r\n");
+                        evt_gatt_write_permit_req* write_req = (evt_gatt_write_permit_req*)blue_evt->data;
+
+                        // ask the local server if the write operation is authorized
+                        uint8_t err_code = BlueNRGGattServer::getInstance().Write_Request_CB(
+                            write_req->conn_handle,
+                            write_req->attr_handle,
+                            write_req->data_length,
+                            write_req->data
+                        );
+                        uint8_t write_status = err_code == 0 ? 0 : 1;
+
+                        // reply to the shield
+                        tBleStatus err = aci_gatt_write_response(
+                            write_req->conn_handle,
+                            write_req->attr_handle,
+                            write_status,
+                            err_code,
+                            write_req->data_length,
+                            write_req->data
+                        );
+                    }
+                    break;
 
                 case EVT_BLUE_GATT_READ_PERMIT_REQ:
                     {

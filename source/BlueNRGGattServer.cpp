@@ -176,7 +176,7 @@ ble_error_t BlueNRGGattServer::addService(GattService &service)
                     (GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_WRITE_WITHOUT_RESPONSE|
                         GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_WRITE))) {
             PRINTF("Setting up Gatt GATT_NOTIFY_ATTRIBUTE_WRITE Mask\n\r");
-            Gatt_Evt_Mask = Gatt_Evt_Mask | GATT_NOTIFY_ATTRIBUTE_WRITE /* | GATT_NOTIFY_WRITE_REQ_AND_WAIT_FOR_APPL_RESP */;
+            Gatt_Evt_Mask = Gatt_Evt_Mask | GATT_NOTIFY_ATTRIBUTE_WRITE  | GATT_NOTIFY_WRITE_REQ_AND_WAIT_FOR_APPL_RESP;
         }
         if((p_char->getProperties() &
                     (GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_READ|
@@ -565,6 +565,42 @@ ble_error_t BlueNRGGattServer::Read_Request_CB(uint16_t attributeHandle)
     }
 
     return BLE_ERROR_NONE;
+}
+
+// ask if the write request should be accepted of rejected
+// return 0 in case of success or an ATT error response in
+// case of faillure
+uint8_t BlueNRGGattServer::Write_Request_CB(
+    uint16_t connection_handle, uint16_t attr_handle, uint8_t data_length,
+    const uint8_t* data) {
+
+    GattCharacteristic* characteristic = getCharacteristicFromHandle(attr_handle);
+    if(!characteristic) {
+        return AUTH_CALLBACK_REPLY_ATTERR_INVALID_HANDLE & 0xFF;
+    }
+
+    // check if the data length is in range
+    if (characteristic->getValueAttribute().getMaxLength() < data_length) {
+        return AUTH_CALLBACK_REPLY_ATTERR_INVALID_ATT_VAL_LENGTH & 0xFF;
+    }
+
+    // if the length of the characteristic value is fixed
+    // then the data in input should be of that length
+    if (characteristic->getValueAttribute().hasVariableLength() == false &&
+        characteristic->getValueAttribute().getMaxLength() != data_length) {
+        return AUTH_CALLBACK_REPLY_ATTERR_INVALID_ATT_VAL_LENGTH & 0xFF;
+    }
+
+    GattWriteAuthCallbackParams params = {
+        connection_handle,
+        attr_handle,
+        /* offset */ 0,
+        data_length,
+        data,
+        /* authorizationReply */ AUTH_CALLBACK_REPLY_ATTERR_WRITE_NOT_PERMITTED
+    };
+
+    return characteristic->authorizeWrite(&params) & 0xFF;
 }
 
 /**************************************************************************/
