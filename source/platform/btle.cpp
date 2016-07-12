@@ -160,9 +160,6 @@ void btleInit(bool isSetAddress, uint8_t role)
     }
 #endif
 
-    const Gap::Address_t BLE_address_BE = {0xFD,0x66,0x05,0x13,0xBE,0xBA};
-    BlueNRGGap::getInstance().setAddress(BLEProtocol::AddressType::RANDOM_STATIC, BLE_address_BE);
-
     ret = aci_gatt_init();
     if(ret != BLE_STATUS_SUCCESS){
         PRINTF("GATT_Init failed.\n");
@@ -176,6 +173,15 @@ void btleInit(bool isSetAddress, uint8_t role)
                                    &appearance_char_handle);
     } else {
         ret = aci_gap_init_IDB04A1(role, &service_handle, &dev_name_char_handle, &appearance_char_handle);
+    }
+
+    // read the default static address and inject it into the GAP object
+    {
+        Gap::Address_t BLE_address_BE = { 0 };
+        uint8_t data_len_out;
+        aci_hal_read_config_data(CONFIG_DATA_RANDOM_ADDRESS_IDB05A1, BDADDR_SIZE, &data_len_out, BLE_address_BE);
+        // FIXME error handling of this function
+        BlueNRGGap::getInstance().setAddress(BLEProtocol::AddressType::RANDOM_STATIC, BLE_address_BE);
     }
 
     if(ret != BLE_STATUS_SUCCESS){

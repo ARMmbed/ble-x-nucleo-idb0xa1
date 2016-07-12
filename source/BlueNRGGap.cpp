@@ -811,26 +811,47 @@ uint16_t BlueNRGGap::getConnectionHandle(void)
 /**************************************************************************/
 ble_error_t BlueNRGGap::setAddress(AddressType_t type, const BLEProtocol::AddressBytes_t address)
 {
-    tBleStatus ret;
-
     if (type > BLEProtocol::AddressType::RANDOM_PRIVATE_NON_RESOLVABLE) {
         return BLE_ERROR_PARAM_OUT_OF_RANGE;
     }
 
-    addr_type = type;
-
-    // If Address Type is other than PUBLIC, the given Address is ignored
-    if(addr_type == BLEProtocol::AddressType::PUBLIC){
-        ret = aci_hal_write_config_data(CONFIG_DATA_PUBADDR_OFFSET,
-                                        CONFIG_DATA_PUBADDR_LEN,
-                                        address);
+    if(type == BLEProtocol::AddressType::PUBLIC){
+        tBleStatus ret = aci_hal_write_config_data(
+            CONFIG_DATA_PUBADDR_OFFSET,
+            CONFIG_DATA_PUBADDR_LEN,
+            address
+        );
         if(ret != BLE_STATUS_SUCCESS) {
             return BLE_ERROR_OPERATION_NOT_PERMITTED;
         }
+    } else if  (type == BLEProtocol::AddressType::RANDOM_STATIC) {
+        // ensure that the random static address is well formed
+        if ((address[5] & 0xC0) != 0xC0) {
+            return BLE_ERROR_PARAM_OUT_OF_RANGE;
+        }
+
+        // thanks to const correctness of the API ...
+        tBDAddr random_address = { 0 };
+        memcpy(random_address, address, sizeof(random_address));
+        int err = hci_le_set_random_address(random_address);
+        if (err) {
+            return BLE_ERROR_OPERATION_NOT_PERMITTED;
+        }
+
+        // It is not possible to get the bluetooth address when it is set
+        // store it locally in class data member
+        memcpy(bdaddr, address, sizeof(bdaddr));
     } else {
-        return BLE_ERROR_OPERATION_NOT_PERMITTED;
+        // FIXME random addresses are not supported yet
+        // BLEProtocol::AddressType::RANDOM_PRIVATE_NON_RESOLVABLE
+        // BLEProtocol::AddressType::RANDOM_PRIVATE_RESOLVABLE
+        return BLE_ERROR_NOT_IMPLEMENTED;
     }
 
+    // if we're here then the address was correctly set
+    // commit it inside the addr_type
+    addr_type = type;
+    isSetAddress = true;
     return BLE_ERROR_NONE;
 }
 
@@ -871,23 +892,30 @@ ble_error_t BlueNRGGap::getAddress(AddressType_t *typeP, Address_t address)
     uint8_t bdaddr[BDADDR_SIZE];
     uint8_t data_len_out;
 
-    if (addr_type == BLEProtocol::AddressType::RANDOM_PRIVATE_NON_RESOLVABLE ||
-        addr_type == BLEProtocol::AddressType::RANDOM_PRIVATE_RESOLVABLE) {
-        return BLE_ERROR_OPERATION_NOT_PERMITTED;
+    // precondition, check that pointers in input are valid
+    if (typeP == NULL || address == NULL) {
+        return BLE_ERROR_INVALID_PARAM;
     }
 
-    if(typeP != NULL) {
-        *typeP = addr_type;
+    if (addr_type == BLEProtocol::AddressType::PUBLIC) {
+        tBleStatus ret = aci_hal_read_config_data(CONFIG_DATA_PUBADDR_OFFSET, BDADDR_SIZE, &data_len_out, bdaddr);
+        if(ret != BLE_STATUS_SUCCESS || data_len_out != BDADDR_SIZE) {
+            return BLE_ERROR_UNSPECIFIED;
+        }
+    } else if (addr_type == BLEProtocol::AddressType::RANDOM_STATIC) {
+        // FIXME hci_read_bd_addr and
+        // aci_hal_read_config_data CONFIG_DATA_RANDOM_ADDRESS_IDB05A1
+        // does not work, use the address stored in class data member
+        memcpy(bdaddr, this->bdaddr, sizeof(bdaddr));
+    } else {
+        // FIXME: should be implemented with privacy features
+        // BLEProtocol::AddressType::RANDOM_PRIVATE_NON_RESOLVABLE
+        // BLEProtocol::AddressType::RANDOM_PRIVATE_RESOLVABLE
+        return BLE_ERROR_NOT_IMPLEMENTED;
     }
 
-    tBleStatus ret = aci_hal_read_config_data(CONFIG_DATA_RANDOM_ADDRESS_IDB05A1, BDADDR_SIZE, &data_len_out, bdaddr);
-    if(ret != BLE_STATUS_SUCCESS) {
-        return BLE_ERROR_UNSPECIFIED;
-    }
-
-    if(address != NULL) {
-        memcpy(address, bdaddr, BDADDR_SIZE);
-    }
+    *typeP = addr_type;
+    memcpy(address, bdaddr, BDADDR_SIZE);
 
     return BLE_ERROR_NONE;
 }
