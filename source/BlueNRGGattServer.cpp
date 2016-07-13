@@ -101,6 +101,8 @@ ble_error_t BlueNRGGattServer::addService(GattService &service)
         COPY_UUID_128(primary_base_uuid, base_uuid[15],base_uuid[14],primary_short_uuid[1],primary_short_uuid[0],base_uuid[11],base_uuid[10],base_uuid[9],base_uuid[8],base_uuid[7],base_uuid[6],base_uuid[5],base_uuid[4],base_uuid[3],base_uuid[2],base_uuid[1],base_uuid[0]);
     }
 
+    ret = BLE_STATUS_SUCCESS;
+
     if(type==UUID::UUID_TYPE_SHORT) {
         ret = aci_gatt_add_serv(UUID_TYPE_16,
                                 primary_short_uuid,
@@ -109,8 +111,7 @@ ble_error_t BlueNRGGattServer::addService(GattService &service)
                                 &servHandle);
         PRINTF("aci_gatt_add_serv UUID_TYPE_SHORT ret=%d\n\r", ret);
 
-    }
-    else if(type==UUID::UUID_TYPE_LONG) {
+    } else if(type==UUID::UUID_TYPE_LONG) {
         ret = aci_gatt_add_serv(UUID_TYPE_128,
                                 primary_base_uuid,
                                 PRIMARY_SERVICE,

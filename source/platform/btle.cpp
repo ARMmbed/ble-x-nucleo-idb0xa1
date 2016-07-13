@@ -545,7 +545,7 @@ extern "C" {
                         uint8_t write_status = err_code == 0 ? 0 : 1;
 
                         // reply to the shield
-                        tBleStatus err = aci_gatt_write_response(
+                        aci_gatt_write_response(
                             write_req->conn_handle,
                             write_req->attr_handle,
                             write_status,
