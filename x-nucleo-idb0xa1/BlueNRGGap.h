@@ -66,10 +66,6 @@
 #define MAX_INT_CONN   0x0C80 //=>4000msec
 #define DEF_INT_CONN   0x0140 //=>400msec (default value for connection interval)
 
-#define LOCAL_NAME_MAX_SIZE 9 //8 + 1(AD_DATA_TYPE)
-#define UUID_BUFFER_SIZE 17 //Either 8*2(16-bit UUIDs) or 4*4(32-bit UUIDs) or 1*16(128-bit UUIDs) +1(AD_DATA_TYPE)
-#define ADV_DATA_MAX_SIZE 31
-
 /**************************************************************************/
 /*!
     \brief
@@ -166,22 +162,8 @@ private:
     bool isSetAddress;
     uint8_t deviceAppearance[2];
 
-    uint8_t local_name_length;
-    uint8_t local_name[ADV_DATA_MAX_SIZE];//LOCAL_NAME_MAX_SIZE];
-
-    uint8_t servUuidlength;
-    uint8_t servUuidData[UUID_BUFFER_SIZE];
-
-    uint8_t AdvLen;
-    uint8_t AdvData[ADV_DATA_MAX_SIZE];
-
-    uint8_t txPowLevSet;
-
     Timeout advTimeout;
     bool AdvToFlag;
-
-    const uint8_t *scan_response_payload;
-    uint8_t scan_rsp_length;
 
     static uint16_t SCAN_DURATION_UNITS_TO_MSEC(uint16_t duration) {
         return (duration * 625) / 1000;
@@ -204,7 +186,7 @@ private:
 
     ble_error_t updateAdvertisingData(void);
 
-    BlueNRGGap(): txPowLevSet(0) {
+    BlueNRGGap() {
         m_connectionHandle = BLE_CONN_HANDLE_INVALID;
         addr_type = BLEProtocol::AddressType::RANDOM_STATIC;
 
@@ -220,6 +202,7 @@ private:
     void operator=(BlueNRGGap const &);
 
     GapAdvertisingData _advData;
+    GapAdvertisingData _scanResponse;
 };
 
 #endif // ifndef __BLUENRG_GAP_H__
