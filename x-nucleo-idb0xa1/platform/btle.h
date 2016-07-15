@@ -39,7 +39,7 @@ extern uint16_t g_appearance_char_handle;
 extern uint16_t g_device_name_char_handle;
 extern uint16_t g_preferred_connection_parameters_char_handle;
 
-void btleInit(bool isSetAddress, uint8_t role);
+void btleInit(void);
 void SPI_Poll(void);
 void User_Process(void);
 void setConnectable(void);

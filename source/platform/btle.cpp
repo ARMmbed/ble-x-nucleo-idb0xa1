@@ -92,16 +92,12 @@ uint8_t bnrg_expansion_board = IDB04A1; /* at startup, suppose the X-NUCLEO-IDB0
 /**************************************************************************/
 /*!
     @brief  Init the BTLE stack with the specified role
-    @param  isSetAddress boolean if address has been set
-    @param  role The device role
     @returns void
 */
 /**************************************************************************/
-void btleInit(bool isSetAddress, uint8_t role)
+void btleInit(void)
 {
     PRINTF("btleInit>>\n\r");
-    /* Avoid compiler warnings about unused variables. */
-    (void)isSetAddress;
 
     int ret;
     uint8_t  hwVersion;
@@ -136,30 +132,6 @@ void btleInit(bool isSetAddress, uint8_t role)
                                         &stackMode);
     }
 
-    /* The Nucleo board must be configured as SERVER */
-    //check if isSetAddress is set then set address.
-#if 0
-    if(isSetAddress)
-    {
-        Gap::Address_t bleAddr;
-        Gap::AddressType_t addr_type;
-
-        BlueNRGGap::getInstance().getAddress(&addr_type, bleAddr);
-
-        ret = aci_hal_write_config_data(CONFIG_DATA_PUBADDR_OFFSET,
-                                        CONFIG_DATA_PUBADDR_LEN,
-                                        bleAddr);
-    } else {
-
-        const Gap::Address_t BLE_address_BE = {0xFD,0x66,0x05,0x13,0xBE,0xBA};
-        BlueNRGGap::getInstance().setAddress(BLEProtocol::AddressType::RANDOM_STATIC, BLE_address_BE);
-
-        ret = aci_hal_write_config_data(CONFIG_DATA_PUBADDR_OFFSET,
-                                        CONFIG_DATA_PUBADDR_LEN,
-                                        BLE_address_BE);
-    }
-#endif
-
     ret = aci_gatt_init();
     if(ret != BLE_STATUS_SUCCESS){
         PRINTF("GATT_Init failed.\n");
@@ -172,7 +144,8 @@ void btleInit(bool isSetAddress, uint8_t role)
                                    &dev_name_char_handle,
                                    &appearance_char_handle);
     } else {
-        ret = aci_gap_init_IDB04A1(role, &service_handle, &dev_name_char_handle, &appearance_char_handle);
+        // IDB04A1 is configured as peripheral by default
+        ret = aci_gap_init_IDB04A1(GAP_PERIPHERAL_ROLE_IDB04A1, &service_handle, &dev_name_char_handle, &appearance_char_handle);
     }
 
     // read the default static address and inject it into the GAP object
@@ -211,12 +184,8 @@ void btleInit(bool isSetAddress, uint8_t role)
                             strlen(name), (tHalUint8 *)name);*/
 
     // update the peripheral preferred conenction parameters handle
-    // if the device is configured as a peripheral
     // This value is hardcoded at the moment.
-    if ((role & GAP_PERIPHERAL_ROLE_IDB05A1) || (role & GAP_PERIPHERAL_ROLE_IDB04A1) ||
-        (bnrg_expansion_board == IDB05A1 /* role is ignored in this configuration ... */)) {
-        g_preferred_connection_parameters_char_handle = 10;
-    }
+    g_preferred_connection_parameters_char_handle = 10;
 
 
 #ifdef AST_FOR_MBED_OS

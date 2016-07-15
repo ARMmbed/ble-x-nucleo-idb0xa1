@@ -181,11 +181,9 @@ ble_error_t BlueNRGDevice::init(BLE::InstanceID_t instanceID, FunctionPointerWit
         	callback.call(&context);
         	return BLE_ERROR_ALREADY_INITIALIZED;
     	}
-	
-	/* ToDo: Clear memory contents, reset the SD, etc. */
+
 	// Init the BlueNRG/BlueNRG-MS stack
-	// By default, we set the device GAP role to PERIPHERAL
-	btleInit(BlueNRGGap::getInstance().getIsSetAddress(), GAP_PERIPHERAL_ROLE_IDB04A1);
+	btleInit();
 	
 	isInitialized = true;
 	BLE::InitializationCompleteCallbackContext context = {
