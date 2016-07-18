@@ -426,7 +426,7 @@ extern "C" {
                         BlueNRGGap::getInstance().setConnectionHandle(cc->handle);
                         BlueNRGGap::ConnectionParams_t connectionParams = {
                             /* minConnectionInterval = */ cc->interval,
-                            /*  maxConnectionInterval = */ cc->interval,
+                            /* maxConnectionInterval = */ cc->interval,
                             /* slaveLatency = */ cc->latency,
                             /* connectionSupervisionTimeout = */ cc->supervision_timeout
                         };
@@ -459,7 +459,9 @@ extern "C" {
                                 role = Gap::PERIPHERAL;
 				break;
                         }
-                        //PRINTF("EVT_LE_CONN_COMPLETE GAP role=%d\n", role);
+
+                        BlueNRGGap::getInstance().setGapRole(role);
+
                         BlueNRGGap::getInstance().processConnectionEvent(cc->handle,
                                                                          role,
                                                                          peerAddrType,
@@ -635,6 +637,36 @@ extern "C" {
             evt_gatt_procedure_complete *evt = (evt_gatt_procedure_complete*)blue_evt->data;
             PRINTF("EVT_BLUE_GATT_PROCEDURE_COMPLETE error_code=%d\n\r", evt->error_code);
             BlueNRGGattClient::getInstance().gattProcedureCompleteCB(evt->conn_handle, evt->error_code);
+          }
+          break;
+
+        case EVT_BLUE_L2CAP_CONN_UPD_REQ:
+          {
+            PRINTF("EVT_BLUE_L2CAP_CONN_UPD_REQ\r\n");
+            evt_l2cap_conn_upd_req *evt = (evt_l2cap_conn_upd_req*)blue_evt->data;
+            if(bnrg_expansion_board == IDB05A1) {
+              // we assume the application accepts the request from the slave
+              aci_l2cap_connection_parameter_update_response_IDB05A1(evt->conn_handle,
+                                                                     evt->interval_min,
+                                                                     evt->interval_max,
+                                                                     evt->slave_latency,
+                                                                     evt->timeout_mult,
+                                                                     CONN_L1, CONN_L2,
+                                                                     evt->identifier,
+                                                                     0x0000);
+            }
+          }
+          break;
+
+        case EVT_BLUE_L2CAP_CONN_UPD_RESP:
+          {
+            PRINTF("EVT_BLUE_L2CAP_CONN_UPD_RESP\r\n");
+          }
+          break;
+
+        case EVT_LE_CONN_UPDATE_COMPLETE:
+          {
+            PRINTF("EVT_LE_CONN_UPDATE_COMPLETE\r\n");
           }
           break;
 

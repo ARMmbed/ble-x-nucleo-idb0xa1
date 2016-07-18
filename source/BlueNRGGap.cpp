@@ -765,9 +765,36 @@ ble_error_t BlueNRGGap::setPreferredConnectionParams(const ConnectionParams_t *p
 /**************************************************************************/
 ble_error_t BlueNRGGap::updateConnectionParams(Handle_t handle, const ConnectionParams_t *params)
 {
-    /* avoid compiler warnings about unused variables */
-    (void) handle;
-    (void)params;
+    tBleStatus ret = BLE_STATUS_SUCCESS;
+
+    if(gapRole == Gap::CENTRAL) {
+        ret = aci_gap_start_connection_update(handle,
+                                              params->minConnectionInterval,
+                                              params->maxConnectionInterval,
+                                              params->slaveLatency,
+                                              params->connectionSupervisionTimeout,
+                                              CONN_L1, CONN_L2);
+    } else {
+        ret = aci_l2cap_connection_parameter_update_request(handle,
+                                                            params->minConnectionInterval,
+                                                            params->maxConnectionInterval,
+                                                            params->slaveLatency,
+                                                            params->connectionSupervisionTimeout);
+    }
+
+    if (BLE_STATUS_SUCCESS != ret){
+        PRINTF("updateConnectionParams failed (ret=0x%x)!!\n\r", ret) ;
+        switch (ret) {
+          case ERR_INVALID_HCI_CMD_PARAMS:
+          case BLE_STATUS_INVALID_PARAMETER:
+            return BLE_ERROR_INVALID_PARAM;
+          case ERR_COMMAND_DISALLOWED:
+          case BLE_STATUS_NOT_ALLOWED:
+            return BLE_ERROR_OPERATION_NOT_PERMITTED;
+          default:
+            return BLE_ERROR_UNSPECIFIED;
+        }
+    }
 
     return BLE_ERROR_NONE;
 }
@@ -1265,7 +1292,12 @@ ble_error_t BlueNRGGap::connect (const Gap::Address_t peerAddr,
 {
   /* avoid compiler warnings about unused variables */
   (void)connectionParams;
-  (void)scanParams;
+
+  setScanParams(scanParams->getInterval(),
+                scanParams->getWindow(),
+                scanParams->getTimeout(),
+                scanParams->getActiveScanning()
+               );
 
   // Save the peer address
   for(int i=0; i<BDADDR_SIZE; i++) {
@@ -1383,3 +1415,9 @@ void BlueNRGGap::setConnectionInterval(uint16_t interval) {
     conn_min_interval = interval;
     conn_max_interval = interval;
 }
+
+void BlueNRGGap::setGapRole(Role_t role)
+{
+    gapRole = role;
+}
+

@@ -150,9 +150,11 @@ public:
     virtual ble_error_t startRadioScan(const GapScanningParams &scanningParams);
 
     void setConnectionInterval(uint16_t interval);
+    void setGapRole(Role_t role);
 
 private:
     uint16_t m_connectionHandle;
+    Role_t gapRole;
     AddressType_t addr_type;
     Address_t _peerAddr;
     AddressType_t _peerAddrType;
