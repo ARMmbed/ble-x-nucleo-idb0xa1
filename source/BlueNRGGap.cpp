@@ -17,7 +17,7 @@
 
 /**
   ******************************************************************************
-  * @file    BlueNRGGap.cpp 
+  * @file    BlueNRGGap.cpp
   * @author  STMicroelectronics
   * @brief   Implementation of BLE_API Gap Class
   ******************************************************************************
@@ -44,15 +44,11 @@
 #include "Utils.h"
 #include "debug.h"
 
-//Local Variables
-//const char *local_name = NULL;
-//uint8_t local_name_length = 0;
-
 /*
  * Utility to process GAP specific events (e.g., Advertising timeout)
  */
 void BlueNRGGap::Process(void)
-{    
+{
     if(AdvToFlag) {
         stopAdvertising();
     }
@@ -61,7 +57,7 @@ void BlueNRGGap::Process(void)
 
 /**************************************************************************/
 /*!
-    @brief  Sets the advertising parameters and payload for the device. 
+    @brief  Sets the advertising parameters and payload for the device.
             Note: Some data types give error when their adv data is updated using aci_gap_update_adv_data() API
 
     @params[in] advData
@@ -95,7 +91,7 @@ void BlueNRGGap::Process(void)
 */
 /**************************************************************************/
 ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, const GapAdvertisingData &scanResponse)
-{ 
+{
     PRINTF("BlueNRGGap::setAdvertisingData\n\r");
     /* Make sure we don't exceed the advertising payload length */
     if (advData.getPayloadLen() > GAP_ADVERTISING_DATA_MAX_PAYLOAD) {
@@ -103,18 +99,8 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
         return BLE_ERROR_BUFFER_OVERFLOW;
     }
 
-    // Reset the length of the ADV payload each time
-    // since we get fields of argument 'advData' iteratively
-    AdvLen = 0;
-
     /* Make sure we have a payload! */
-    if (advData.getPayloadLen() == 0) {
-        PRINTF("advData.getPayloadLen() == 0\n\r");
-        //return BLE_ERROR_PARAM_OUT_OF_RANGE;
-        local_name_length = 0;
-        txPowLevSet = 0;
-        servUuidlength = 0;
-    } else {
+    if (advData.getPayloadLen() != 0) {
         PayloadPtr loadPtr(advData.getPayload(), advData.getPayloadLen());
 
         /* Align the GAP Service Appearance Char value coherently
@@ -125,88 +111,17 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
         setAppearance((GapAdvertisingData::Appearance)(deviceAppearance[1]<<8|deviceAppearance[0]));
 
 
-        for(uint8_t index=0; index<loadPtr.getPayloadUnitCount(); index++) {                  
+        for(uint8_t index=0; index<loadPtr.getPayloadUnitCount(); index++) {
             loadPtr.getUnitAtIndex(index);
 
             PRINTF("adData[%d].length=%d\n\r", index,(uint8_t)(*loadPtr.getUnitAtIndex(index).getLenPtr()));
-            PRINTF("adData[%d].AdType=0x%x\n\r", index,(uint8_t)(*loadPtr.getUnitAtIndex(index).getAdTypePtr()));                  
-            
-            switch(*loadPtr.getUnitAtIndex(index).getAdTypePtr()) {
-            case GapAdvertisingData::FLAGS:                              /* ref *Flags */                     
-                {
-                PRINTF("Advertising type: FLAGS\n\r");
-                //Check if Flags are OK. BlueNRG only supports LE Mode.
-                uint8_t *flags = loadPtr.getUnitAtIndex(index).getDataPtr();
-                if((*flags & GapAdvertisingData::BREDR_NOT_SUPPORTED) != GapAdvertisingData::BREDR_NOT_SUPPORTED) {
-                    PRINTF("BlueNRG does not support BR/EDR Mode");
-                    return BLE_ERROR_PARAM_OUT_OF_RANGE;
-                }
-                
-                break;
-                }
-            case GapAdvertisingData::INCOMPLETE_LIST_16BIT_SERVICE_IDS:  /**< Incomplete list of 16-bit Service IDs */
-            case GapAdvertisingData::COMPLETE_LIST_16BIT_SERVICE_IDS:    /**< Complete list of 16-bit Service IDs */
-            case GapAdvertisingData::INCOMPLETE_LIST_128BIT_SERVICE_IDS: /**< Incomplete list of 128-bit Service IDs */
-            case GapAdvertisingData::COMPLETE_LIST_128BIT_SERVICE_IDS:   /**< Complete list of 128-bit Service IDs */
-                {
-                PRINTF("Advertising type: INCOMPLETE_LIST SERVICE_IDS/COMPLETE_LIST SERVICE_IDS\n\r");
-                
-                uint8_t buffSize = *loadPtr.getUnitAtIndex(index).getLenPtr()-1;
-                // The total lenght should include the Data Type Value
-                if(buffSize>UUID_BUFFER_SIZE-1) {
-                    return BLE_ERROR_INVALID_PARAM;
-                }
-                
-                servUuidlength = buffSize+1; // +1 to include the Data Type Value
-                servUuidData[0] = (uint8_t)(*loadPtr.getUnitAtIndex(index).getAdTypePtr()); //Data Type Value
-                
-                PRINTF("servUuidlength=%d servUuidData[0]=%d buffSize=%d\n\r", servUuidlength, servUuidData[0], buffSize);
-                // Save the Service UUID list just after the Data Type Value field
-                memcpy(servUuidData+1, loadPtr.getUnitAtIndex(index).getDataPtr(), buffSize);
-#ifdef DEBUG
-                for(unsigned i=0; i<servUuidlength; i++) {
-                    PRINTF("servUuidData[%d] = 0x%x\n\r", i, servUuidData[i]);
-                }
-                
-                for(unsigned i=0; i<buffSize; i++) {
-                    PRINTF("loadPtr.getUnitAtIndex(index).getDataPtr()[%d] = 0x%x\n\r",
-                            i, loadPtr.getUnitAtIndex(index).getDataPtr()[i]);
-                }
-#endif /* DEBUG */
-                break;
-                }
-            case GapAdvertisingData::INCOMPLETE_LIST_32BIT_SERVICE_IDS:  /**< Incomplete list of 32-bit Service IDs (not relevant for Bluetooth 4.0) */
-                {
-                PRINTF("Advertising type: INCOMPLETE_LIST_32BIT_SERVICE_IDS\n\r");
-                return BLE_ERROR_NOT_IMPLEMENTED;
-                }
-            case GapAdvertisingData::COMPLETE_LIST_32BIT_SERVICE_IDS:    /**< Complete list of 32-bit Service IDs (not relevant for Bluetooth 4.0) */
-                {
-                PRINTF("Advertising type: COMPLETE_LIST_32BIT_SERVICE_IDS\n\r");
-                return BLE_ERROR_NOT_IMPLEMENTED;
-                }
-            case GapAdvertisingData::SHORTENED_LOCAL_NAME:               /**< Shortened Local Name */
-                {
-                break;
-                }
-            case GapAdvertisingData::COMPLETE_LOCAL_NAME:                /**< Complete Local Name */
-                {
-                PRINTF("Advertising type: COMPLETE_LOCAL_NAME\n\r");
-                loadPtr.getUnitAtIndex(index).printDataAsString();
-                local_name_length = *loadPtr.getUnitAtIndex(index).getLenPtr()-1;
-                // The total length should include the Data Type Value
-                if(local_name_length>ADV_DATA_MAX_SIZE-1) {
-                    return BLE_ERROR_INVALID_PARAM;
-                }
-                local_name[0] = (uint8_t)(*loadPtr.getUnitAtIndex(index).getAdTypePtr()); //Data Type Value
-                memcpy(local_name+1, (uint8_t*)loadPtr.getUnitAtIndex(index).getDataPtr(), local_name_length-1);
-                PRINTF("Advertising type: COMPLETE_LOCAL_NAME local_name=%s local_name_length=%d\n\r", local_name+1, local_name_length);
+            PRINTF("adData[%d].AdType=0x%x\n\r", index,(uint8_t)(*loadPtr.getUnitAtIndex(index).getAdTypePtr()));
 
-                break;
-                }
-            case GapAdvertisingData::TX_POWER_LEVEL:                     /**< TX Power Level (in dBm) */
+            switch(*loadPtr.getUnitAtIndex(index).getAdTypePtr()) {
+            /**< TX Power Level (in dBm) */
+            case GapAdvertisingData::TX_POWER_LEVEL:
                 {
-                PRINTF("Advertising type: TX_POWER_LEVEL\n\r");     
+                PRINTF("Advertising type: TX_POWER_LEVEL\n\r");
                 int8_t enHighPower = 0;
                 int8_t paLevel = 0;
 
@@ -218,47 +133,11 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
 #endif
                 if(ret == BLE_STATUS_SUCCESS) {
                   aci_hal_set_tx_power_level(enHighPower, paLevel);
-                  txPowLevSet = 1;
                 }
                 break;
                 }
-            case GapAdvertisingData::DEVICE_ID:                          /**< Device ID */
-                {
-                break;
-                }
-            case GapAdvertisingData::SLAVE_CONNECTION_INTERVAL_RANGE:    /**< Slave :Connection Interval Range */
-                {
-                PRINTF("Advertising type: SLAVE_CONNECTION_INTERVAL_RANGE\n\r");
-                uint8_t *ptr = loadPtr.getUnitAtIndex(index).getDataPtr();
-                slaveConnIntervMin = ptr[0]|ptr[1]<<8;
-                slaveConnIntervMax = ptr[2]|ptr[3]<<8;
-
-                break;
-                }
-            case GapAdvertisingData::SERVICE_DATA:                       /**< Service Data */
-                {
-                PRINTF("Advertising type: SERVICE_DATA\n\r");
-                uint8_t buffSize = *loadPtr.getUnitAtIndex(index).getLenPtr()-1;
-                PRINTF("Advertising type: SERVICE_DATA (buffSize=%d)\n\r", buffSize);
-                // the total ADV DATA LEN should include two more bytes: the buffer size byte; and the Service Data Type Value byte
-                if(buffSize>ADV_DATA_MAX_SIZE-2) {
-                    return BLE_ERROR_PARAM_OUT_OF_RANGE;
-                }
-#ifdef DEBUG
-                for(int i=0; i<buffSize+1; i++) {
-                    PRINTF("Advertising type: SERVICE_DATA loadPtr.getUnitAtIndex(index).getDataPtr()[%d] = 0x%x\n\r",
-                            i, loadPtr.getUnitAtIndex(index).getDataPtr()[i]);
-                }
-#endif
-                // the total ADV DATA LEN should include two more bytes: the buffer size byte; and the Service Data Type Value byte
-                AdvData[AdvLen++] = buffSize+1; // the fisrt byte is the data buffer size (type+data)
-                AdvData[AdvLen++] = AD_TYPE_SERVICE_DATA;
-                memcpy(&AdvData[AdvLen], loadPtr.getUnitAtIndex(index).getDataPtr(), buffSize);
-                AdvLen += buffSize;
-                break;
-                }
-
-            case GapAdvertisingData::APPEARANCE:			/**< Appearance */
+            /**< Appearance */
+            case GapAdvertisingData::APPEARANCE:
                 {
                 PRINTF("Advertising type: APPEARANCE\n\r");
 
@@ -273,70 +152,15 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
                 break;
                 }
 
-            case GapAdvertisingData::ADVERTISING_INTERVAL:               /**< Advertising Interval */
-                {
-                printf("Advertising type: ADVERTISING_INTERVAL\n\r");
-                uint8_t buffSize = *loadPtr.getUnitAtIndex(index).getLenPtr()-1;
-                AdvData[AdvLen++] = buffSize+1; // the fisrt byte is the data buffer size (type+data)
-                AdvData[AdvLen++] = AD_TYPE_ADVERTISING_INTERVAL;
-                memcpy(&AdvData[AdvLen], loadPtr.getUnitAtIndex(index).getDataPtr(), buffSize);
-                AdvLen += buffSize;
-                break;
-                }
-            case GapAdvertisingData::MANUFACTURER_SPECIFIC_DATA:        /**< Manufacturer Specific Data */                             
-                {
-                PRINTF("Advertising type: MANUFACTURER_SPECIFIC_DATA\n\r");
-                uint8_t buffSize = *loadPtr.getUnitAtIndex(index).getLenPtr()-1;
-                PRINTF("Advertising type: MANUFACTURER_SPECIFIC_DATA (buffSize=%d)\n\r", buffSize);
-                // the total ADV DATA LEN should include two more bytes:
-		// the buffer size byte;
-		// and the Manufacturer Specific Data Type Value byte
-                if(buffSize>ADV_DATA_MAX_SIZE-2) {
-                    return BLE_ERROR_PARAM_OUT_OF_RANGE;
-                }
-#ifdef DBEUG
-                for(int i=0; i<buffSize+1; i++) {
-                    PRINTF("Advertising type: MANUFACTURER_SPECIFIC_DATA loadPtr.getUnitAtIndex(index).getDataPtr()[%d] = 0x%x\n\r",
-				i, loadPtr.getUnitAtIndex(index).getDataPtr()[i]);
-                }
-#endif
-                // the total ADV DATA LEN should include two more bytes: the buffer size byte; and the Manufacturer Specific Data Type Value byte
-                AdvData[AdvLen++] = buffSize+1; // the fisrt byte is the data buffer size (type+data)
-                AdvData[AdvLen++] = AD_TYPE_MANUFACTURER_SPECIFIC_DATA;
-                memcpy(&AdvData[AdvLen], loadPtr.getUnitAtIndex(index).getDataPtr(), buffSize);
-                AdvLen += buffSize;
-                break;
-                }
             } // end switch
 
         } //end for
 
-        //Set the SCAN_RSP Payload
-        if(scanResponse.getPayloadLen() > 0) {
-          scan_response_payload = scanResponse.getPayload();
-          scan_rsp_length = scanResponse.getPayloadLen();
-        }
-
-        // Update the ADV data if we are already in ADV mode
-        if(AdvLen > 0 && state.advertising == 1) {
- 
-            tBleStatus ret = aci_gap_update_adv_data(AdvLen, AdvData);
-            if(BLE_STATUS_SUCCESS!=ret) {
-                PRINTF("error occurred while adding adv data (ret=0x%x)\n", ret);
-                switch (ret) {
-                  case BLE_STATUS_TIMEOUT:
-                    return BLE_STACK_BUSY;
-                  case ERR_INVALID_HCI_CMD_PARAMS:
-                  case BLE_STATUS_INVALID_PARAMS:
-                    return BLE_ERROR_INVALID_PARAM;
-                  case BLE_STATUS_FAILED:
-                    return BLE_ERROR_PARAM_OUT_OF_RANGE;
-                  default:
-                    return BLE_ERROR_UNSPECIFIED;
-                }
-            }
-        }
     }
+
+    _advData = advData;
+    _scanResponse = scanResponse;
+
     return BLE_ERROR_NONE;
 }
 
@@ -354,40 +178,40 @@ void BlueNRGGap::setAdvToFlag(void) {
 static void advTimeoutCB(void)
 {
     Gap::GapState_t state;
-    
+
     state = BlueNRGGap::getInstance().getState();
     if (state.advertising == 1) {
-        
+
         BlueNRGGap::getInstance().stopAdvertising();
-        
+
     }
 }
 #else
 static void advTimeoutCB(void)
 {
     Gap::GapState_t state;
-    
+
     state = BlueNRGGap::getInstance().getState();
     if (state.advertising == 1) {
-        
+
         BlueNRGGap::getInstance().setAdvToFlag();
-        
+
         Timeout t = BlueNRGGap::getInstance().getAdvTimeout();
         t.detach(); /* disable the callback from the timeout */
 
     }
 }
 #endif /* AST_FOR_MBED_OS */
-    
+
 /**************************************************************************/
 /*!
     @brief  Starts the BLE HW, initialising any services that were
             added before this function was called.
-    
+
     @param[in]  params
                 Basic advertising details, including the advertising
                 delay, timeout and how the device should be advertised
-                
+
     @note   All services must be added before calling this function!
 
     @returns    ble_error_t
@@ -406,7 +230,7 @@ static void advTimeoutCB(void)
 ble_error_t BlueNRGGap::startAdvertising(const GapAdvertisingParams &params)
 {
     tBleStatus ret;
-    ble_error_t rc;
+    int err;
 
     /* Make sure we support the advertising type */
     if (params.getAdvertisingType() == GapAdvertisingParams::ADV_CONNECTABLE_DIRECTED) {
@@ -475,8 +299,8 @@ ble_error_t BlueNRGGap::startAdvertising(const GapAdvertisingParams &params)
         params.getAdvertisingType() == GapAdvertisingParams::ADV_SCANNABLE_UNDIRECTED) {
 
         /* set scan response data */
-        PRINTF(" setting scan response data (scan_rsp_length=%u)\n", scan_rsp_length);
-        ret = hci_le_set_scan_resp_data(scan_rsp_length, scan_response_payload);
+        PRINTF(" setting scan response data (_scanResponseLen=%u)\n", _scanResponse.getPayloadLen());
+        ret = hci_le_set_scan_resp_data(_scanResponse.getPayloadLen(), _scanResponse.getPayload());
 
         if(BLE_STATUS_SUCCESS!=ret) {
             PRINTF(" error while setting scan response data (ret=0x%x)\n", ret);
@@ -491,54 +315,42 @@ ble_error_t BlueNRGGap::startAdvertising(const GapAdvertisingParams &params)
         hci_le_set_scan_resp_data(0, NULL);
     }
 
-    //advInterval = params.getIntervalInADVUnits();
     setAdvParameters();
     PRINTF("advInterval=%d advType=%d\n\r", advInterval, params.getAdvertisingType());
 
-    /* Setting discoverable mode */
-    ret = aci_gap_set_discoverable(params.getAdvertisingType(), // AdvType
-                                   advInterval,                 // AdvIntervMin
-                                   advInterval,                 // AdvIntervMax
-                                   addr_type,                   // OwnAddrType
-                                   advFilterPolicy,             // AdvFilterPolicy
-                                   local_name_length,           // LocalNameLen
-                                   (const char*)local_name,     // LocalName
-                                   servUuidlength,              // ServiceUUIDLen
-                                   servUuidData,                // ServiceUUIDList
-                                   slaveConnIntervMin,          // SlaveConnIntervMin
-                                   slaveConnIntervMax);         // SlaveConnIntervMax
+    err = hci_le_set_advertising_data(_advData.getPayloadLen(), _advData.getPayload());
 
-    
-    PRINTF("!!!setting discoverable (servUuidlength=0x%x)\n\r", servUuidlength);
-    if(BLE_STATUS_SUCCESS!=ret) {
-       PRINTF("error occurred while setting discoverable (ret=0x%x)\n\r", ret);
-       switch (ret) {
-         case BLE_STATUS_INVALID_PARAMS:
-         case ERR_INVALID_HCI_CMD_PARAMS:
-           return BLE_ERROR_INVALID_PARAM;
-         case ERR_COMMAND_DISALLOWED:
-           return BLE_ERROR_OPERATION_NOT_PERMITTED;
-         case ERR_UNSUPPORTED_FEATURE:
-           return BLE_ERROR_NOT_IMPLEMENTED;
-         case BLE_STATUS_TIMEOUT:
-           return BLE_STACK_BUSY;
-         default:
-           return BLE_ERROR_UNSPECIFIED;
-       }
+    if (err) {
+        PRINTF("error while setting the payload\r\n");
+        return BLE_ERROR_UNSPECIFIED;
     }
 
-    // Since AD_TYPE_TX_POWER_LEVEL has not been set by application, we delete it
-    if(!txPowLevSet) {
-      PRINTF("Deleting TX POW LEV\n");
-      aci_gap_delete_ad_type(AD_TYPE_TX_POWER_LEVEL);
-      txPowLevSet = 0;
+    tBDAddr dummy_addr = { 0 };
+    uint16_t advIntervalMin = advInterval == GapAdvertisingParams::GAP_ADV_PARAMS_INTERVAL_MAX ? advInterval - 1 : advInterval;
+    uint16_t advIntervalMax = advIntervalMin + 1;
+
+    err = hci_le_set_advertising_parameters(
+        advIntervalMin,
+        advIntervalMax,
+        params.getAdvertisingType(),
+    	addr_type,
+        0x00,
+        dummy_addr,
+        /* all channels */ 7,
+    	advFilterPolicy
+    );
+
+    if (err) {
+        PRINTF("impossible to set advertising parameters\n\r");
+        PRINTF("advInterval min: %u, advInterval max: %u\n\r", advInterval, advInterval + 1);
+        PRINTF("advType: %u, advFilterPolicy: %u\n\r", params.getAdvertisingType(), advFilterPolicy);
+        return BLE_ERROR_INVALID_PARAM;
     }
 
-    // Stop Advertising if an error occurs while updating ADV data
-    rc = updateAdvertisingData();
-    if(rc != BLE_ERROR_NONE) {
-      aci_gap_set_non_discoverable();
-      return rc;
+    err = hci_le_set_advertise_enable(0x01);
+    if (err) {
+        PRINTF("impossible to start advertising\n\r");
+        return BLE_ERROR_UNSPECIFIED;
     }
 
     state.advertising = 1;
@@ -554,76 +366,9 @@ ble_error_t BlueNRGGap::startAdvertising(const GapAdvertisingParams &params)
     }
 
     return BLE_ERROR_NONE;
-}
-
-ble_error_t BlueNRGGap::updateAdvertisingData(void)
-{
-    tBleStatus ret;
-
-    // Before updating the ADV data, delete COMPLETE_LOCAL_NAME field
-    if(AdvLen > 0) {
-      if(local_name_length > 0) {
-        ret = aci_gap_delete_ad_type(AD_TYPE_COMPLETE_LOCAL_NAME);
-        if (BLE_STATUS_SUCCESS!=ret){
-          PRINTF("aci_gap_delete_ad_type failed return=%d\n", ret);
-          switch (ret) {
-            case BLE_STATUS_TIMEOUT:
-              return BLE_STACK_BUSY;
-            case ERR_COMMAND_DISALLOWED:
-              return BLE_ERROR_OPERATION_NOT_PERMITTED;
-            case ERR_INVALID_HCI_CMD_PARAMS:
-              return BLE_ERROR_INVALID_PARAM;
-            default:
-              return BLE_ERROR_UNSPECIFIED;
-          }
-        }
-      }
-
-      // ...and TX_POWER_LEVEL field to make the needed room in ADV payload
-      if(txPowLevSet) {
-        ret = aci_gap_delete_ad_type(AD_TYPE_TX_POWER_LEVEL);
-        if (BLE_STATUS_SUCCESS!=ret){
-          PRINTF("aci_gap_delete_ad_type failed return=%d\n", ret);
-          switch (ret) {
-            case BLE_STATUS_TIMEOUT:
-              return BLE_STACK_BUSY;
-            case ERR_COMMAND_DISALLOWED:
-              return BLE_ERROR_OPERATION_NOT_PERMITTED;
-            case ERR_INVALID_HCI_CMD_PARAMS:
-              return BLE_ERROR_INVALID_PARAM;
-            default:
-              return BLE_ERROR_UNSPECIFIED;
-          }
-        }
-      }
-
-      ret = aci_gap_update_adv_data(AdvLen, AdvData);
-      if(BLE_STATUS_SUCCESS!=ret) {
-          PRINTF("error occurred while adding adv data (ret=0x%x)\n\r", ret);
-          switch (ret) {
-            case BLE_STATUS_TIMEOUT:
-              return BLE_STACK_BUSY;
-            case ERR_INVALID_HCI_CMD_PARAMS:
-            case BLE_STATUS_INVALID_PARAMS:
-              return BLE_ERROR_INVALID_PARAM;
-            case BLE_STATUS_FAILED:
-              return BLE_ERROR_PARAM_OUT_OF_RANGE;
-            default:
-              return BLE_ERROR_UNSPECIFIED;
-          }
-      }
-
-    } // AdvLen>0
-
-    if(deviceAppearance != 0) {
-      uint8_t appearance[] = {3, AD_TYPE_APPEARANCE, deviceAppearance[0], deviceAppearance[1]};
-      // just ignore error code while setting appearance
-      aci_gap_update_adv_data(4, appearance);
-    }
-
-    return BLE_ERROR_NONE;
 
 }
+
 
 /**************************************************************************/
 /*!
@@ -643,28 +388,19 @@ ble_error_t BlueNRGGap::updateAdvertisingData(void)
 /**************************************************************************/
 ble_error_t BlueNRGGap::stopAdvertising(void)
 {
-    tBleStatus ret;
 
     if(state.advertising == 1) {
-        //Set non-discoverable to stop advertising
-        ret = aci_gap_set_non_discoverable();
-        
-        if (BLE_STATUS_SUCCESS!=ret){
-            PRINTF("Error in stopping advertisement (ret=0x%x)!!\n\r", ret) ;
-            switch (ret) {
-              case ERR_COMMAND_DISALLOWED:
-                return BLE_ERROR_OPERATION_NOT_PERMITTED;
-              case BLE_STATUS_TIMEOUT:
-                return BLE_STACK_BUSY;
-              default:
-                return BLE_ERROR_UNSPECIFIED;
-            }
+
+        int err = hci_le_set_advertise_enable(0);
+        if (err) {
+            return BLE_ERROR_OPERATION_NOT_PERMITTED;
         }
+
         PRINTF("Advertisement stopped!!\n\r") ;
         //Set GapState_t::advertising state
         state.advertising = 0;
     }
-    
+
     return BLE_ERROR_NONE;
 }
 
@@ -674,7 +410,7 @@ ble_error_t BlueNRGGap::stopAdvertising(void)
 
     @param[in]  reason
                 Disconnection Reason
-                
+
     @returns    ble_error_t
 
     @retval     BLE_ERROR_NONE
@@ -704,7 +440,7 @@ ble_error_t BlueNRGGap::disconnect(Handle_t connectionHandle, Gap::Disconnection
             return BLE_ERROR_UNSPECIFIED;
         }
     }
-    
+
     return BLE_ERROR_NONE;
 }
 
@@ -714,7 +450,7 @@ ble_error_t BlueNRGGap::disconnect(Handle_t connectionHandle, Gap::Disconnection
 
     @param[in]  reason
                 Disconnection Reason
-                
+
     @returns    ble_error_t
 
     @retval     BLE_ERROR_NONE
@@ -735,10 +471,10 @@ ble_error_t BlueNRGGap::disconnect(Gap::DisconnectionReason_t reason)
 /**************************************************************************/
 /*!
     @brief  Sets the 16-bit connection handle
-    
+
     @param[in]  conn_handle
                 Connection Handle which is set in the Gap Instance
-                
+
     @returns    void
 */
 /**************************************************************************/
@@ -750,9 +486,9 @@ void BlueNRGGap::setConnectionHandle(uint16_t conn_handle)
 /**************************************************************************/
 /*!
     @brief  Gets the 16-bit connection handle
-    
+
     @param[in]  void
-                
+
     @returns    uint16_t
                 Connection Handle of the Gap Instance
 */
@@ -769,10 +505,10 @@ uint16_t BlueNRGGap::getConnectionHandle(void)
 
     @param[in]  type
                 Type of Address
-    
+
     @param[in]  address[6]
                 Value of the Address to be set
-                
+
     @returns    ble_error_t
 
     @section EXAMPLE
@@ -784,26 +520,47 @@ uint16_t BlueNRGGap::getConnectionHandle(void)
 /**************************************************************************/
 ble_error_t BlueNRGGap::setAddress(AddressType_t type, const BLEProtocol::AddressBytes_t address)
 {
-    tBleStatus ret;
-
     if (type > BLEProtocol::AddressType::RANDOM_PRIVATE_NON_RESOLVABLE) {
         return BLE_ERROR_PARAM_OUT_OF_RANGE;
     }
-    
-    addr_type = type;
 
-    // If Address Type is other than PUBLIC, the given Address is ignored
-    if(addr_type == BLEProtocol::AddressType::PUBLIC){
-        ret = aci_hal_write_config_data(CONFIG_DATA_PUBADDR_OFFSET,
-                                        CONFIG_DATA_PUBADDR_LEN,
-                                        address);
+    if(type == BLEProtocol::AddressType::PUBLIC){
+        tBleStatus ret = aci_hal_write_config_data(
+            CONFIG_DATA_PUBADDR_OFFSET,
+            CONFIG_DATA_PUBADDR_LEN,
+            address
+        );
         if(ret != BLE_STATUS_SUCCESS) {
             return BLE_ERROR_OPERATION_NOT_PERMITTED;
         }
+    } else if  (type == BLEProtocol::AddressType::RANDOM_STATIC) {
+        // ensure that the random static address is well formed
+        if ((address[5] & 0xC0) != 0xC0) {
+            return BLE_ERROR_PARAM_OUT_OF_RANGE;
+        }
+
+        // thanks to const correctness of the API ...
+        tBDAddr random_address = { 0 };
+        memcpy(random_address, address, sizeof(random_address));
+        int err = hci_le_set_random_address(random_address);
+        if (err) {
+            return BLE_ERROR_OPERATION_NOT_PERMITTED;
+        }
+
+        // It is not possible to get the bluetooth address when it is set
+        // store it locally in class data member
+        memcpy(bdaddr, address, sizeof(bdaddr));
     } else {
-        return BLE_ERROR_OPERATION_NOT_PERMITTED;
+        // FIXME random addresses are not supported yet
+        // BLEProtocol::AddressType::RANDOM_PRIVATE_NON_RESOLVABLE
+        // BLEProtocol::AddressType::RANDOM_PRIVATE_RESOLVABLE
+        return BLE_ERROR_NOT_IMPLEMENTED;
     }
-    
+
+    // if we're here then the address was correctly set
+    // commit it inside the addr_type
+    addr_type = type;
+    isSetAddress = true;
     return BLE_ERROR_NONE;
 }
 
@@ -811,7 +568,7 @@ ble_error_t BlueNRGGap::setAddress(AddressType_t type, const BLEProtocol::Addres
 /*!
     @brief      Returns boolean if the address of the device has been set
                 or not
-                
+
     @returns    bool
 
     @section EXAMPLE
@@ -821,9 +578,9 @@ ble_error_t BlueNRGGap::setAddress(AddressType_t type, const BLEProtocol::Addres
     @endcode
 */
 /**************************************************************************/
-bool BlueNRGGap::getIsSetAddress() 
+bool BlueNRGGap::getIsSetAddress()
 {
-    return isSetAddress;   
+    return isSetAddress;
 }
 
 /**************************************************************************/
@@ -839,29 +596,36 @@ bool BlueNRGGap::getIsSetAddress()
     @endcode
 */
 /**************************************************************************/
-ble_error_t BlueNRGGap::getAddress(AddressType_t *typeP, Address_t address) 
+ble_error_t BlueNRGGap::getAddress(AddressType_t *typeP, Address_t address)
 {
     uint8_t bdaddr[BDADDR_SIZE];
     uint8_t data_len_out;
 
-    if (addr_type == BLEProtocol::AddressType::RANDOM_PRIVATE_NON_RESOLVABLE ||
-        addr_type == BLEProtocol::AddressType::RANDOM_PRIVATE_RESOLVABLE) {
-        return BLE_ERROR_OPERATION_NOT_PERMITTED;
+    // precondition, check that pointers in input are valid
+    if (typeP == NULL || address == NULL) {
+        return BLE_ERROR_INVALID_PARAM;
     }
 
-    if(typeP != NULL) {
-        *typeP = addr_type;
+    if (addr_type == BLEProtocol::AddressType::PUBLIC) {
+        tBleStatus ret = aci_hal_read_config_data(CONFIG_DATA_PUBADDR_OFFSET, BDADDR_SIZE, &data_len_out, bdaddr);
+        if(ret != BLE_STATUS_SUCCESS || data_len_out != BDADDR_SIZE) {
+            return BLE_ERROR_UNSPECIFIED;
+        }
+    } else if (addr_type == BLEProtocol::AddressType::RANDOM_STATIC) {
+        // FIXME hci_read_bd_addr and
+        // aci_hal_read_config_data CONFIG_DATA_RANDOM_ADDRESS_IDB05A1
+        // does not work, use the address stored in class data member
+        memcpy(bdaddr, this->bdaddr, sizeof(bdaddr));
+    } else {
+        // FIXME: should be implemented with privacy features
+        // BLEProtocol::AddressType::RANDOM_PRIVATE_NON_RESOLVABLE
+        // BLEProtocol::AddressType::RANDOM_PRIVATE_RESOLVABLE
+        return BLE_ERROR_NOT_IMPLEMENTED;
     }
 
-    tBleStatus ret = aci_hal_read_config_data(CONFIG_DATA_RANDOM_ADDRESS_IDB05A1, BDADDR_SIZE, &data_len_out, bdaddr);
-    if(ret != BLE_STATUS_SUCCESS) {
-        return BLE_ERROR_UNSPECIFIED;
-    }
+    *typeP = addr_type;
+    memcpy(address, bdaddr, BDADDR_SIZE);
 
-    if(address != NULL) {
-        memcpy(address, bdaddr, BDADDR_SIZE);
-    }
-        
     return BLE_ERROR_NONE;
 }
 
@@ -878,12 +642,39 @@ ble_error_t BlueNRGGap::getAddress(AddressType_t *typeP, Address_t address)
     @endcode
 */
 /**************************************************************************/
-ble_error_t BlueNRGGap::getPreferredConnectionParams(ConnectionParams_t *params) 
+ble_error_t BlueNRGGap::getPreferredConnectionParams(ConnectionParams_t *params)
 {
-    /* avoid compiler warnings about unused variables */
-    (void)params;
+    static const size_t parameter_size = 2;
 
-    return BLE_ERROR_NOT_IMPLEMENTED;
+    if (!g_preferred_connection_parameters_char_handle) {
+        return BLE_ERROR_OPERATION_NOT_PERMITTED;
+    }
+
+    // Peripheral preferred connection parameters are an array of 4 uint16_t
+    uint8_t parameters_packed[parameter_size * 4];
+    uint16_t bytes_read = 0;
+
+    tBleStatus err = aci_gatt_read_handle_value(
+        g_preferred_connection_parameters_char_handle + BlueNRGGattServer::CHAR_VALUE_HANDLE,
+        sizeof(parameters_packed),
+        &bytes_read,
+        parameters_packed
+    );
+
+    PRINTF("getPreferredConnectionParams err=0x%02x (bytes_read=%u)\n\r", err, bytes_read);
+
+    // check that the read succeed and the result have the expected length
+    if (err || bytes_read != sizeof(parameters_packed)) {
+        return BLE_ERROR_UNSPECIFIED;
+    }
+
+    // memcpy field by field
+    memcpy(&params->minConnectionInterval, parameters_packed, parameter_size);
+    memcpy(&params->maxConnectionInterval, &parameters_packed[parameter_size], parameter_size);
+    memcpy(&params->slaveLatency, &parameters_packed[2 * parameter_size], parameter_size);
+    memcpy(&params->connectionSupervisionTimeout, &parameters_packed[3 * parameter_size], parameter_size);
+
+    return BLE_ERROR_NONE;
 }
 
 
@@ -900,12 +691,63 @@ ble_error_t BlueNRGGap::getPreferredConnectionParams(ConnectionParams_t *params)
     @endcode
 */
 /**************************************************************************/
-ble_error_t BlueNRGGap::setPreferredConnectionParams(const ConnectionParams_t *params) 
+ble_error_t BlueNRGGap::setPreferredConnectionParams(const ConnectionParams_t *params)
 {
-    /* avoid compiler warnings about unused variables */
-    (void)params;
+    static const size_t parameter_size = 2;
+    uint8_t parameters_packed[parameter_size * 4];
 
-    return BLE_ERROR_NOT_IMPLEMENTED;
+    // ensure that parameters are correct
+    // see BLUETOOTH SPECIFICATION Version 4.2 [Vol 3, Part C]
+    // section 12.3 PERIPHERAL PREFERRED CONNECTION PARAMETERS CHARACTERISTIC
+    if (((0x0006 > params->minConnectionInterval) || (params->minConnectionInterval > 0x0C80)) &&
+        params->minConnectionInterval != 0xFFFF) {
+        return BLE_ERROR_PARAM_OUT_OF_RANGE;
+    }
+
+    if (((params->minConnectionInterval > params->maxConnectionInterval) || (params->maxConnectionInterval > 0x0C80)) &&
+        params->maxConnectionInterval != 0xFFFF) {
+        return BLE_ERROR_PARAM_OUT_OF_RANGE;
+    }
+
+    if (params->slaveLatency > 0x01F3) {
+        return BLE_ERROR_PARAM_OUT_OF_RANGE;
+    }
+
+    if (((0x000A > params->connectionSupervisionTimeout) || (params->connectionSupervisionTimeout > 0x0C80)) &&
+        params->connectionSupervisionTimeout != 0xFFFF) {
+        return BLE_ERROR_PARAM_OUT_OF_RANGE;
+    }
+
+    // copy the parameters inside the byte array
+    memcpy(parameters_packed, &params->minConnectionInterval, parameter_size);
+    memcpy(&parameters_packed[parameter_size], &params->maxConnectionInterval, parameter_size);
+    memcpy(&parameters_packed[2 * parameter_size], &params->slaveLatency, parameter_size);
+    memcpy(&parameters_packed[3 * parameter_size], &params->connectionSupervisionTimeout, parameter_size);
+
+    tBleStatus err = aci_gatt_update_char_value(
+        g_gap_service_handle,
+        g_preferred_connection_parameters_char_handle,
+        /* offset */ 0,
+        sizeof(parameters_packed),
+        parameters_packed
+    );
+
+    if (err) {
+        PRINTF("setPreferredConnectionParams failed (err=0x%x)!!\n\r", err) ;
+        switch (err) {
+          case BLE_STATUS_INVALID_HANDLE:
+          case BLE_STATUS_INVALID_PARAMETER:
+            return BLE_ERROR_INVALID_PARAM;
+          case BLE_STATUS_INSUFFICIENT_RESOURCES:
+            return BLE_ERROR_NO_MEM;
+          case BLE_STATUS_TIMEOUT:
+            return BLE_STACK_BUSY;
+          default:
+            return BLE_ERROR_UNSPECIFIED;
+        }
+    }
+
+    return BLE_ERROR_NONE;
 }
 
 /**************************************************************************/
@@ -923,16 +765,43 @@ ble_error_t BlueNRGGap::setPreferredConnectionParams(const ConnectionParams_t *p
 /**************************************************************************/
 ble_error_t BlueNRGGap::updateConnectionParams(Handle_t handle, const ConnectionParams_t *params)
 {
-    /* avoid compiler warnings about unused variables */
-    (void) handle;
-    (void)params;
+    tBleStatus ret = BLE_STATUS_SUCCESS;
+
+    if(gapRole == Gap::CENTRAL) {
+        ret = aci_gap_start_connection_update(handle,
+                                              params->minConnectionInterval,
+                                              params->maxConnectionInterval,
+                                              params->slaveLatency,
+                                              params->connectionSupervisionTimeout,
+                                              CONN_L1, CONN_L2);
+    } else {
+        ret = aci_l2cap_connection_parameter_update_request(handle,
+                                                            params->minConnectionInterval,
+                                                            params->maxConnectionInterval,
+                                                            params->slaveLatency,
+                                                            params->connectionSupervisionTimeout);
+    }
+
+    if (BLE_STATUS_SUCCESS != ret){
+        PRINTF("updateConnectionParams failed (ret=0x%x)!!\n\r", ret) ;
+        switch (ret) {
+          case ERR_INVALID_HCI_CMD_PARAMS:
+          case BLE_STATUS_INVALID_PARAMETER:
+            return BLE_ERROR_INVALID_PARAM;
+          case ERR_COMMAND_DISALLOWED:
+          case BLE_STATUS_NOT_ALLOWED:
+            return BLE_ERROR_OPERATION_NOT_PERMITTED;
+          default:
+            return BLE_ERROR_UNSPECIFIED;
+        }
+    }
 
     return BLE_ERROR_NONE;
 }
 
 /**************************************************************************/
 /*!
-    @brief  Sets the Device Name Characteristic 
+    @brief  Sets the Device Name Characteristic
 
     @param[in]  deviceName
                 pointer to device name to be set
@@ -949,11 +818,11 @@ ble_error_t BlueNRGGap::updateConnectionParams(Handle_t handle, const Connection
     @endcode
 */
 /**************************************************************************/
-ble_error_t BlueNRGGap::setDeviceName(const uint8_t *deviceName) 
+ble_error_t BlueNRGGap::setDeviceName(const uint8_t *deviceName)
 {
     tBleStatus ret;
-    uint8_t nameLen = 0;     
-    
+    uint8_t nameLen = 0;
+
     nameLen = strlen((const char*)deviceName);
     PRINTF("DeviceName Size=%d\n\r", nameLen);
 
@@ -983,13 +852,13 @@ ble_error_t BlueNRGGap::setDeviceName(const uint8_t *deviceName)
 
 /**************************************************************************/
 /*!
-    @brief  Gets the Device Name Characteristic 
+    @brief  Gets the Device Name Characteristic
 
     @param[in]  deviceName
-                pointer to device name                 
+                pointer to device name
 
     @param[in]  lengthP
-                pointer to device name length                
+                pointer to device name length
 
     @returns    ble_error_t
 
@@ -1021,10 +890,10 @@ ble_error_t BlueNRGGap::getDeviceName(uint8_t *deviceName, unsigned *lengthP)
 
 /**************************************************************************/
 /*!
-    @brief  Sets the Device Appearance Characteristic 
+    @brief  Sets the Device Appearance Characteristic
 
     @param[in]  appearance
-                device appearance      
+                device appearance
 
     @returns    ble_error_t
 
@@ -1043,9 +912,9 @@ ble_error_t BlueNRGGap::setAppearance(GapAdvertisingData::Appearance appearance)
     tBleStatus ret;
     uint8_t deviceAppearance[2];
 
-    STORE_LE_16(deviceAppearance, appearance);                 
+    STORE_LE_16(deviceAppearance, appearance);
     PRINTF("setAppearance= 0x%x 0x%x\n\r", deviceAppearance[1], deviceAppearance[0]);
-    
+
     ret = aci_gatt_update_char_value(g_gap_service_handle,
                                      g_appearance_char_handle,
                                      0, 2, (uint8_t *)deviceAppearance);
@@ -1072,7 +941,7 @@ ble_error_t BlueNRGGap::setAppearance(GapAdvertisingData::Appearance appearance)
     @brief  Gets the Device Appearance Characteristic
 
     @param[in]  appearance
-                pointer to device appearance value      
+                pointer to device appearance value
 
     @returns    ble_error_t
 
@@ -1161,7 +1030,7 @@ void BlueNRGGap::Discovery_CB(Reason_t reason,
       default:
         type = GapAdvertisingParams::ADV_CONNECTABLE_UNDIRECTED;
       }
-    
+
       PRINTF("data_length=%d adv peerAddr[%02x %02x %02x %02x %02x %02x] \r\n",
              *data_length, addr[5], addr[4], addr[3], addr[2], addr[1], addr[0]);
       if(!_connecting) {
@@ -1170,7 +1039,7 @@ void BlueNRGGap::Discovery_CB(Reason_t reason,
       PRINTF("!!!After processAdvertisementReport\n\r");
     }
     break;
-    
+
   case DISCOVERY_COMPLETE:
     // The discovery is complete. If this is due to a stop scanning (i.e., the device
     // we are interested in has been found) and a connection has been requested
@@ -1199,7 +1068,7 @@ void BlueNRGGap::Discovery_CB(Reason_t reason,
 
 ble_error_t BlueNRGGap::startRadioScan(const GapScanningParams &scanningParams)
 {
-  
+
   tBleStatus ret = BLE_STATUS_SUCCESS;
 
   // Stop ADV before scanning
@@ -1256,13 +1125,13 @@ ble_error_t BlueNRGGap::stopScan() {
 
   PRINTF("stopScan\n\r");
   ret = aci_gap_terminate_gap_procedure(GAP_OBSERVATION_PROC);
-  
+
   if (ret != BLE_STATUS_SUCCESS) {
     PRINTF("GAP Terminate Gap Procedure failed(ret=0x%x)\n", ret);
-    return BLE_ERROR_UNSPECIFIED; 
+    return BLE_ERROR_UNSPECIFIED;
   } else {
     PRINTF("Discovery Procedure Terminated\n");
-    return BLE_ERROR_NONE; 
+    return BLE_ERROR_NONE;
   }
 }
 
@@ -1276,7 +1145,7 @@ ble_error_t BlueNRGGap::stopScan() {
 ble_error_t BlueNRGGap::setTxPower(int8_t txPower)
 {
     tBleStatus ret;
-    
+
     int8_t enHighPower = 0;
     int8_t paLevel = 0;
 
@@ -1285,7 +1154,7 @@ ble_error_t BlueNRGGap::setTxPower(int8_t txPower)
         return BLE_ERROR_PARAM_OUT_OF_RANGE;
     }
 
-    PRINTF("enHighPower=%d, paLevel=%d\n\r", enHighPower, paLevel);                    
+    PRINTF("enHighPower=%d, paLevel=%d\n\r", enHighPower, paLevel);
     ret = aci_hal_set_tx_power_level(enHighPower, paLevel);
     if(ret!=BLE_STATUS_SUCCESS) {
       return BLE_ERROR_PARAM_OUT_OF_RANGE;
@@ -1298,7 +1167,7 @@ ble_error_t BlueNRGGap::setTxPower(int8_t txPower)
 /*!
     @brief  get permitted Tx power values
     @param[in] values pointer to pointer to permitted power values
-    @param[in] num number of values   
+    @param[in] num number of values
 */
 /**************************************************************************/
 void BlueNRGGap::getPermittedTxPowerValues(const int8_t **valueArrayPP, size_t *countP) {
@@ -1324,6 +1193,8 @@ void BlueNRGGap::setAdvParameters(void)
   if(state.connected == 1) {
     advIntMS = (conn_min_interval*1.25)-GUARD_INT;
     advInterval = _advParams.MSEC_TO_ADVERTISEMENT_DURATION_UNITS(advIntMS);
+
+    PRINTF("conn_min_interval is equal to %u\r\n", conn_min_interval);
   } else {
     advInterval = _advParams.getIntervalInADVUnits();
   }
@@ -1391,8 +1262,8 @@ ble_error_t BlueNRGGap::createConnection ()
   setConnectionParameters();
 
   /*
-    Scan_Interval, Scan_Window, Peer_Address_Type, Peer_Address, Own_Address_Type, Conn_Interval_Min, 
-    Conn_Interval_Max, Conn_Latency, Supervision_Timeout, Conn_Len_Min, Conn_Len_Max    
+    Scan_Interval, Scan_Window, Peer_Address_Type, Peer_Address, Own_Address_Type, Conn_Interval_Min,
+    Conn_Interval_Max, Conn_Latency, Supervision_Timeout, Conn_Len_Min, Conn_Len_Max
   */
   ret = aci_gap_create_connection(scanInterval,
 				  scanWindow,
@@ -1403,7 +1274,7 @@ ble_error_t BlueNRGGap::createConnection ()
 				  SUPERV_TIMEOUT, CONN_L1, CONN_L1);
 
   //_connecting = false;
-  
+
   if (ret != BLE_STATUS_SUCCESS) {
     PRINTF("Error while starting connection (ret=0x%02X).\n\r", ret);
     return BLE_ERROR_UNSPECIFIED;
@@ -1421,7 +1292,12 @@ ble_error_t BlueNRGGap::connect (const Gap::Address_t peerAddr,
 {
   /* avoid compiler warnings about unused variables */
   (void)connectionParams;
-  (void)scanParams;
+
+  setScanParams(scanParams->getInterval(),
+                scanParams->getWindow(),
+                scanParams->getTimeout(),
+                scanParams->getActiveScanning()
+               );
 
   // Save the peer address
   for(int i=0; i<BDADDR_SIZE; i++) {
@@ -1437,7 +1313,7 @@ ble_error_t BlueNRGGap::connect (const Gap::Address_t peerAddr,
     PRINTF("Calling createConnection from connect()\n\r");
     return createConnection();
   }
-  
+
   return BLE_ERROR_NONE;
 }
 
@@ -1528,15 +1404,20 @@ ble_error_t BlueNRGGap::reset(void)
     /* Clear derived class members */
     m_connectionHandle = BLE_CONN_HANDLE_INVALID;
 
-    memset(deviceAppearance, 0, sizeof(deviceAppearance));
-    memset(local_name, 0, LOCAL_NAME_MAX_SIZE);
-    memset(local_name, 0, UUID_BUFFER_SIZE);
-    memset(AdvData, 0, ADV_DATA_MAX_SIZE);
-
     /* Set the whitelist policy filter modes to IGNORE_WHITELIST */
     advertisingPolicyMode = Gap::ADV_POLICY_IGNORE_WHITELIST;
     scanningPolicyMode    = Gap::SCAN_POLICY_IGNORE_WHITELIST;
 
     return BLE_ERROR_NONE;
+}
+
+void BlueNRGGap::setConnectionInterval(uint16_t interval) {
+    conn_min_interval = interval;
+    conn_max_interval = interval;
+}
+
+void BlueNRGGap::setGapRole(Role_t role)
+{
+    gapRole = role;
 }
 

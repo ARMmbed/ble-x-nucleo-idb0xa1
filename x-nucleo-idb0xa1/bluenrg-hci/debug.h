@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    debug.h 
+  * @file    debug.h
   * @author  CL
   * @version V1.0.0
   * @date    04-July-2014
@@ -41,7 +41,7 @@
 
 #ifdef __cplusplus
  extern "C" {
-#endif 
+#endif
 
 /* Includes ------------------------------------------------------------------*/
 #include <string.h>
@@ -56,7 +56,7 @@
 #endif
 
 /* Print the data travelling over the SPI in the .csv format for the GUI*/
-//#define PRINT_CSV_FORMAT 
+//#define PRINT_CSV_FORMAT
 #ifdef PRINT_CSV_FORMAT
 #include <stdio.h>
 #define PRINT_CSV(...) printf(__VA_ARGS__)

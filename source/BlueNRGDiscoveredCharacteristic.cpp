@@ -62,3 +62,7 @@ void BlueNRGDiscoveredCharacteristic::setup(BlueNRGGattClient         *gattcIn,
     props._indicate        = propsIn.indicate();
     props._authSignedWrite = propsIn.authSignedWrite();
 }
+
+ void BlueNRGDiscoveredCharacteristic::setLastHandle(GattAttribute::Handle_t  lastHandleIn) {
+     lastHandle = lastHandleIn;
+ }

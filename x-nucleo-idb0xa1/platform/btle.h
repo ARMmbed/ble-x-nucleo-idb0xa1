@@ -25,20 +25,21 @@ extern "C" {
 
 #include <stdio.h>
 #include <string.h>
-	
+
 #include "hci.h"
-#include "bluenrg_aci.h"	
-#include "hci_const.h"	
+#include "bluenrg_aci.h"
+#include "hci_const.h"
 #include "bluenrg_hal_aci.h"
-#include "stm32_bluenrg_ble.h"	
+#include "stm32_bluenrg_ble.h"
 #include "bluenrg_gap.h"
 #include "bluenrg_gatt_server.h"
 
 extern uint16_t g_gap_service_handle;
 extern uint16_t g_appearance_char_handle;
 extern uint16_t g_device_name_char_handle;
-	
-void btleInit(bool isSetAddress, uint8_t role);
+extern uint16_t g_preferred_connection_parameters_char_handle;
+
+void btleInit(void);
 void SPI_Poll(void);
 void User_Process(void);
 void setConnectable(void);
