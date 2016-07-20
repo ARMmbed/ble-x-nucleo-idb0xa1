@@ -16,7 +16,7 @@
 
 /**
   ******************************************************************************
-  * @file    BlueNRGGap.h 
+  * @file    BlueNRGGap.h
   * @author  STMicroelectronics
   * @brief   Header file for BlueNRG BLE_API Gap Class
   ******************************************************************************
@@ -30,8 +30,8 @@
   * CODING INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
   *
   * <h2><center>&copy; COPYRIGHT 2013 STMicroelectronics</center></h2>
-  */ 
-  
+  */
+
 #ifndef __BLUENRG_GAP_H__
 #define __BLUENRG_GAP_H__
 
@@ -66,10 +66,6 @@
 #define MAX_INT_CONN   0x0C80 //=>4000msec
 #define DEF_INT_CONN   0x0140 //=>400msec (default value for connection interval)
 
-#define LOCAL_NAME_MAX_SIZE 9 //8 + 1(AD_DATA_TYPE)
-#define UUID_BUFFER_SIZE 17 //Either 8*2(16-bit UUIDs) or 4*4(32-bit UUIDs) or 1*16(128-bit UUIDs) +1(AD_DATA_TYPE)
-#define ADV_DATA_MAX_SIZE 31
-
 /**************************************************************************/
 /*!
     \brief
@@ -88,7 +84,7 @@ public:
         DEVICE_FOUND,
         DISCOVERY_COMPLETE
     };
-    
+
     /* Functions that must be implemented from Gap */
     virtual ble_error_t setAddress(addr_type_t type, const BLEProtocol::AddressBytes_t address);
     virtual ble_error_t getAddress(BLEProtocol::AddressType_t *typeP, BLEProtocol::AddressBytes_t address);
@@ -136,9 +132,9 @@ public:
 
     void     setConnectionHandle(uint16_t con_handle);
     uint16_t getConnectionHandle(void);
-    
+
     bool getIsSetAddress();
-    
+
     Timeout getAdvTimeout(void) const {
         return advTimeout;
     }
@@ -146,15 +142,19 @@ public:
         return AdvToFlag;
     }
     void setAdvToFlag(void);
-    
+
     void Process(void);
 
     GapScanningParams* getScanningParams(void);
 
     virtual ble_error_t startRadioScan(const GapScanningParams &scanningParams);
 
+    void setConnectionInterval(uint16_t interval);
+    void setGapRole(Role_t role);
+
 private:
     uint16_t m_connectionHandle;
+    Role_t gapRole;
     AddressType_t addr_type;
     Address_t _peerAddr;
     AddressType_t _peerAddrType;
@@ -164,22 +164,8 @@ private:
     bool isSetAddress;
     uint8_t deviceAppearance[2];
 
-    uint8_t local_name_length;
-    uint8_t local_name[ADV_DATA_MAX_SIZE];//LOCAL_NAME_MAX_SIZE];
-
-    uint8_t servUuidlength;
-    uint8_t servUuidData[UUID_BUFFER_SIZE];
-
-    uint8_t AdvLen;
-    uint8_t AdvData[ADV_DATA_MAX_SIZE];
-
-    uint8_t txPowLevSet;
-    
     Timeout advTimeout;
     bool AdvToFlag;
-
-    const uint8_t *scan_response_payload;
-    uint8_t scan_rsp_length;
 
     static uint16_t SCAN_DURATION_UNITS_TO_MSEC(uint16_t duration) {
         return (duration * 625) / 1000;
@@ -202,7 +188,7 @@ private:
 
     ble_error_t updateAdvertisingData(void);
 
-    BlueNRGGap(): txPowLevSet(0) {
+    BlueNRGGap() {
         m_connectionHandle = BLE_CONN_HANDLE_INVALID;
         addr_type = BLEProtocol::AddressType::RANDOM_STATIC;
 
@@ -216,6 +202,9 @@ private:
 
     BlueNRGGap(BlueNRGGap const &);
     void operator=(BlueNRGGap const &);
+
+    GapAdvertisingData _advData;
+    GapAdvertisingData _scanResponse;
 };
 
 #endif // ifndef __BLUENRG_GAP_H__

@@ -15,7 +15,7 @@
 */
 /**
   ******************************************************************************
-  * @file    BlueNRGGattServer.cpp 
+  * @file    BlueNRGGattServer.cpp
   * @author  STMicroelectronics
   * @brief   Header file for BLE_API GattServer Class
   ******************************************************************************
@@ -30,7 +30,7 @@
   *
   * <h2><center>&copy; COPYRIGHT 2013 STMicroelectronics</center></h2>
   */
- 
+
 #ifndef __BLUENRG_GATT_SERVER_H__
 #define __BLUENRG_GATT_SERVER_H__
 
@@ -53,13 +53,13 @@ public:
         static BlueNRGGattServer m_instance;
         return m_instance;
     }
-    
+
     enum HandleEnum_t {
         CHAR_HANDLE = 0,
         CHAR_VALUE_HANDLE,
         CHAR_DESC_HANDLE
     };
-    
+
     /* Functions that must be implemented from GattServer */
     virtual ble_error_t addService(GattService &);
     virtual ble_error_t read(GattAttribute::Handle_t attributeHandle, uint8_t buffer[], uint16_t *lengthP);
@@ -67,24 +67,33 @@ public:
     virtual ble_error_t write(GattAttribute::Handle_t, const uint8_t[], uint16_t, bool localOnly = false);
     virtual ble_error_t write(Gap::Handle_t connectionHandle, GattAttribute::Handle_t, const uint8_t[], uint16_t, bool localOnly = false);
     virtual ble_error_t initializeGATTDatabase(void);
-    
+
     virtual bool isOnDataReadAvailable() const {
         return true;
     }
 
     virtual ble_error_t reset(void);
-    
+
     /* BlueNRG Functions */
     void eventCallback(void);
     //void hwCallback(void *pckt);
     ble_error_t Read_Request_CB(uint16_t attributeHandle);
+    uint8_t Write_Request_CB(
+        uint16_t connection_handle, uint16_t attr_handle,
+        uint8_t data_length, const uint8_t* data
+    );
     GattCharacteristic* getCharacteristicFromHandle(uint16_t charHandle);
     void HCIDataWrittenEvent(const GattWriteCallbackParams *params);
     void HCIDataReadEvent(const GattReadCallbackParams *params);
     void HCIEvent(GattServerEvents::gattEvent_e type, uint16_t charHandle);
     void HCIDataSentEvent(unsigned count);
-    
+
 private:
+
+    // compute the number of attribute record needed by a service
+    static uint16_t computeAttributesRecord(GattService& service);
+
+
     static const int MAX_SERVICE_COUNT = 10;
     uint8_t serviceCount;
     uint8_t characteristicCount;
@@ -101,12 +110,12 @@ private:
 
     BlueNRGGattServer(BlueNRGGattServer const &);
     void operator=(BlueNRGGattServer const &);
-    
-    static const int CHAR_DESC_TYPE_16_BIT=0x01; 
-    static const int CHAR_DESC_TYPE_128_BIT=0x02;    
+
+    static const int CHAR_DESC_TYPE_16_BIT=0x01;
+    static const int CHAR_DESC_TYPE_128_BIT=0x02;
     static const int CHAR_DESC_SECURITY_PERMISSION=0x00;
-    static const int CHAR_DESC_ACCESS_PERMISSION=0x03;  
-    static const int CHAR_ATTRIBUTE_LEN_IS_FIXED=0x00;        
+    static const int CHAR_DESC_ACCESS_PERMISSION=0x03;
+    static const int CHAR_ATTRIBUTE_LEN_IS_FIXED=0x00;
 };
 
 #endif

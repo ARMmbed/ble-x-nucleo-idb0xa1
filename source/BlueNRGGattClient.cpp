@@ -15,7 +15,7 @@
 */
 /**
   ******************************************************************************
-  * @file    BlueNRGGattServer.cpp 
+  * @file    BlueNRGGattServer.cpp
   * @author  STMicroelectronics
   * @brief   Implementation of BlueNRG BLE_API GattServer Class
   ******************************************************************************
@@ -29,13 +29,13 @@
   * CODING INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
   *
   * <h2><center>&copy; COPYRIGHT 2013 STMicroelectronics</center></h2>
-  */ 
- 
+  */
+
 /** @defgroup BlueNRGGATTClient
  *  @brief BlueNRG BLE_API GattClient Adaptation
  *  @{
  */
- 
+
 #include "BlueNRGGattClient.h"
 #include "mbed-drivers/mbed.h"
 #include "BlueNRGGap.h"
@@ -59,10 +59,10 @@ void BlueNRGGattClient::gattProcedureCompleteCB(Gap::Handle_t connectionHandle, 
     _currentState = GATT_IDLE;
     return;
   }
-    
+
   // Service Discovery complete
 /*
-  if(_currentState != GATT_IDLE && 
+  if(_currentState != GATT_IDLE &&
      _currentState != GATT_DISCOVERY_TERMINATED &&
      _currentState != GATT_WRITE_CHAR &&
      _currentState != GATT_READ_CHAR) {
@@ -72,6 +72,13 @@ void BlueNRGGattClient::gattProcedureCompleteCB(Gap::Handle_t connectionHandle, 
   }
 
   if(_currentState == GATT_CHAR_DESC_DISCOVERY) {
+      if(charDescTerminationCallback != NULL) {
+         CharacteristicDescriptorDiscovery::TerminationCallbackParams_t params = {
+                                   _characteristic,
+                                   BLE_ERROR_NONE
+         };
+         charDescTerminationCallback(&params);
+       }
     _currentState = GATT_IDLE;
   }
 
@@ -86,7 +93,7 @@ void BlueNRGGattClient::gattProcedureCompleteCB(Gap::Handle_t connectionHandle, 
     _currentState = GATT_IDLE;
   }
 }
-                                                
+
 void BlueNRGGattClient::primaryServicesCB(Gap::Handle_t connectionHandle,
                                           uint8_t event_data_length,
                                           uint8_t attribute_data_length,
@@ -107,13 +114,13 @@ void BlueNRGGattClient::primaryServicesCB(Gap::Handle_t connectionHandle,
 
     // UUID Type
     if (attribute_data_length == 6) {
-      
+
       PRINTF("UUID_TYPE_16\n\r");
       uuid = attribute_data_list[offset+5]<<8|attribute_data_list[offset+4];
       PRINTF("S UUID-%X attrs[%u %u]\r\n", uuid.getShortUUID(), startHandle, endHandle);
-      
+
     } else {
-      
+
       PRINTF("UUID_TYPE_128\n\r");
       uuid.setupLong(attribute_data_list+offset+4, UUID::LSB);
 
@@ -125,17 +132,12 @@ void BlueNRGGattClient::primaryServicesCB(Gap::Handle_t connectionHandle,
       }
 #endif
       PRINTF(" attrs[%u %u]\r\n", startHandle, endHandle);
-      
+
     }
-    
+
     PRINTF("Setup serviceIndex = %d\n\r", _numServices);
     discoveredService[_numServices].setup(uuid, startHandle, endHandle);
-    
-    if(serviceDiscoveryCallback) {
-      if(_matchingServiceUUID == BLE_UUID_UNKNOWN || _matchingServiceUUID == discoveredService[_numServices].getUUID()) {
-        serviceDiscoveryCallback(&discoveredService[_numServices]);
-      }
-    }
+
     _numServices++;
 
     offset += attribute_data_length;
@@ -181,12 +183,9 @@ void BlueNRGGattClient::primaryServiceCB(Gap::Handle_t connectionHandle,
     }
 
     discoveredService[i].setup(uuid, startHandle, endHandle);
-    
-    if(serviceDiscoveryCallback) {
-      serviceDiscoveryCallback(&discoveredService[_numServices]);
-    }
+
     _numServices++;
-    
+
     offset += 4;
   }
 }
@@ -225,10 +224,10 @@ void BlueNRGGattClient::serviceCharsCB(Gap::Handle_t connectionHandle,
       PRINTF("\r\n");
 #endif
     }
-    
+
     // Properties
     DiscoveredCharacteristic::Properties_t p;
-    
+
     p._broadcast = (props_mask[0] & handle_value_pair[offset+2]);
     p._read = (props_mask[1] & handle_value_pair[offset+2])>>1;
     p._writeWoResp = (props_mask[2] & handle_value_pair[offset+2])>>2;
@@ -263,9 +262,14 @@ void BlueNRGGattClient::serviceCharsCB(Gap::Handle_t connectionHandle,
                                     valueHandle,
                                     lastHandle);
 
-    if(characteristicDiscoveryCallback) {
-      characteristicDiscoveryCallback(&discoveredChar[_numChars]);
+    if (_numChars != 0) {
+        discoveredChar[_numChars - 1].setLastHandle(declHandle - 1);
+
+        if(characteristicDiscoveryCallback) {
+          characteristicDiscoveryCallback(&discoveredChar[_numChars - 1]);
+        }
     }
+
     _numChars++;
 
     offset += handle_value_pair_length;
@@ -280,9 +284,9 @@ void BlueNRGGattClient::serviceCharByUUIDCB(Gap::Handle_t connectionHandle,
   // Charac Properties(1), Charac Value Handle(2), Charac UUID(2/16)
   GattAttribute::Handle_t declHandle, valueHandle, lastHandle;
   UUID uuid;
-  
+
   PRINTF("serviceCharByUUIDCB\n\r");
-  
+
   // UUID Type
   if (event_data_length == 7) {
     PRINTF("Char UUID_TYPE_16\n\r");
@@ -303,7 +307,7 @@ void BlueNRGGattClient::serviceCharByUUIDCB(Gap::Handle_t connectionHandle,
 
   // Properties
   DiscoveredCharacteristic::Properties_t p;
-  
+
   p._broadcast = (props_mask[0] & attr_value[0]);
   p._read = (props_mask[1] & attr_value[0])>>1;
   p._writeWoResp = (props_mask[2] & attr_value[0])>>2;
@@ -336,7 +340,7 @@ void BlueNRGGattClient::serviceCharByUUIDCB(Gap::Handle_t connectionHandle,
                                   declHandle,
                                   valueHandle,
                                   lastHandle);
-  
+
   if(characteristicDiscoveryCallback) {
     characteristicDiscoveryCallback(&discoveredChar[_numChars]);
   }
@@ -346,24 +350,37 @@ void BlueNRGGattClient::serviceCharByUUIDCB(Gap::Handle_t connectionHandle,
 ble_error_t BlueNRGGattClient::findServiceChars(Gap::Handle_t connectionHandle)
 {
   PRINTF("findServiceChars\n\r");
-  
+
   tBleStatus ret;
   uint8_t uuid_type = UUID_TYPE_16;
   uint8_t short_uuid[2];
   uint8_t *uuid = NULL;
-  
+
   DiscoveredService *service;
-  
+
+  // complete the discovery of the last characteristic of the previous service.
+  // Its last handle wasn't known before this point
+  // update the handle and call the characteristic discovery callback.
+  if (_servIndex != 0 && _numChars != 0) {
+      discoveredChar[_numChars - 1].setLastHandle(discoveredService[_servIndex - 1].getEndHandle());
+
+      if(characteristicDiscoveryCallback) {
+        characteristicDiscoveryCallback(&discoveredChar[_numChars - 1]);
+      }
+  }
+
+  _numChars = 0;
+
   // We finished chars discovery for all services
   if(_servIndex >= _numServices) {
     PRINTF("!!!We finished chars discovery for all services!!!\n\r");
     //_currentState = GATT_CHARS_DISCOVERY_COMPLETE;
-    
+
     terminateServiceDiscovery();
-    
+
     return BLE_ERROR_NONE;
   }
-    
+
   service = &discoveredService[_servIndex];
   /*
   if (service->getUUID().shortOrLong() == UUID::UUID_TYPE_SHORT) {
@@ -377,55 +394,59 @@ ble_error_t BlueNRGGattClient::findServiceChars(Gap::Handle_t connectionHandle)
     PRINTF("\r\n");
   }
   */
-  
+
+  if(serviceDiscoveryCallback) {
+    serviceDiscoveryCallback(service);
+  }
+
   PRINTF("findServiceChars (_servIndex=%d)\n\r", _servIndex);
   //ret = aci_gatt_disc_all_charac_of_serv(connectionHandle, service->getStartHandle(), service->getEndHandle());
 
-  if(_matchingCharacteristicUUIDIn == BLE_UUID_UNKNOWN) {
-    PRINTF("findServiceChars (BLE_UUID_UNKNOWN)\n\r");
-    ret = aci_gatt_disc_all_charac_of_serv(connectionHandle, service->getStartHandle(), service->getEndHandle());
-  } else {
-    
-    uint8_t type = _matchingCharacteristicUUIDIn.shortOrLong();
-    
-    if(type == UUID::UUID_TYPE_SHORT) {
-      STORE_LE_16(short_uuid, _matchingCharacteristicUUIDIn.getShortUUID());
-      
-      uuid_type = UUID_TYPE_16;
-      uuid = short_uuid;
+    if(_matchingCharacteristicUUIDIn == BLE_UUID_UNKNOWN) {
+        PRINTF("findServiceChars (BLE_UUID_UNKNOWN)\n\r");
+        ret = aci_gatt_disc_all_charac_of_serv(connectionHandle, service->getStartHandle(), service->getEndHandle());
+    } else {
+
+        uint8_t type = _matchingCharacteristicUUIDIn.shortOrLong();
+
+        if(type == UUID::UUID_TYPE_SHORT) {
+            STORE_LE_16(short_uuid, _matchingCharacteristicUUIDIn.getShortUUID());
+
+            uuid_type = UUID_TYPE_16;
+            uuid = short_uuid;
 #ifdef DEBUG
-      PRINTF("findServiceChars C UUID-");
-      for(unsigned i = 0; i < 2; i++) {
-        PRINTF("%02X", short_uuid[i]);
-      }
-      PRINTF("\n\r");
+            PRINTF("findServiceChars C UUID-");
+            for(unsigned i = 0; i < 2; i++) {
+                PRINTF("%02X", short_uuid[i]);
+            }
+            PRINTF("\n\r");
 #endif
-    } else if(type==UUID::UUID_TYPE_LONG) {
-      
-      uuid_type = UUID_TYPE_128;
-      uuid = (unsigned char*)_matchingCharacteristicUUIDIn.getBaseUUID();
+        } else if(type==UUID::UUID_TYPE_LONG) {
+
+            uuid_type = UUID_TYPE_128;
+            uuid = (unsigned char*)_matchingCharacteristicUUIDIn.getBaseUUID();
 #ifdef DEBUG
-      PRINTF("(findServiceChars) C UUID-");
-      for (unsigned i = 0; i < UUID::LENGTH_OF_LONG_UUID; i++) {
-        PRINTF("%02X", uuid[i]);
-      }
-      PRINTF("\r\n");
+            PRINTF("(findServiceChars) C UUID-");
+            for (unsigned i = 0; i < UUID::LENGTH_OF_LONG_UUID; i++) {
+                PRINTF("%02X", uuid[i]);
+            }
+            PRINTF("\r\n");
 #endif
+        }
+
+        ret = aci_gatt_disc_charac_by_uuid(connectionHandle,
+                                           service->getStartHandle(),
+                                           service->getEndHandle(),
+                                           uuid_type,
+                                           uuid);
     }
 
-    ret = aci_gatt_disc_charac_by_uuid(connectionHandle,
-                                       service->getStartHandle(),
-                                       service->getEndHandle(),
-                                       uuid_type,
-                                       uuid);
-  }
-  
   if(ret == BLE_STATUS_SUCCESS) {
     _servIndex++;
   }
-  
+
   PRINTF("findServiceChars ret=%d\n\r", ret);
-  
+
   return BLE_ERROR_NONE;
 }
 
@@ -436,7 +457,7 @@ ble_error_t BlueNRGGattClient::launchServiceDiscovery(Gap::Handle_t             
                                                       const UUID                                 &matchingCharacteristicUUIDIn)
 {
   PRINTF("launchServiceDiscovery\n\r");
-  
+
   tBleStatus ret;
   uint8_t uuid_type = UUID_TYPE_16;
   uint8_t short_uuid[2];
@@ -466,17 +487,17 @@ ble_error_t BlueNRGGattClient::launchServiceDiscovery(Gap::Handle_t             
   for(j = 0; j < BLE_TOTAL_DISCOVERED_SERVICES; j++) {
     discoveredService[j].setup(BLE_UUID_UNKNOWN, GattAttribute::INVALID_HANDLE, GattAttribute::INVALID_HANDLE);
   }
-  
+
   if(matchingServiceUUID == BLE_UUID_UNKNOWN) {
-    
+
     // Wildcard: search for all services
     ret = aci_gatt_disc_all_prim_services((uint16_t)connectionHandle);
-    
+
   } else {
-  
+
     uint8_t type = matchingServiceUUID.shortOrLong();
     //PRINTF("AddService(): Type:%d\n\r", type);
-    
+
     if(type == UUID::UUID_TYPE_SHORT) {
       STORE_LE_16(short_uuid, matchingServiceUUID.getShortUUID());
 #ifdef DEBUG
@@ -486,10 +507,10 @@ ble_error_t BlueNRGGattClient::launchServiceDiscovery(Gap::Handle_t             
       }
       PRINTF("\n\r");
 #endif
-      
+
       uuid_type = UUID_TYPE_16;
       uuid = short_uuid;
-      
+
     } else if(type==UUID::UUID_TYPE_LONG) {
 
       uuid_type = UUID_TYPE_128;
@@ -503,18 +524,18 @@ ble_error_t BlueNRGGattClient::launchServiceDiscovery(Gap::Handle_t             
       PRINTF("\n\r");
 #endif
     }
-    
+
     // search for specific service by UUID
     ret = aci_gatt_disc_prim_service_by_uuid((uint16_t)connectionHandle, uuid_type, uuid);
     //ret = aci_gatt_disc_all_prim_services((uint16_t)connectionHandle);
   }
-    
+
   if(ret == BLE_STATUS_SUCCESS) {
     _currentState = GATT_SERVICE_DISCOVERY;
   }
-  
+
   PRINTF("launchServiceDiscovery ret=%d\n\r", ret);
-  
+
   return BLE_ERROR_NONE;
 }
 
@@ -558,7 +579,7 @@ bool BlueNRGGattClient::isServiceDiscoveryActive(void) const
          _currentState == GATT_WRITE_CHAR ) {
     return false;
   }
-  
+
   return true;
 */
 }
@@ -566,7 +587,7 @@ bool BlueNRGGattClient::isServiceDiscoveryActive(void) const
 void BlueNRGGattClient::terminateServiceDiscovery(void)
 {
   _currentState = GATT_IDLE;//GATT_DISCOVERY_TERMINATED;
-  
+
   if (terminationCallback) {
     terminationCallback(_connectionHandle);
   }
@@ -590,18 +611,18 @@ ble_error_t BlueNRGGattClient::read(Gap::Handle_t connHandle, GattAttribute::Han
   (void)offset;
 
   tBleStatus ret;
-  
+
   BlueNRGGattClient *gattc = const_cast<BlueNRGGattClient*>(this);
-  
-  // Save the attribute_handle not provided by evt_att_read_resp    
+
+  // Save the attribute_handle not provided by evt_att_read_resp
   gattc->readCBParams.handle = attributeHandle;
-  
+
   // FIXME: We need to wait for a while before starting a read
   // due to BlueNRG process queue handling
   Clock_Wait(100);
 
   ret = aci_gatt_read_charac_val(connHandle, attributeHandle);
-  
+
   if(ret == BLE_STATUS_SUCCESS) {
     gattc->_currentState = GATT_READ_CHAR;
     return BLE_ERROR_NONE;
@@ -639,7 +660,7 @@ void BlueNRGGattClient::charWriteExecCB(Gap::Handle_t connHandle,
   (void)event_data_length;
 
   writeCBParams.connHandle = connHandle;
-  
+
   BlueNRGGattClient::getInstance().processWriteResponse(&writeCBParams);
 }
 
@@ -653,9 +674,9 @@ ble_error_t BlueNRGGattClient::write(GattClient::WriteOp_t    cmd,
   (void)cmd;
 
   tBleStatus ret;
-  
+
   BlueNRGGattClient *gattc = const_cast<BlueNRGGattClient*>(this);
-  
+
   // We save the write response params (used by the callback) because
   // when the aci_gatt_write_charac_value() is used the only event received is the EVT_BLUE_GATT_PROCEDURE_COMPLETE
   gattc->writeCBParams.connHandle = connHandle;
@@ -664,10 +685,10 @@ ble_error_t BlueNRGGattClient::write(GattClient::WriteOp_t    cmd,
   gattc->writeCBParams.offset = 0;
   gattc->writeCBParams.len = length;
   gattc->writeCBParams.data = value;
-  
+
   ret = aci_gatt_write_charac_value(connHandle, attributeHandle, length, const_cast<uint8_t *>(value));
   //ret = aci_gatt_write_charac_reliable(connHandle, attributeHandle, 0, length, const_cast<uint8_t *>(value));
-  
+
   if (ret == BLE_STATUS_SUCCESS) {
     gattc->_currentState = GATT_WRITE_CHAR;
     return BLE_ERROR_NONE;
@@ -694,21 +715,25 @@ void BlueNRGGattClient::discAllCharacDescCB(Gap::Handle_t connHandle,
     handle_uuid_length = 18; //Handle + UUID_128
 
   numCharacDesc = (event_data_length - 1) / handle_uuid_length;
-  
+
   offset = 0;
 
+  PRINTF("\r\ncharacteristic descriptor discovered: data length %u, format %u\r\n",
+    event_data_length, format);
+
+
   for (i=0; i<numCharacDesc; i++) {
-    attHandle = handle_uuid_pair[offset];
+    memcpy(&attHandle, handle_uuid_pair + offset, sizeof(attHandle));
 
     // UUID Type
     if (handle_uuid_length == 4) {
-      
+
       PRINTF("UUID_TYPE_16\n\r");
       uuid = handle_uuid_pair[offset+3]<<8|handle_uuid_pair[offset+2];
       PRINTF("D UUID-%X attHandle=%u\r\n", uuid.getShortUUID(), attHandle);
-      
+
     } else {
-      
+
       PRINTF("UUID_TYPE_128\n\r");
       uuid.setupLong(handle_uuid_pair+offset+2, UUID::LSB);
 #ifdef DEBUG
@@ -737,15 +762,6 @@ void BlueNRGGattClient::discAllCharacDescCB(Gap::Handle_t connHandle,
 
     offset += handle_uuid_length;
   }
-
-  if(charDescTerminationCallback != NULL) {
-     CharacteristicDescriptorDiscovery::TerminationCallbackParams_t params = {
-                               _characteristic,
-                               BLE_ERROR_NONE
-     };
-     charDescTerminationCallback(&params);
-   }
-
 }
 
 ble_error_t BlueNRGGattClient::discoverCharacteristicDescriptors(
@@ -766,7 +782,7 @@ ble_error_t BlueNRGGattClient::discoverCharacteristicDescriptors(
   GattAttribute::Handle_t valueHandle = characteristic.getValueHandle();
   GattAttribute::Handle_t lastHandle = characteristic.getLastHandle();
 
-  PRINTF("Starting aci_gatt_disc_all_charac_descriptors...\n\r");
+  PRINTF("Starting aci_gatt_disc_all_charac_descriptors... [%u : %u]\n\r", valueHandle, lastHandle);
   ret = aci_gatt_disc_all_charac_descriptors(connHandle, valueHandle, lastHandle);
 
   if (ret == BLE_STATUS_SUCCESS) {
@@ -813,4 +829,3 @@ ble_error_t BlueNRGGattClient::reset(void) {
 
   return BLE_ERROR_NONE;
 }
-
