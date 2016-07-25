@@ -50,10 +50,9 @@ tBleStatus btleStartRadioScan(uint8_t scan_type,
                               uint16_t scan_window,
                               uint8_t own_address_type);
 
-#ifdef AST_FOR_MBED_OS
+
 extern int btle_handler_pending;
 extern void btle_handler(void);
-#endif
 
 #ifdef __cplusplus
 }

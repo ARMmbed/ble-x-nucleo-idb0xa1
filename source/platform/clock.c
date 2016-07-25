@@ -1,7 +1,12 @@
 
 #include "clock.h"
-#include "mbed-drivers/wait_api.h"
-#include "mbed-drivers/rtc_time.h"
+#ifdef YOTTA_CFG_MBED_OS
+	#include "mbed-drivers/wait_api.h"
+	#include "mbed-drivers/rtc_time.h"
+#else
+    #include "wait_api.h"
+	#include "rtc_time.h"
+#endif
 
 const uint32_t CLOCK_SECOND = 1000;
 
@@ -29,6 +34,3 @@ void Clock_Wait(uint32_t i)
 	wait_ms(i);
 }
 /*---------------------------------------------------------------------------*/
-
-
-
