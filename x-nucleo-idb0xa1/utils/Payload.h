@@ -14,7 +14,11 @@
 * limitations under the License.
 */
 
-#include "mbed-drivers/mbed.h"
+#ifdef YOTTA_CFG_MBED_OS
+    #include "mbed-drivers/mbed.h"
+#else
+    #include "mbed.h"
+#endif 
 #include "debug.h"
 
 #ifndef __PAYLOAD_H__
