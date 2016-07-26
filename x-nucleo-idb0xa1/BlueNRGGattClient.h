@@ -34,7 +34,11 @@
 #ifndef __BLUENRG_GATT_CLIENT_H__
 #define __BLUENRG_GATT_CLIENT_H__
 
-#include "mbed-drivers/mbed.h"
+#ifdef YOTTA_CFG_MBED_OS
+    #include "mbed-drivers/mbed.h"
+#else
+    #include "mbed.h"
+#endif 
 #include "ble/blecommon.h"
 #include "btle.h"
 #include "ble/GattClient.h"

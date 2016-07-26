@@ -35,7 +35,11 @@
 #ifndef __BLUENRG_GAP_H__
 #define __BLUENRG_GAP_H__
 
-#include "mbed-drivers/mbed.h"
+#ifdef YOTTA_CFG_MBED_OS
+    #include "mbed-drivers/mbed.h"
+#else
+    #include "mbed.h"
+#endif 
 #include "ble/blecommon.h"
 #include "btle.h"
 #include "ble/GapAdvertisingParams.h"

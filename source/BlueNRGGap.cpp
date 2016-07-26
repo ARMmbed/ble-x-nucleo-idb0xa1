@@ -39,7 +39,11 @@
  */
 
 #include "BlueNRGDevice.h"
-#include "mbed-drivers/mbed.h"
+#ifdef YOTTA_CFG_MBED_OS
+    #include "mbed-drivers/mbed.h"
+#else
+    #include "mbed.h"
+#endif 
 #include "Payload.h"
 #include "Utils.h"
 #include "debug.h"

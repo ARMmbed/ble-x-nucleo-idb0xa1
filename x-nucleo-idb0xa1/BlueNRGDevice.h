@@ -40,7 +40,11 @@
 
 #include "btle.h"
 
-#include "mbed-drivers/mbed.h"
+#ifdef YOTTA_CFG_MBED_OS
+    #include "mbed-drivers/mbed.h"
+#else
+    #include "mbed.h"
+#endif 
 #include "ble/blecommon.h"
 #include "ble/BLEInstanceBase.h"
 #include "ble/BLE.h"
