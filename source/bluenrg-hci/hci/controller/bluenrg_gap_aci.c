@@ -13,7 +13,7 @@
 * INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
 *******************************************************************************/
 
-#include "hal_types.h"
+#include "ble_hal_types.h"
 #include "ble_osal.h"
 #include "ble_status.h"
 #include "ble_hal.h"
