@@ -15,7 +15,7 @@
 #ifndef __BNRG_GAP_H__
 #define __BNRG_GAP_H__
 
-#include <link_layer.h>
+#include <ble_link_layer.h>
 
 /**
  *@addtogroup GAP GAP
