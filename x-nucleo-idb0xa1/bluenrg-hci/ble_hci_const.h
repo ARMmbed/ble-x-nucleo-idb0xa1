@@ -10,11 +10,11 @@
 #ifndef __HCI_INTERNAL_H_
 #define __HCI_INTERNAL_H_
 
-#include "compiler.h"
-#include "hal_types.h"
-#include "clock.h"
-#include "link_layer.h"
-#include "hci.h"
+#include "ble_compiler.h"
+#include "ble_hal_types.h"
+#include "ble_clock.h"
+#include "ble_link_layer.h"
+#include "ble_hci.h"
 
 #define DEFAULT_TIMEOUT (CLOCK_SECOND/10)
 
