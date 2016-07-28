@@ -1,6 +1,6 @@
 /**
 ******************************************************************************
-* @file    osal.c 
+* @file    ble_osal.c 
 * @author  AMS - HEA&RF BU / CL
 * @version V1.0.0
 * @date    04-July-2014
@@ -38,7 +38,7 @@
   
 /* Includes ------------------------------------------------------------------*/
 #include <string.h>
-#include <osal.h>
+#include <ble_osal.h>
  
  /**
  * @brief  Osal_MemCpy
