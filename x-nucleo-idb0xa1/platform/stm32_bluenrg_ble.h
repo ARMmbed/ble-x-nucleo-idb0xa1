@@ -45,8 +45,8 @@
 	 
 
 #include <stdint.h>
-#include "gp_timer.h"
-#include "hal.h"
+#include "ble_gp_timer.h"
+#include "ble_hal.h"
 
 /** @addtogroup BSP
  *  @{
