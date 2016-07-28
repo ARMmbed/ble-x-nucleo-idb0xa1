@@ -15,7 +15,7 @@
 #ifndef __BLE_STATUS_H__
 #define __BLE_STATUS_H__
 
-#include <hal_types.h>
+#include <ble_hal_types.h>
 
 
 /** @defgroup ble_status Bluetooth Status/Error Codes
