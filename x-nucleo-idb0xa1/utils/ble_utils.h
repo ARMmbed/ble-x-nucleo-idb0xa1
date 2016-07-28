@@ -21,7 +21,7 @@
 #define __UTIL_H__
 
 #include "ble_status.h"
-#include "hal_types.h"
+#include "ble_hal_types.h"
 #ifdef YOTTA_CFG_MBED_OS
     #include "mbed-drivers/mbed.h"
 #else

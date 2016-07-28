@@ -27,8 +27,8 @@
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "hal_types.h" 
-#include "compiler.h"
+#include "ble_hal_types.h" 
+#include "ble_compiler.h"
 
 /* Exported types ------------------------------------------------------------*/
 typedef struct{

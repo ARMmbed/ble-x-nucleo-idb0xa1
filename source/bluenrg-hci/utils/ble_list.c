@@ -1,5 +1,5 @@
 /******************** (C) COPYRIGHT 2012 STMicroelectronics ********************
-* File Name          : list.c
+* File Name          : ble_list.c
 * Author             : AMS - HEA&RF BU
 * Version            : V1.0.0
 * Date               : 19-July-2012
@@ -16,8 +16,8 @@
 /******************************************************************************
  * Include Files
 ******************************************************************************/
-#include <hal_types.h>
-#include "list.h"
+#include <ble_hal_types.h>
+#include "ble_list.h"
 
 /******************************************************************************
  * Function Definitions 
