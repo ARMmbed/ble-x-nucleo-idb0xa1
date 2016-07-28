@@ -32,8 +32,8 @@
  *
  */
 
-#include "clock.h"
-#include "gp_timer.h"
+#include "ble_clock.h"
+#include "ble_gp_timer.h"
 
 /*---------------------------------------------------------------------------*/
 /**

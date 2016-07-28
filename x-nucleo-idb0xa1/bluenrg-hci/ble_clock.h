@@ -1,5 +1,5 @@
 /******************** (C) COPYRIGHT 2012 STMicroelectronics ********************
-* File Name          : clock.h
+* File Name          : ble_clock.h
 * Author             : AMS - HEA&RF BU
 * Version            : V1.0.1
 * Date               : 19-July-2012

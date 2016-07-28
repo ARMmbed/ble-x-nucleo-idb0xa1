@@ -1,5 +1,5 @@
 
-#include "clock.h"
+#include "ble_clock.h"
 #ifdef YOTTA_CFG_MBED_OS
 	#include "mbed-drivers/wait_api.h"
 	#include "mbed-drivers/rtc_time.h"
