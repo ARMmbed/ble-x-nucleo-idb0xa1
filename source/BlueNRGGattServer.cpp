@@ -43,8 +43,8 @@
     #include "mbed.h"
 #endif 
 #include "BlueNRGGap.h"
-#include "Utils.h"
-#include "debug.h"
+#include "ble_utils.h"
+#include "ble_debug.h"
 
 /**************************************************************************/
 /*!

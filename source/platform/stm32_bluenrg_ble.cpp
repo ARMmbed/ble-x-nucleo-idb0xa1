@@ -52,8 +52,8 @@ extern "C" {
 #endif
 
 #include "stm32_bluenrg_ble.h"
-#include "gp_timer.h"
-#include "debug.h"
+#include "ble_gp_timer.h"
+#include "ble_debug.h"
 
 	
 void BlueNRG_RST(void)

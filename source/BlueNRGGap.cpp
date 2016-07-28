@@ -44,9 +44,9 @@
 #else
     #include "mbed.h"
 #endif 
-#include "Payload.h"
-#include "Utils.h"
-#include "debug.h"
+#include "ble_payload.h"
+#include "ble_utils.h"
+#include "ble_debug.h"
 
 /*
  * Utility to process GAP specific events (e.g., Advertising timeout)
