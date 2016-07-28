@@ -1,11 +1,11 @@
 
-#include "hal.h"
-#include "hal_types.h"
+#include "ble_hal.h"
+#include "ble_hal_types.h"
 #include "ble_status.h"
 #include "bluenrg_aci.h"
 #include "bluenrg_utils.h"
-#include "hci.h"
-#include "osal.h"
+#include "ble_hci.h"
+#include "ble_osal.h"
 #include "string.h"
 #include "stm32_bluenrg_ble.h"
 

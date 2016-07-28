@@ -14,7 +14,7 @@
 * limitations under the License.
 */
 
-#include <Payload.h>   
+#include <ble_payload.h>   
 
 Payload::Payload() {
     stringLength = 0;

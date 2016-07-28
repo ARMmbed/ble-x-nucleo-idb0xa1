@@ -16,7 +16,7 @@
 #ifndef __GP_TIMER_H__
 #define __GP_TIMER_H__
 
-#include "clock.h"
+#include "ble_clock.h"
 #include "ble_status.h"
 #ifdef __DMA_LP__
 #include "stm32xx_timerserver.h"

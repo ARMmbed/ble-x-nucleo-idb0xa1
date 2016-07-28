@@ -16,9 +16,9 @@
 #ifndef __BLUENRG_ACI_CONST_H_
 #define __BLUENRG_ACI_CONST_H_
 
-#include "compiler.h"
-#include "link_layer.h"
-#include "hci_const.h"
+#include "ble_compiler.h"
+#include "ble_link_layer.h"
+#include "ble_hci_const.h"
 #include "bluenrg_gatt_server.h"
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS

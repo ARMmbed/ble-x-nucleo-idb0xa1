@@ -40,7 +40,7 @@
 #include "BlueNRGGap.h"
 #include "BlueNRGGattServer.h"
 #include "BlueNRGGattClient.h"
-#include "Utils.h"
+#include "ble_utils.h"
 
 #include "x_nucleo_idb0xa1_targets.h"
 
@@ -52,19 +52,19 @@ extern "C" {
 /* C File Includes ------------------------------------------------------------------*/
 #include <stdio.h>
 #include <string.h>
-#include "hci.h"
-#include "hci_const.h"
+#include "ble_hci.h"
+#include "ble_hci_const.h"
 #include "bluenrg_aci.h"
 #include "bluenrg_hal_aci.h"
 #include "bluenrg_gap.h"
 #include "bluenrg_utils.h"
 
-#include "hal_types.h"
-#include "hal.h"
-#include "gp_timer.h"
-#include "osal.h"
-#include "sm.h"
-#include "debug.h"
+#include "ble_hal_types.h"
+#include "ble_hal.h"
+#include "ble_gp_timer.h"
+#include "ble_osal.h"
+#include "ble_sm.h"
+#include "ble_debug.h"
 
 #ifdef __cplusplus
 }

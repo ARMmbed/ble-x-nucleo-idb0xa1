@@ -14,7 +14,7 @@
 * limitations under the License.
 */
 
-#include "Utils.h"
+#include "ble_utils.h"
 
 /**************************************************************************/
 /*!

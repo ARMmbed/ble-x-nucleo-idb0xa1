@@ -1,13 +1,12 @@
 /**
-******************************************************************************
-* @file    osal.c 
-* @author  AMS - HEA&RF BU / CL
-* @version V1.0.0
-* @date    04-July-2014
-* @brief   Implementation of OS abstraction layer functions used by the
-*          library.
-******************************************************************************
-* @attention
+  ******************************************************************************
+  * @file    ble_debug.h
+  * @author  CL
+  * @version V1.0.0
+  * @date    04-July-2014
+  * @brief   This file defines print functions for debug purposes.
+  ******************************************************************************
+  * @attention
   *
   * <h2><center>&copy; COPYRIGHT(c) 2014 STMicroelectronics</center></h2>
   *
@@ -35,38 +34,40 @@
   *
   ******************************************************************************
   */
-  
+
+/* Define to prevent recursive inclusion -------------------------------------*/
+#ifndef __DEBUG_H
+#define __DEBUG_H
+
+#ifdef __cplusplus
+ extern "C" {
+#endif
+
 /* Includes ------------------------------------------------------------------*/
 #include <string.h>
-#include <osal.h>
- 
- /**
- * @brief  Osal_MemCpy
- * @param  dest: Pointer to the destination buffer
- * @param  src : Pointer to the source buffer
- * @param  size: Number of bytes to copy from the source to the destination
- *               buffer
- * @retval Pointer to the destination buffer
- */
-void* Osal_MemCpy(void *dest, const void *src, unsigned int size)
-{
-    return(memcpy(dest,src,size)); 
-}
 
-/**
- * @brief  Osal_MemSet
- * @param  ptr  : Pointer to block of memory to fill  
- * @param  value: Value to assign to each byte of the memory block
- * @param  size : Number of bytes to be set to "value"
- * @retval Pointer to the filled block of memory
- */
-void* Osal_MemSet(void *ptr, int value, unsigned int size)
-{
-    return(memset(ptr,value,size));
-}
+/* Exported macro ------------------------------------------------------------*/
+//#define DEBUG
+#ifdef DEBUG
+#include <stdio.h>
+#define PRINTF(...) printf(__VA_ARGS__)
+#else
+#define PRINTF(...)
+#endif
 
-/******************************************************************************
- * local Functions
- *****************************************************************************/ 
- 
- /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+/* Print the data travelling over the SPI in the .csv format for the GUI*/
+//#define PRINT_CSV_FORMAT
+#ifdef PRINT_CSV_FORMAT
+#include <stdio.h>
+#define PRINT_CSV(...) printf(__VA_ARGS__)
+#else
+#define PRINT_CSV(...)
+#endif
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* __DEBUG_H */
+
+/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

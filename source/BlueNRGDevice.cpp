@@ -47,14 +47,14 @@
 #include "BlueNRGGattServer.h"
 
 #include "btle.h"
-#include "Utils.h"
-#include "osal.h"
+#include "ble_utils.h"
+#include "ble_osal.h"
 
-#include "debug.h"
+#include "ble_debug.h"
 #include "stm32_bluenrg_ble.h"
 
 extern "C" {
-    #include "hci.h"
+    #include "ble_hci.h"
     #include "bluenrg_utils.h"
 }
 

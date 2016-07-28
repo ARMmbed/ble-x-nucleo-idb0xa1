@@ -16,7 +16,7 @@
 #ifndef __BNRG_GATT_SERVER_H__
 #define __BNRG_GATT_SERVER_H__
 
-#include "compiler.h"
+#include "ble_compiler.h"
 #include "ble_status.h"
 
 /**

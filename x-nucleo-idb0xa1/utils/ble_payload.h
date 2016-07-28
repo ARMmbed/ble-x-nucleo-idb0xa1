@@ -19,7 +19,7 @@
 #else
     #include "mbed.h"
 #endif 
-#include "debug.h"
+#include "ble_debug.h"
 
 #ifndef __PAYLOAD_H__
 #define __PAYLOAD_H__

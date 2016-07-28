@@ -1,5 +1,5 @@
 /******************** (C) COPYRIGHT 2012 STMicroelectronics ********************
-* File Name          : clock.h
+* File Name          : ble_clock.h
 * Author             : AMS - HEA&RF BU
 * Version            : V1.0.1
 * Date               : 19-July-2012
@@ -17,7 +17,7 @@
 #ifndef __CLOCK_H__
 #define __CLOCK_H__
 
-#include <hal_types.h>
+#include <ble_hal_types.h>
 
 /**
  * Number of clocks in one seconds.

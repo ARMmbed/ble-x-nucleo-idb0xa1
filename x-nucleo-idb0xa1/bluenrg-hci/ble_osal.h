@@ -1,5 +1,5 @@
 /******************** (C) COPYRIGHT 2012 STMicroelectronics ********************
-* File Name          : osal.h
+* File Name          : ble_osal.h
 * Author             : AMS - HEA&RF BU
 * Version            : V1.0.0
 * Date               : 19-July-2012
@@ -22,7 +22,7 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <hal_types.h>
+#include <ble_hal_types.h>
 #ifdef __ICCARM__
 #include <intrinsics.h>
 #endif

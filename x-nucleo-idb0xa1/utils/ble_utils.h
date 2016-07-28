@@ -21,12 +21,7 @@
 #define __UTIL_H__
 
 #include "ble_status.h"
-#include "hal_types.h"
-#ifdef YOTTA_CFG_MBED_OS
-    #include "mbed-drivers/mbed.h"
-#else
-    #include "mbed.h"
-#endif 
+#include "ble_hal_types.h"
 
 #define STORE_LE_16(buf, val)    ( ((buf)[0] =  (uint8_t) (val)    ) , \
     ((buf)[1] =  (uint8_t) (val>>8) ) )

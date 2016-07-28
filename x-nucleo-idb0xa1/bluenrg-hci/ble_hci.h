@@ -17,9 +17,9 @@
 #ifndef __HCI_H_
 #define __HCI_H_
 
-#include "hal_types.h"
-#include "link_layer.h"
-#include <list.h>
+#include "ble_hal_types.h"
+#include "ble_link_layer.h"
+#include <ble_list.h>
 
 #define HCI_READ_PACKET_SIZE                    128 //71
 

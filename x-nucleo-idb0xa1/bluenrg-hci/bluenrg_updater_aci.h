@@ -16,7 +16,7 @@
 #ifndef __BLUENRG_UPDATER_ACI_H__
 #define __BLUENRG_UPDATER_ACI_H__
 
-#include <compiler.h>
+#include <ble_compiler.h>
 
 /**
  * @defgroup Updater Updater
