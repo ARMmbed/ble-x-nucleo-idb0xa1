@@ -26,9 +26,9 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 
-#include "hci.h"
+#include "ble_hci.h"
 #include "bluenrg_aci.h"
-#include "hci_const.h"
+#include "ble_hci_const.h"
 #include "bluenrg_hal_aci.h"
 #include "stm32_bluenrg_ble.h"
 #include "bluenrg_gap.h"
