@@ -43,7 +43,7 @@
     #include "mbed-drivers/mbed.h"
 #else
     #include "mbed.h"
-#endif 
+#endif
 #include "ble_payload.h"
 #include "ble_utils.h"
 #include "ble_debug.h"
@@ -160,6 +160,27 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
 
         } //end for
 
+    }
+
+    // update the advertising data in the shield if advertising is running
+    if (state.advertising == 1) {
+        tBleStatus ret = hci_le_set_scan_resp_data(scanResponse.getPayloadLen(), scanResponse.getPayload());
+
+        if(BLE_STATUS_SUCCESS != ret) {
+            PRINTF(" error while setting scan response data (ret=0x%x)\n", ret);
+            switch (ret) {
+                case BLE_STATUS_TIMEOUT:
+                    return BLE_STACK_BUSY;
+                default:
+                    return BLE_ERROR_UNSPECIFIED;
+            }
+        }
+
+        ret = hci_le_set_advertising_data(advData.getPayloadLen(), advData.getPayload());
+        if (ret) {
+            PRINTF("error while setting the payload\r\n");
+            return BLE_ERROR_UNSPECIFIED;
+        }
     }
 
     _advData = advData;
@@ -1424,4 +1445,3 @@ void BlueNRGGap::setGapRole(Role_t role)
 {
     gapRole = role;
 }
-
