@@ -21,7 +21,9 @@
 #ifdef __GNUC__
 #undef __packed
 #define __packed
+#ifndef PACKED
 #define PACKED __attribute__((packed))
+#endif
 #else
 #define PACKED
 #define __packed
