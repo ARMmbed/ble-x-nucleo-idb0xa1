@@ -73,9 +73,11 @@ void BlueNRGGattClient::gattProcedureCompleteCB(Gap::Handle_t connectionHandle, 
 */
   if(_currentState == GATT_SERVICE_DISCOVERY) {
     findServiceChars(connectionHandle);
+    return;
   }
 
   if(_currentState == GATT_CHAR_DESC_DISCOVERY) {
+      _currentState = GATT_IDLE;
       if(charDescTerminationCallback != NULL) {
          CharacteristicDescriptorDiscovery::TerminationCallbackParams_t params = {
                                    _characteristic,
@@ -83,18 +85,23 @@ void BlueNRGGattClient::gattProcedureCompleteCB(Gap::Handle_t connectionHandle, 
          };
          charDescTerminationCallback(&params);
        }
-    _currentState = GATT_IDLE;
+      return;
   }
 
   // Read complete
   if(_currentState == GATT_READ_CHAR) {
     _currentState = GATT_IDLE;
+    BlueNRGGattClient::getInstance().processReadResponse(&readCBParams);
+    free((void*)(readCBParams.data));
+    readCBParams.data = NULL;
+    return;
   }
 
   // Write complete
   if(_currentState == GATT_WRITE_CHAR) {
-    BlueNRGGattClient::getInstance().processWriteResponse(&writeCBParams);
     _currentState = GATT_IDLE;
+    BlueNRGGattClient::getInstance().processWriteResponse(&writeCBParams);
+    return;
   }
 }
 
@@ -601,12 +608,13 @@ void BlueNRGGattClient::charReadCB(Gap::Handle_t connHandle,
                                    uint8_t event_data_length,
                                    uint8_t* attribute_value)
 {
-  readCBParams.connHandle = connHandle;
+  // copy the data read, they will be forwarded to the user once the procedure
+  // has completed
+  readCBParams.connHandle = coqnnHandle;
   readCBParams.offset = 0;
   readCBParams.len = event_data_length;
-  readCBParams.data = attribute_value;
-
-  BlueNRGGattClient::getInstance().processReadResponse(&readCBParams);
+  readCBParams.data = static_cast<uint8_t*>(malloc(event_data_length));
+  memcpy((void*)(readCBParams.data), attribute_value, event_data_length);
 }
 
 ble_error_t BlueNRGGattClient::read(Gap::Handle_t connHandle, GattAttribute::Handle_t attributeHandle, uint16_t offset) const
@@ -620,10 +628,6 @@ ble_error_t BlueNRGGattClient::read(Gap::Handle_t connHandle, GattAttribute::Han
 
   // Save the attribute_handle not provided by evt_att_read_resp
   gattc->readCBParams.handle = attributeHandle;
-
-  // FIXME: We need to wait for a while before starting a read
-  // due to BlueNRG process queue handling
-  Clock_Wait(100);
 
   ret = aci_gatt_read_charac_val(connHandle, attributeHandle);
 
@@ -830,6 +834,9 @@ ble_error_t BlueNRGGattClient::reset(void) {
   /* Clear class members */
   memset(discoveredService, 0, sizeof(discoveredService));
   memset(discoveredChar, 0, sizeof(discoveredChar));
+
+  // free response if allocated
+  free((void*)(readCBParams.data));
 
   return BLE_ERROR_NONE;
 }
