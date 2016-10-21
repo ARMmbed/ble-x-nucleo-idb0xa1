@@ -610,7 +610,7 @@ void BlueNRGGattClient::charReadCB(Gap::Handle_t connHandle,
 {
   // copy the data read, they will be forwarded to the user once the procedure
   // has completed
-  readCBParams.connHandle = coqnnHandle;
+  readCBParams.connHandle = connHandle;
   readCBParams.offset = 0;
   readCBParams.len = event_data_length;
   readCBParams.data = static_cast<uint8_t*>(malloc(event_data_length));
