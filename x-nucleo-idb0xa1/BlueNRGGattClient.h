@@ -45,11 +45,11 @@
 #include "ble/DiscoveredService.h"
 #include "ble/CharacteristicDescriptorDiscovery.h"
 #include "BlueNRGDiscoveredCharacteristic.h"
+#include "BlueNRGGattConnectionClient.h"
 
 using namespace std;
 
-#define BLE_TOTAL_DISCOVERED_SERVICES 10
-#define BLE_TOTAL_DISCOVERED_CHARS 10
+#define MAX_ACTIVE_CONNECTIONS 7
 
 class BlueNRGGattClient : public GattClient
 {
@@ -58,16 +58,9 @@ public:
         static BlueNRGGattClient m_instance;
         return m_instance;
     }
-    
-    enum {
-      GATT_IDLE,
-      GATT_SERVICE_DISCOVERY,
-      GATT_CHAR_DESC_DISCOVERY,
-      //GATT_CHARS_DISCOVERY_COMPLETE,
-      //GATT_DISCOVERY_TERMINATED,
-      GATT_READ_CHAR,
-      GATT_WRITE_CHAR
-    };
+
+    ble_error_t createGattConnectionClient(Gap::Handle_t connectionHandle);
+    ble_error_t removeGattConnectionClient(Gap::Handle_t connectionHandle);
     
     /* Functions that must be implemented from GattClient */
     virtual ble_error_t launchServiceDiscovery(Gap::Handle_t                               connectionHandle,
@@ -121,10 +114,10 @@ public:
                         uint8_t handle_value_pair_length,
                         uint8_t *handle_value_pair);
     
-    void  serviceCharByUUIDCB(Gap::Handle_t connectionHandle,
-                              uint8_t event_data_length,
-                              uint16_t attr_handle,
-                              uint8_t *attr_value);
+    void serviceCharByUUIDCB(Gap::Handle_t connectionHandle,
+                             uint8_t event_data_length,
+                             uint16_t attr_handle,
+                             uint8_t *attr_value);
 
     void discAllCharacDescCB(Gap::Handle_t connHandle,
                              uint8_t event_data_length,
@@ -144,42 +137,27 @@ public:
     void charWriteExecCB(Gap::Handle_t connHandle,
                          uint8_t event_data_length);
 
+
 protected:
 
     BlueNRGGattClient() {
-      _currentState = GATT_IDLE;
-      _matchingServiceUUID = BLE_UUID_UNKNOWN;
-      _matchingCharacteristicUUIDIn = BLE_UUID_UNKNOWN;
+      for (uint8_t i = 0; i < MAX_ACTIVE_CONNECTIONS; i++) {
+        _connectionPool[i] = NULL;
+      }
     }
 
-    ServiceDiscovery::ServiceCallback_t  serviceDiscoveryCallback;
-    ServiceDiscovery::CharacteristicCallback_t characteristicDiscoveryCallback;
     ServiceDiscovery::TerminationCallback_t terminationCallback;
-    CharacteristicDescriptorDiscovery::DiscoveryCallback_t charDescDiscoveryCallback;
-    CharacteristicDescriptorDiscovery::TerminationCallback_t charDescTerminationCallback;
 
 private:
 
   BlueNRGGattClient(BlueNRGGattClient const &);
   void operator=(BlueNRGGattClient const &);
 
-  Gap::Handle_t _connectionHandle;
-  DiscoveredService discoveredService[BLE_TOTAL_DISCOVERED_SERVICES];
-  BlueNRGDiscoveredCharacteristic discoveredChar[BLE_TOTAL_DISCOVERED_CHARS];
-  
-  GattReadCallbackParams readCBParams;
-  GattWriteCallbackParams writeCBParams;
+  BlueNRGGattConnectionClient *_connectionPool[MAX_ACTIVE_CONNECTIONS];
+  uint8_t _numConnections;
 
-  // The char for which the descriptor discovery has been launched  
-  DiscoveredCharacteristic _characteristic;
+  BlueNRGGattConnectionClient * getGattConnectionClient(Gap::Handle_t connectionHandle);
 
-  UUID _matchingServiceUUID;
-  UUID _matchingCharacteristicUUIDIn;
-  uint8_t _currentState;
-  uint8_t _numServices, _servIndex;
-  uint8_t _numChars;
-  uint8_t _numCharDesc;
-  
 };
 
 #endif /* __BLUENRG_GATT_CLIENT_H__ */

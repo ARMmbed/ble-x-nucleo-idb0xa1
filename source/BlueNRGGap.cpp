@@ -1441,7 +1441,13 @@ void BlueNRGGap::setConnectionInterval(uint16_t interval) {
     conn_max_interval = interval;
 }
 
-void BlueNRGGap::setGapRole(Role_t role)
+Gap::Role_t BlueNRGGap::getGapRole(void)
+{
+    return (gapRole);
+}
+
+void BlueNRGGap::setGapRole(Gap::Role_t role)
 {
     gapRole = role;
 }
+

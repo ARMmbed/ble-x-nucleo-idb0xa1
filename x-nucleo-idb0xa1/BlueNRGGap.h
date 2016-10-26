@@ -154,7 +154,8 @@ public:
     virtual ble_error_t startRadioScan(const GapScanningParams &scanningParams);
 
     void setConnectionInterval(uint16_t interval);
-    void setGapRole(Role_t role);
+    Gap::Role_t getGapRole(void);
+    void setGapRole(Gap::Role_t role);
 
 private:
     uint16_t m_connectionHandle;

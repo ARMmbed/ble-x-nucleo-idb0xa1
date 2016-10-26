@@ -395,6 +395,10 @@ extern "C" {
 
                 evt_disconn_complete *evt = (evt_disconn_complete*)event_pckt->data;
 
+                if(BlueNRGGap::getInstance().getGapRole() == Gap::CENTRAL) {
+                  BlueNRGGattClient::getInstance().removeGattConnectionClient(evt->handle);
+                }
+
                 BlueNRGGap::getInstance().processDisconnectionEvent(evt->handle, (Gap::DisconnectionReason_t)evt->reason);
             }
             break;
@@ -447,6 +451,7 @@ extern "C" {
                         switch (cc->role) {
 			case 0: //master
                                 role = Gap::CENTRAL;
+                                BlueNRGGattClient::getInstance().createGattConnectionClient(cc->handle);
                                 break;
 			case 1:
                                 role = Gap::PERIPHERAL;
