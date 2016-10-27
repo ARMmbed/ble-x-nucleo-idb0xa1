@@ -141,9 +141,7 @@ public:
 protected:
 
     BlueNRGGattClient() {
-      for (uint8_t i = 0; i < MAX_ACTIVE_CONNECTIONS; i++) {
-        _connectionPool[i] = NULL;
-      }
+      memset(_connectionPool, 0, sizeof(_connectionPool));
     }
 
     ServiceDiscovery::TerminationCallback_t terminationCallback;

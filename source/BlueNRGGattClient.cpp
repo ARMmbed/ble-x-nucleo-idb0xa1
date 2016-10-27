@@ -46,6 +46,9 @@
 #include "ble_utils.h"
 #include "ble_debug.h"
 
+#include <new>
+#include <assert.h>
+
 ble_error_t BlueNRGGattClient::createGattConnectionClient(Gap::Handle_t connectionHandle)
 {
   if(MAX_ACTIVE_CONNECTIONS <= _numConnections) {
@@ -55,7 +58,7 @@ ble_error_t BlueNRGGattClient::createGattConnectionClient(Gap::Handle_t connecti
   for(uint8_t i = 0; i < MAX_ACTIVE_CONNECTIONS; i++) {
 
     if(_connectionPool[i] == NULL) {
-      BlueNRGGattConnectionClient *gattConnectionClient = new BlueNRGGattConnectionClient(this, connectionHandle);
+      BlueNRGGattConnectionClient *gattConnectionClient = new(std::nothrow) BlueNRGGattConnectionClient(this, connectionHandle);
 
       if (gattConnectionClient == NULL) {
         return BLE_ERROR_NO_MEM;
@@ -81,7 +84,11 @@ ble_error_t BlueNRGGattClient::removeGattConnectionClient(Gap::Handle_t connecti
     gattConnectionClient = NULL;
 
     _numConnections--;
+
+  } else {
+    return BLE_ERROR_INTERNAL_STACK_FAILURE;
   }
+
   PRINTF("removeGattConnectionClient: succesfully removed gattConnectionClient (_numConnections=%d)\r\n", _numConnections);
 
   return BLE_ERROR_NONE;
@@ -106,9 +113,9 @@ void BlueNRGGattClient::gattProcedureCompleteCB(Gap::Handle_t connectionHandle, 
 
   BlueNRGGattConnectionClient *gattConnectionClient = getGattConnectionClient(connectionHandle);
 
-  if(gattConnectionClient != NULL) {
-    gattConnectionClient->gattProcedureCompleteCB(error_code);
-  }
+  assert(gattConnectionClient != NULL);
+
+  gattConnectionClient->gattProcedureCompleteCB(error_code);
 }
 
 void BlueNRGGattClient::primaryServicesCB(Gap::Handle_t connectionHandle,
@@ -118,11 +125,11 @@ void BlueNRGGattClient::primaryServicesCB(Gap::Handle_t connectionHandle,
 
   BlueNRGGattConnectionClient *gattConnectionClient = getGattConnectionClient(connectionHandle);
 
-  if(gattConnectionClient != NULL) {
-    gattConnectionClient->primaryServicesCB(event_data_length,
-                                            attribute_data_length,
-                                            attribute_data_list);
-  }
+  assert(gattConnectionClient != NULL);
+
+  gattConnectionClient->primaryServicesCB(event_data_length,
+                                          attribute_data_length,
+                                          attribute_data_list);
 }
     
 void BlueNRGGattClient::primaryServiceCB(Gap::Handle_t connectionHandle,
@@ -131,13 +138,10 @@ void BlueNRGGattClient::primaryServiceCB(Gap::Handle_t connectionHandle,
 
   BlueNRGGattConnectionClient *gattConnectionClient = getGattConnectionClient(connectionHandle);
 
-  if(gattConnectionClient != NULL) {
-    PRINTF("calling gattConnectionClient->primaryServiceCB...\r\n");
-    gattConnectionClient->primaryServiceCB(event_data_length,
-                                           handles_info_list);
-  } else {
-    PRINTF("gattConnectionClient NULL\r\n");
-  }
+  assert(gattConnectionClient != NULL);
+
+  gattConnectionClient->primaryServiceCB(event_data_length,
+                                         handles_info_list);
 }
     
 ble_error_t BlueNRGGattClient::findServiceChars(Gap::Handle_t connectionHandle) {
@@ -146,9 +150,9 @@ ble_error_t BlueNRGGattClient::findServiceChars(Gap::Handle_t connectionHandle) 
 
   if(gattConnectionClient != NULL) {
     return gattConnectionClient->findServiceChars();
+  } else {
+    return BLE_ERROR_INTERNAL_STACK_FAILURE;
   }
-
-  return BLE_ERROR_NONE;
 }
     
 void BlueNRGGattClient::serviceCharsCB(Gap::Handle_t connectionHandle,
@@ -158,11 +162,11 @@ void BlueNRGGattClient::serviceCharsCB(Gap::Handle_t connectionHandle,
 
   BlueNRGGattConnectionClient *gattConnectionClient = getGattConnectionClient(connectionHandle);
 
-  if(gattConnectionClient != NULL) {
-    gattConnectionClient->serviceCharsCB(event_data_length,
-                                         handle_value_pair_length,
-                                         handle_value_pair);
-  }
+  assert(gattConnectionClient != NULL);
+
+  gattConnectionClient->serviceCharsCB(event_data_length,
+                                       handle_value_pair_length,
+                                       handle_value_pair);
 }
     
 void BlueNRGGattClient::serviceCharByUUIDCB(Gap::Handle_t connectionHandle,
@@ -172,11 +176,11 @@ void BlueNRGGattClient::serviceCharByUUIDCB(Gap::Handle_t connectionHandle,
 
   BlueNRGGattConnectionClient *gattConnectionClient = getGattConnectionClient(connectionHandle);
 
-  if(gattConnectionClient != NULL) {
-    gattConnectionClient->serviceCharByUUIDCB(event_data_length,
-                                              attr_handle,
-                                              attr_value);
-  }
+  assert(gattConnectionClient != NULL);
+
+  gattConnectionClient->serviceCharByUUIDCB(event_data_length,
+                                            attr_handle,
+                                            attr_value);
 }
 
 void BlueNRGGattClient::discAllCharacDescCB(Gap::Handle_t connHandle,
@@ -186,11 +190,11 @@ void BlueNRGGattClient::discAllCharacDescCB(Gap::Handle_t connHandle,
 
   BlueNRGGattConnectionClient *gattConnectionClient = getGattConnectionClient(connHandle);
 
-  if(gattConnectionClient != NULL) {
-    gattConnectionClient->discAllCharacDescCB(event_data_length,
-                                              format,
-                                              handle_uuid_pair);
-  }
+  assert(gattConnectionClient != NULL);
+
+  gattConnectionClient->discAllCharacDescCB(event_data_length,
+                                            format,
+                                            handle_uuid_pair);
 }
 
 void BlueNRGGattClient::charReadCB(Gap::Handle_t connHandle,
@@ -199,10 +203,10 @@ void BlueNRGGattClient::charReadCB(Gap::Handle_t connHandle,
 
   BlueNRGGattConnectionClient *gattConnectionClient = getGattConnectionClient(connHandle);
 
-  if(gattConnectionClient != NULL) {
-    gattConnectionClient->charReadCB(event_data_length,
-                                     attribute_value);
-  }
+  assert(gattConnectionClient != NULL);
+
+  gattConnectionClient->charReadCB(event_data_length,
+                                   attribute_value);
 }
 
 void BlueNRGGattClient::charWritePrepareCB(Gap::Handle_t connHandle,
@@ -213,12 +217,12 @@ void BlueNRGGattClient::charWritePrepareCB(Gap::Handle_t connHandle,
 
   BlueNRGGattConnectionClient *gattConnectionClient = getGattConnectionClient(connHandle);
 
-  if(gattConnectionClient != NULL) {
-    gattConnectionClient->charWritePrepareCB(event_data_length,
-                                             attribute_handle,
-                                             offset,
-                                             part_attr_value);
-  }
+  assert(gattConnectionClient != NULL);
+
+  gattConnectionClient->charWritePrepareCB(event_data_length,
+                                           attribute_handle,
+                                           offset,
+                                           part_attr_value);
 }
     
 void BlueNRGGattClient::charWriteExecCB(Gap::Handle_t connHandle,
@@ -226,9 +230,9 @@ void BlueNRGGattClient::charWriteExecCB(Gap::Handle_t connHandle,
 
   BlueNRGGattConnectionClient *gattConnectionClient = getGattConnectionClient(connHandle);
 
-  if(gattConnectionClient != NULL) {
-    gattConnectionClient->charWriteExecCB(event_data_length);
-  }
+  assert(gattConnectionClient != NULL);
+
+  gattConnectionClient->charWriteExecCB(event_data_length);
 }
 
 ble_error_t BlueNRGGattClient::launchServiceDiscovery(Gap::Handle_t                               connectionHandle,
@@ -245,28 +249,10 @@ ble_error_t BlueNRGGattClient::launchServiceDiscovery(Gap::Handle_t             
     gattConnectionClient->onServiceDiscoveryTermination(terminationCallback);
 
     return gattConnectionClient->launchServiceDiscovery(sc, cc, matchingServiceUUID, matchingCharacteristicUUIDIn);
+
+  } else {
+    return BLE_ERROR_INTERNAL_STACK_FAILURE;
   }
-
-  return BLE_ERROR_NONE;
-
-/*
-  if(MAX_ACTIVE_CONNECTIONS > _numConnections) {
-    BlueNRGGattConnectionClient *gattConnectionClient = new BlueNRGGattConnectionClient(this, connectionHandle);
-    if (gattConnectionClient != NULL) {
-      _connectionPool[_numConnections] = gattConnectionClient;
-      gattConnectionClient->onServiceDiscoveryTermination(terminationCallback);
-
-      _numConnections++;
-
-    } else {
-      return BLE_ERROR_NO_MEM;
-    }
-
-    return gattConnectionClient->launchServiceDiscovery(sc, cc, matchingServiceUUID, matchingCharacteristicUUIDIn);
-  }
-
-  return BLE_ERROR_NONE;
-*/
 }
 
 ble_error_t BlueNRGGattClient::discoverServices(Gap::Handle_t                        connectionHandle,
@@ -276,10 +262,12 @@ ble_error_t BlueNRGGattClient::discoverServices(Gap::Handle_t                   
   BlueNRGGattConnectionClient *gattConnectionClient = getGattConnectionClient(connectionHandle);
 
   if(gattConnectionClient != NULL) {
-    return gattConnectionClient->discoverServices(callback, matchingServiceUUID);
-  }
 
-  return BLE_ERROR_NONE;
+    return gattConnectionClient->discoverServices(callback, matchingServiceUUID);
+
+  } else {
+    return BLE_ERROR_INTERNAL_STACK_FAILURE;
+  }
 }
 
 ble_error_t BlueNRGGattClient::discoverServices(Gap::Handle_t                        connectionHandle,
@@ -290,10 +278,12 @@ ble_error_t BlueNRGGattClient::discoverServices(Gap::Handle_t                   
   BlueNRGGattConnectionClient *gattConnectionClient = getGattConnectionClient(connectionHandle);
 
   if(gattConnectionClient != NULL) {
-    return gattConnectionClient->discoverServices(callback, startHandle, endHandle);
-  }
 
-  return BLE_ERROR_NONE;
+    return gattConnectionClient->discoverServices(callback, startHandle, endHandle);
+
+  } else {
+    return BLE_ERROR_INTERNAL_STACK_FAILURE;
+  }
 }
 
 bool BlueNRGGattClient::isServiceDiscoveryActive(void) const
@@ -319,10 +309,12 @@ ble_error_t BlueNRGGattClient::read(Gap::Handle_t connHandle, GattAttribute::Han
   BlueNRGGattConnectionClient *gattConnectionClient = const_cast<BlueNRGGattClient*>(this)->getGattConnectionClient(connHandle);
 
   if(gattConnectionClient != NULL) {
-    return gattConnectionClient->read(attributeHandle, offset);
-  }
 
-  return BLE_ERROR_NONE;
+    return gattConnectionClient->read(attributeHandle, offset);
+
+  } else {
+    return BLE_ERROR_INTERNAL_STACK_FAILURE;
+  }
 }
 
 ble_error_t BlueNRGGattClient::write(GattClient::WriteOp_t    cmd,
@@ -334,10 +326,12 @@ ble_error_t BlueNRGGattClient::write(GattClient::WriteOp_t    cmd,
   BlueNRGGattConnectionClient *gattConnectionClient = const_cast<BlueNRGGattClient*>(this)->getGattConnectionClient(connHandle);
 
   if(gattConnectionClient != NULL) {
-    return gattConnectionClient->write(cmd, attributeHandle, length, value);
-  }
 
-  return BLE_ERROR_NONE;
+    return gattConnectionClient->write(cmd, attributeHandle, length, value);
+
+  } else {
+    return BLE_ERROR_INTERNAL_STACK_FAILURE;
+  }
 }
 
 ble_error_t BlueNRGGattClient::discoverCharacteristicDescriptors(
@@ -348,10 +342,12 @@ ble_error_t BlueNRGGattClient::discoverCharacteristicDescriptors(
   BlueNRGGattConnectionClient *gattConnectionClient = getGattConnectionClient(characteristic.getConnectionHandle());
 
   if(gattConnectionClient != NULL) {
-    return gattConnectionClient->discoverCharacteristicDescriptors(characteristic, discoveryCallback, terminationCallback);
-  }
 
-  return BLE_ERROR_NONE;
+    return gattConnectionClient->discoverCharacteristicDescriptors(characteristic, discoveryCallback, terminationCallback);
+
+  } else {
+    return BLE_ERROR_INTERNAL_STACK_FAILURE;
+  }
 }
 
 /**************************************************************************/
@@ -370,6 +366,7 @@ ble_error_t BlueNRGGattClient::reset(void)
     if(_connectionPool[i] != NULL) {
       _connectionPool[i]->reset();
 
+      delete _connectionPool[i];
       _connectionPool[i] = NULL;
 
       _numConnections--;
