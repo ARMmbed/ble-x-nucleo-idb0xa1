@@ -231,7 +231,7 @@ void BlueNRGDevice::waitForEvent(void)
 	bool must_return = false;
 
 	do {
-        bluenrgDeviceInstance.processEvents();
+		bluenrgDeviceInstance.processEvents();
 
 		if(must_return) return;
 
