@@ -47,6 +47,8 @@
 #include "ble_utils.h"
 #include "ble_debug.h"
 
+// #define PRINTF printf
+
 static uint8_t props_mask[] = {
   0x01,
   0x02,

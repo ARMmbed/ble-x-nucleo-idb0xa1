@@ -138,7 +138,7 @@ protected:
      _matchingServiceUUID = BLE_UUID_UNKNOWN;
      _matchingCharacteristicUUIDIn = BLE_UUID_UNKNOWN;
 
-     printf("BlueNRGGattConnectionClient construtor: connHandle=%d\n\r", connectionHandle);
+//     printf("BlueNRGGattConnectionClient construtor: connHandle=%d\n\r", connectionHandle);
 
     }
 
