@@ -65,6 +65,7 @@ ble_error_t BlueNRGGattClient::createGattConnectionClient(Gap::Handle_t connecti
       }
 
       _connectionPool[i] = gattConnectionClient;
+      _connectionPool[i]->onServiceDiscoveryTermination(terminationCallback);
       _numConnections++;
 
       break;
