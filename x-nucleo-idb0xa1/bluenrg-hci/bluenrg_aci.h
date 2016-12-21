@@ -1,5 +1,5 @@
 /******************** (C) COPYRIGHT 2014 STMicroelectronics ********************
-* File Name          : bluenrg_hci.h
+* File Name          : bluenrg_aci.h
 * Author             : AMS - AAS
 * Version            : V1.0.0
 * Date               : 26-Jun-2014

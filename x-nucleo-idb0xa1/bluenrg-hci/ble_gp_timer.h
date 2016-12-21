@@ -1,5 +1,5 @@
 /******************** (C) COPYRIGHT 2012 STMicroelectronics ********************
-* File Name          : gp_timer.h
+* File Name          : ble_gp_timer.h
 * Author             : AMS - HEA&RF BU
 * Version            : V1.0.0
 * Date               : 19-July-2012
@@ -13,8 +13,8 @@
 * INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
 *******************************************************************************/
 
-#ifndef __GP_TIMER_H__
-#define __GP_TIMER_H__
+#ifndef __BLE_GP_TIMER_H__
+#define __BLE_GP_TIMER_H__
 
 #include "ble_clock.h"
 #include "ble_status.h"
@@ -102,4 +102,4 @@ tBleStatus Blue_NRG_HCI_Timer_Start(uint32_t expiryTime,
 tBleStatus Blue_NRG_HCI_Timer_Stop(uint8_t timerID);
 #endif /* __DMA_LP__ */
 
-#endif /* __GP_TIMER_H__ */
+#endif /* __BLE_GP_TIMER_H__ */

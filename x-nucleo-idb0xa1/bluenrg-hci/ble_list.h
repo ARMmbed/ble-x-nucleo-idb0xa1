@@ -1,5 +1,5 @@
 /******************** (C) COPYRIGHT 2012 STMicroelectronics ********************
-* File Name          : list.h
+* File Name          : ble_list.h
 * Author             : AMS - HEA&RF BU
 * Version            : V1.0.0
 * Date               : 19-July-2012
@@ -12,8 +12,8 @@
 * CONTENT OF SUCH FIRMWARE AND/OR THE USE MADE BY CUSTOMERS OF THE CODING
 * INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
 *******************************************************************************/
-#ifndef _LIST_H_
-#define _LIST_H_
+#ifndef _BLE_LIST_H_
+#define _BLE_LIST_H_
 
 typedef struct _tListNode {
 	struct _tListNode * next;
@@ -44,4 +44,4 @@ void list_get_next_node (tListNode * ref_node, tListNode ** node);
 
 void list_get_prev_node (tListNode * ref_node, tListNode ** node);
 
-#endif /* _LIST_H_ */
+#endif /* _BLE_LIST_H_ */

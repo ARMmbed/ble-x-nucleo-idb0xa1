@@ -14,8 +14,8 @@
 * INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
 *******************************************************************************/
 
-#ifndef __CLOCK_H__
-#define __CLOCK_H__
+#ifndef __BLE_CLOCK_H__
+#define __BLE_CLOCK_H__
 
 #include <ble_hal_types.h>
 
@@ -55,5 +55,5 @@ void Clock_Wait(uint32_t i);
 void Clock_Suspend(void);
 
 
-#endif /* __CLOCK_H__ */
+#endif /* __BLE_CLOCK_H__ */
 

@@ -1,5 +1,5 @@
 /******************** (C) COPYRIGHT 2012 STMicroelectronics ********************
-* File Name          : hal.h
+* File Name          : ble_hal.h
 * Author             : AMS - HEA&RF BU
 * Version            : V1.0.0
 * Date               : 19-July-2012
@@ -14,8 +14,8 @@
 * CONTENT OF SUCH FIRMWARE AND/OR THE USE MADE BY CUSTOMERS OF THE CODING
 * INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
 *******************************************************************************/
-#ifndef __HAL_H__
-#define __HAL_H__
+#ifndef __BLE_HAL_H__
+#define __BLE_HAL_H__
 
 /******************************************************************************
  * Includes
@@ -105,4 +105,4 @@ uint32_t Hal_Get_Timer_Value(void);
 void Hal_Start_Timer(uint32_t timeout);
 void Hal_Stop_Timer(void);
 
-#endif /* __HAL_H__ */
+#endif /* __BLE_HAL_H__ */

@@ -16,8 +16,8 @@
 * INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
 *******************************************************************************/
 
-#ifndef __OSAL_H__
-#define __OSAL_H__
+#ifndef __BLE_OSAL_H__
+#define __BLE_OSAL_H__
 
 /******************************************************************************
  * Includes
@@ -78,4 +78,4 @@ extern void* Osal_MemSet(void *ptr, int value, unsigned int size);
 uint32_t Osal_Get_Cur_Time(void);
 
 
-#endif /* __OSAL_H__ */
+#endif /* __BLE_OSAL_H__ */

@@ -1,5 +1,5 @@
 /******************** (C) COPYRIGHT 2012 STMicroelectronics ********************
-* File Name          : link_layer.h
+* File Name          : ble_link_layer.h
 * Author             : AMS - HEA&RF BU
 * Version            : V1.0.0
 * Date               : 19-July-2012
@@ -15,8 +15,8 @@
 * INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
 *******************************************************************************/
 
-#ifndef _LINK_LAYER_H
-#define _LINK_LAYER_H
+#ifndef _BLE_LINK_LAYER_H
+#define _BLE_LINK_LAYER_H
 
 #include <ble_status.h>
 
@@ -92,7 +92,7 @@ typedef	uint8_t	tBDAddr[6];
 #define ADV_SCAN_IND    (0x02)
 
 /**
- * non-connectable and no scan response (used for passive scan)
+ * non-connectable and no scan response
  */
 #define ADV_NONCONN_IND (0x03)
 
@@ -158,4 +158,4 @@ typedef	uint8_t	tBDAddr[6];
  */
 
 
-#endif /* _LINK_LAYER_H */
+#endif /* _BLE_LINK_LAYER_H */

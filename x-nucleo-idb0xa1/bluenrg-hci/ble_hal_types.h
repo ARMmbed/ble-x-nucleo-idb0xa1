@@ -13,8 +13,8 @@
 * CONTENT OF SUCH FIRMWARE AND/OR THE USE MADE BY CUSTOMERS OF THE CODING
 * INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
 *******************************************************************************/
-#ifndef __HAL_TYPES_H__
-#define __HAL_TYPES_H__
+#ifndef __BLE_HAL_TYPES_H__
+#define __BLE_HAL_TYPES_H__
 
 #include <stdint.h>
 
@@ -54,5 +54,5 @@ typedef uint8_t BOOL;
 
 
 
-#endif /* __HAL_TYPES_H__ */ 
+#endif /* __BLE_HAL_TYPES_H__ */ 
 

@@ -38,7 +38,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "BlueNRGGap.h"
 #include "BlueNRGDevice.h"
-//#include "Utils.h"
 #include "btle.h"
 
 // FIXME: find a better way to get the instance of the BlueNRG device
@@ -52,7 +51,6 @@ extern "C" {
 #endif
 
 #include "stm32_bluenrg_ble.h"
-#include "ble_gp_timer.h"
 #include "ble_debug.h"
 
 	

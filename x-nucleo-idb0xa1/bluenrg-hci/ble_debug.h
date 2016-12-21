@@ -36,8 +36,8 @@
   */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __DEBUG_H
-#define __DEBUG_H
+#ifndef __BLE_DEBUG_H
+#define __BLE_DEBUG_H
 
 #ifdef __cplusplus
  extern "C" {
@@ -68,6 +68,6 @@
 }
 #endif
 
-#endif /* __DEBUG_H */
+#endif /* __BLE_DEBUG_H */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

@@ -1,5 +1,5 @@
 /******************** (C) COPYRIGHT 2012 STMicroelectronics ********************
-* File Name          : sm.h
+* File Name          : ble_sm.h
 * Author             : AMS - HEA&RF BU
 * Version            : V1.0.0
 * Date               : 19-July-2012
@@ -13,8 +13,8 @@
 * INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
 *******************************************************************************/
 
-#ifndef __SM_H__
-#define __SM_H__
+#ifndef __BLE_SM_H__
+#define __BLE_SM_H__
 
 /******************************************************************************
 * Macros
@@ -155,4 +155,4 @@
  * @}
  */
 
-#endif /* __SM_H__ */
+#endif /* __BLE_SM_H__ */
