@@ -17,6 +17,17 @@
 
 #include <ble_hal_types.h>
 
+/** @addtogroup Middlewares
+ *  @{
+ */
+
+/** @defgroup ST
+ *  @{
+ */
+ 
+/** @defgroup SimpleBlueNRG_HCI
+ *  @{
+ */
 
 /** @defgroup ble_status Bluetooth Status/Error Codes
  * @{
@@ -27,6 +38,11 @@ typedef uint8_t tBleStatus;
 /* Error Codes as specified by the specification 
  * according to the spec the error codes range
  * from 0x00 to 0x3F 
+ */
+/**
+ * @name Standard error codes
+ * @brief Standard error codes. See Core v 4.1, Vol. 2, part D.
+ * @{
  */
 #define ERR_CMD_SUCCESS         	                (0x00)
 #define BLE_STATUS_SUCCESS            		        (0x00)
@@ -67,12 +83,30 @@ typedef uint8_t tBleStatus;
 #define ERR_CONN_FAILED_TO_ESTABLISH                (0x3E)
 
 
+/**
+ * @}
+ */
+/**
+ * @name Vendor-specific error codes
+ * @brief Error codes defined by ST related to BlueNRG stack
+ * @{
+ */
+/**
+ * The command cannot be executed due to the current state of the device.
+ */
 #define BLE_STATUS_FAILED             		(0x41)
+/**
+ * Some parameters are invalid.
+ */
 #define BLE_STATUS_INVALID_PARAMS     		(0x42)
-#define BLE_STATUS_BUSY               		(0x43)
-#define BLE_STATUS_INVALID_LEN_PDU    		(0x44)
-#define BLE_STATUS_PENDING            		(0x45)
+/**
+ * It is not allowed to start the procedure (e.g. another the procedure is ongoing
+ * or cannot be started on the given handle).
+ */
 #define BLE_STATUS_NOT_ALLOWED        		(0x46)
+/**
+ * Unexpected error.
+ */
 #define BLE_STATUS_ERROR              		(0x47)
 #define BLE_STATUS_ADDR_NOT_RESOLVED        (0x48)
 
@@ -100,16 +134,55 @@ typedef uint8_t tBleStatus;
 #define BLE_INSUFFICIENT_ENC_KEYSIZE		(0x65)
 #define BLE_STATUS_CHARAC_ALREADY_EXISTS    (0x66)
 
- /*
-  * Library Error Codes
+/**
+ * Returned when no valid slots are available (e.g. when there are no available state machines).
   */
-#define BLE_STATUS_TIMEOUT                     (0xFF)
-#define BLE_STATUS_PROFILE_ALREADY_INITIALIZED (0xF0)
-#define BLE_STATUS_NULL_PARAM                  (0xF1) 
+#define BLE_STATUS_NO_VALID_SLOT                (0x82)
+
+/**
+ * Returned when a scan window shorter than minimum allowed value has been requested (i.e. 2ms)
+ */
+ 
+#define BLE_STATUS_SCAN_WINDOW_SHORT            (0x83)
+/**
+ * Returned when the maximum requested interval to be allocated is shorter then the current
+ * anchor period and a there is no submultiple for the current anchor period that is between
+ * the minimum and the maximum requested intervals.
+ */
+
+#define BLE_STATUS_NEW_INTERVAL_FAILED          (0x84)
+/**
+ * Returned when the maximum requested interval to be allocated is greater than the current anchor
+ * period and there is no multiple of the anchor period that is between the minimum and the maximum
+ * requested intervals.
+ */
+
+#define BLE_STATUS_INTERVAL_TOO_LARGE           (0x85)
+/**
+ * Returned when the current anchor period or a new one can be found that is compatible to the
+ * interval range requested by the new slot but the maximum available length that can be allocated is
+ * less than the minimum requested slot length.
+ */
+ 
+#define BLE_STATUS_LENGTH_FAILED                (0x86)
+/**
+ * @}
+ */
+
+/**
+ * @name Library Error Codes
+ * @brief Error codes defined by ST related to MCU library.
+ * @{
+ */
+#define BLE_STATUS_TIMEOUT                      (0xFF)
+#define BLE_STATUS_PROFILE_ALREADY_INITIALIZED  (0xF0)
+#define BLE_STATUS_NULL_PARAM                   (0xF1) 
+/**
+ * @}
+ */
 
 /**
  * @}
  */
  
-
 #endif /* __BLE_STATUS_H__ */

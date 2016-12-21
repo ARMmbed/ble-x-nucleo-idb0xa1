@@ -18,11 +18,6 @@
 
 #define DEFAULT_TIMEOUT (CLOCK_SECOND/10)
 
-/**
- * Maximum payload of HCI commands that can be sent. Change this value if needed.
- * This value can be up to 255.
- */
-#define HCI_MAX_PAYLOAD_SIZE 128
 
 /* HCI Packet types */
 #define HCI_COMMAND_PKT		0x01
@@ -528,15 +523,6 @@ typedef __packed struct _evt_le_long_term_key_request{
 #define cmd_opcode_ocf(op)		(op & 0x03ff)
 
 
-struct hci_request {
-  uint16_t ogf;
-  uint16_t ocf;
-  int      event;
-  void     *cparam;
-  int      clen;
-  void     *rparam;
-  int      rlen;
-};
 
 void hci_send_cmd(uint16_t ogf, uint16_t ocf, uint8_t plen, void *param);
 
@@ -556,7 +542,6 @@ typedef enum {
 typedef void (*hci_packet_complete_callback)(void *pckt, uint16_t len);
 
 /* HCI library functions. */
-void hci_init(void);
 
 int hci_send_req(struct hci_request *r, BOOL async);
 

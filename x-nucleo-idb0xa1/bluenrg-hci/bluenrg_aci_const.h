@@ -3,7 +3,7 @@
 * Author             : AMS - AAS
 * Version            : V1.0.0
 * Date               : 26-Jun-2014
-* Description        : Header file with ACI definitions for BlueNRG FW6.3.
+* Description        : Header file with ACI definitions for BlueNRG
 ********************************************************************************
 * THE PRESENT FIRMWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS
 * WITH CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE TIME.
@@ -23,6 +23,12 @@
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
+#define OCF_HAL_GET_FW_BUILD_NUMBER         0x0000
+typedef __packed struct _hal_get_fw_build_number_rp{
+  uint8_t       status;
+  uint16_t      build_number;
+} PACKED hal_get_fw_build_number_rp;
+#define HAL_GET_FW_BUILD_NUMBER_RP_SIZE 3
 #define OCF_HAL_WRITE_CONFIG_DATA   0x000C
 
 #define OCF_HAL_READ_CONFIG_DATA   0x000D
@@ -57,6 +63,19 @@ typedef __packed struct _hal_tone_start_cp{
 #define HAL_TONE_START_CP_SIZE 1
 
 #define OCF_HAL_TONE_STOP                   0x0016
+#define OCF_HAL_GET_LINK_STATUS             0x0017
+typedef __packed struct _hal_get_link_status_rp{
+  uint8_t       status;
+  uint8_t       link_status[8];
+  uint16_t      conn_handle[8];
+} PACKED hal_get_link_status_rp;
+
+#define OCF_HAL_GET_ANCHOR_PERIOD           0x0019
+typedef __packed struct _hal_get_anchor_period_rp{
+  uint8_t  status;
+  uint32_t anchor_period;
+  uint32_t max_free_slot;
+} PACKED hal_get_anchor_period_rp;
 
 #define OCF_UPDATER_START                   0x0020
 #define OCF_UPDATER_REBOOT                  0x0021
@@ -134,8 +153,10 @@ typedef __packed struct _updater_hw_version_rp{
 typedef __packed struct _gap_set_direct_conectable_cp_IDB05A1{
     uint8_t		own_bdaddr_type;
     uint8_t		directed_adv_type;
-	uint8_t		direct_bdaddr_type;
+    uint8_t		direct_bdaddr_type;
     tBDAddr		direct_bdaddr;
+    uint16_t            adv_interv_min;
+    uint16_t            adv_interv_max;
 } PACKED gap_set_direct_conectable_cp_IDB05A1;
 
 typedef __packed struct _gap_set_direct_conectable_cp_IDB04A1{
@@ -725,6 +746,18 @@ typedef __packed struct _gatt_read_handle_val_offset_rp{
     uint8_t		value_len;
 	uint8_t		value[HCI_MAX_PAYLOAD_SIZE-GATT_READ_HANDLE_VALUE_OFFSET_RP_SIZE];
 } PACKED gatt_read_handle_val_offset_rp;
+
+#define OCF_GATT_UPD_CHAR_VAL_EXT		        0x012C
+#define GATT_UPD_CHAR_VAL_EXT_CP_SIZE 10  // without value
+typedef __packed struct _gatt_upd_char_val_ext_cp{
+  uint16_t service_handle;
+  uint16_t char_handle;
+  uint8_t  update_type;
+  uint16_t char_length;
+  uint16_t value_offset;
+  uint8_t  value_length;
+  uint8_t  value[HCI_MAX_PAYLOAD_SIZE-GATT_UPD_CHAR_VAL_EXT_CP_SIZE];
+} PACKED gatt_upd_char_val_ext_cp;
 
 #define OCF_L2CAP_CONN_PARAM_UPDATE_REQ  0x0181
 typedef __packed struct _l2cap_conn_param_update_req_cp{

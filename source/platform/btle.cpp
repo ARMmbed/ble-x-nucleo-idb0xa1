@@ -127,8 +127,8 @@ void btleInit(void)
 
     if (bnrg_expansion_board == IDB05A1) {
         uint8_t stackMode = STACK_MODE;
-        ret = aci_hal_write_config_data(CONFIG_DATA_ROLE,
-                                        CONFIG_DATA_ROLE_LEN,
+        ret = aci_hal_write_config_data(CONFIG_DATA_MODE_OFFSET,
+                                        CONFIG_DATA_MODE_LEN,
                                         &stackMode);
     }
 
@@ -152,7 +152,7 @@ void btleInit(void)
     {
         Gap::Address_t BLE_address_BE = { 0 };
         uint8_t data_len_out;
-        aci_hal_read_config_data(CONFIG_DATA_RANDOM_ADDRESS_IDB05A1, BDADDR_SIZE, &data_len_out, BLE_address_BE);
+        aci_hal_read_config_data(CONFIG_DATA_RANDOM_ADDRESS, BDADDR_SIZE, &data_len_out, BLE_address_BE);
         // FIXME error handling of this function
         BlueNRGGap::getInstance().setAddress(BLEProtocol::AddressType::RANDOM_STATIC, BLE_address_BE);
     }

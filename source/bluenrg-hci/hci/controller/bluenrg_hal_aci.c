@@ -17,7 +17,6 @@
 #include "ble_osal.h"
 #include "ble_status.h"
 #include "ble_hal.h"
-#include "ble_osal.h"
 #include "ble_hci_const.h"
 #include "bluenrg_aci_const.h"
 #include "bluenrg_hal_aci.h"
@@ -27,6 +26,27 @@
 #define MIN(a,b)            ((a) < (b) )? (a) : (b)
 #define MAX(a,b)            ((a) > (b) )? (a) : (b)
 
+tBleStatus aci_hal_get_fw_build_number(uint16_t *build_number)
+{
+  struct hci_request rq;
+  hal_get_fw_build_number_rp rp;
+  
+  Osal_MemSet(&rq, 0, sizeof(rq));
+  rq.ogf = OGF_VENDOR_CMD;
+  rq.ocf = OCF_HAL_GET_FW_BUILD_NUMBER;
+  rq.rparam = &rp;
+  rq.rlen = sizeof(rp);
+  
+  if (hci_send_req(&rq, FALSE) < 0)
+    return BLE_STATUS_TIMEOUT;
+  
+  if(rp.status)
+    return rp.status;
+  
+  *build_number = rp.build_number;
+  
+  return 0;
+}
 
 tBleStatus aci_hal_write_config_data(uint8_t offset, 
                                     uint8_t len,
@@ -60,12 +80,9 @@ tBleStatus aci_hal_write_config_data(uint8_t offset,
   if (hci_send_req(&rq, FALSE) < 0)
     return BLE_STATUS_TIMEOUT;
 
-  if (status) {
-    return status;
-  }
-
-  return 0;
+  return status;
 }
+
 
 tBleStatus aci_hal_read_config_data(uint8_t offset, uint16_t data_len, uint8_t *data_len_out_p, uint8_t *data)
 {
@@ -116,9 +133,28 @@ tBleStatus aci_hal_set_tx_power_level(uint8_t en_high_power, uint8_t pa_level)
   if (hci_send_req(&rq, FALSE) < 0)
     return BLE_STATUS_TIMEOUT;
 
-  if (status) {
     return status;
+}
+
+tBleStatus aci_hal_le_tx_test_packet_number(uint32_t *number_of_packets)
+{
+  struct hci_request rq;
+  hal_le_tx_test_packet_number_rp resp;
+  
+  Osal_MemSet(&rq, 0, sizeof(rq));
+  rq.ogf = OGF_VENDOR_CMD;
+  rq.ocf = OCF_HAL_LE_TX_TEST_PACKET_NUMBER;
+  rq.rparam = &resp;
+  rq.rlen = sizeof(resp);
+  
+  if (hci_send_req(&rq, FALSE) < 0)
+    return BLE_STATUS_TIMEOUT;
+  
+  if (resp.status) {
+    return resp.status;
   }
+  
+  *number_of_packets = btohl(resp.number_of_packets);
 
   return 0;
 }
@@ -177,6 +213,53 @@ tBleStatus aci_hal_tone_stop(void)
     return BLE_STATUS_TIMEOUT;
 
   return status;
+}
+
+tBleStatus aci_hal_get_link_status(uint8_t link_status[8], uint16_t conn_handle[8])
+{
+  struct hci_request rq;
+  hal_get_link_status_rp rp;
+  
+  Osal_MemSet(&rq, 0, sizeof(rq));
+  rq.ogf = OGF_VENDOR_CMD;
+  rq.ocf = OCF_HAL_GET_LINK_STATUS;
+  rq.rparam = &rp;
+  rq.rlen = sizeof(rp);
+  
+  if (hci_send_req(&rq, FALSE) < 0)
+    return BLE_STATUS_TIMEOUT;
+  
+  if(rp.status)
+    return rp.status;
+  
+  Osal_MemCpy(link_status,rp.link_status,sizeof(link_status));
+  for(int i = 0; i < 8; i++)  
+    conn_handle[i] = btohs(rp.conn_handle[i]);
+  
+  return 0;
+}
+
+tBleStatus aci_hal_get_anchor_period(uint32_t *anchor_period, uint32_t *max_free_slot)
+{
+  struct hci_request rq;
+  hal_get_anchor_period_rp rp;
+  
+  Osal_MemSet(&rq, 0, sizeof(rq));
+  rq.ogf = OGF_VENDOR_CMD;
+  rq.ocf = OCF_HAL_GET_ANCHOR_PERIOD;
+  rq.rparam = &rp;
+  rq.rlen = sizeof(rp);
+  
+  if (hci_send_req(&rq, FALSE) < 0)
+    return BLE_STATUS_TIMEOUT;
+  
+  if(rp.status)
+    return rp.status;
+  
+  *anchor_period = btohl(rp.anchor_period);
+  *max_free_slot = btohl(rp.max_free_slot);
+  
+  return 0;
 }
 
 

@@ -71,7 +71,7 @@ typedef __packed struct{
 extern const IFR_config_TypeDef IFR_config;
 
 /* Exported macros -----------------------------------------------------------*/
-#define FROM_US_TO_SYS_TIME(us)      ((uint16_t)(us/2.4414))
+#define FROM_US_TO_SYS_TIME(us)      ((uint16_t)(us/2.4414)+1)
 #define FROM_SYS_TIME_TO_US(sys)     ((uint16_t)(sys*2.4414))
 
 /* Convert 2 digit BCD number to an integer */

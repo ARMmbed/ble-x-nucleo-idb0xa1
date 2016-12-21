@@ -1469,3 +1469,37 @@ tBleStatus aci_gatt_read_handle_value_offset_IDB05A1(uint16_t attr_handle, uint8
 
   return 0; 
 }
+
+tBleStatus aci_gatt_update_char_value_ext_IDB05A1(uint16_t service_handle, uint16_t char_handle,
+                                                  uint8_t update_type, uint16_t char_length,
+                                                  uint16_t value_offset, uint8_t value_length,
+                                                  const uint8_t* value)
+{
+  struct hci_request rq;
+  uint8_t status;
+  gatt_upd_char_val_ext_cp cp;
+  
+  if(value_length > sizeof(cp.value))
+    return BLE_STATUS_INVALID_PARAMS;
+  
+  cp.service_handle = htobs(service_handle);
+  cp.char_handle = htobs(char_handle);
+  cp.update_type = update_type;
+  cp.char_length = htobs(char_length);
+  cp.value_offset = htobs(value_offset);
+  cp.value_length = value_length;
+  Osal_MemCpy(cp.value, value, value_length);
+  
+  Osal_MemSet(&rq, 0, sizeof(rq));
+  rq.ogf = OGF_VENDOR_CMD;
+  rq.ocf = OCF_GATT_UPD_CHAR_VAL_EXT;
+  rq.cparam = &cp;
+  rq.clen = GATT_UPD_CHAR_VAL_EXT_CP_SIZE + value_length;
+  rq.rparam = &status;
+  rq.rlen = 1;
+  
+  if (hci_send_req(&rq, FALSE) < 0)
+    return BLE_STATUS_TIMEOUT;
+  
+  return status;
+}

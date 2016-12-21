@@ -198,7 +198,7 @@ tBleStatus aci_gatt_add_char_desc(uint16_t serviceHandle,
  *			ret = aci_gatt_update_char_value(accServHandle, freeFallCharHandle, 0, 1, &val);
  *
  *			if (ret != BLE_STATUS_SUCCESS){
- *			  PRINTF("Error while updating ACC characteristic.\n") ;
+ *			  PRINTF("Error while updating FFall characteristic.\n") ;
  *			  return BLE_STATUS_ERROR ;
  *			}
  *		    return BLE_STATUS_SUCCESS;
@@ -713,8 +713,8 @@ tBleStatus aci_gatt_set_desc_value(uint16_t servHandle,
  * @brief Reads the value of the attribute handle specified from the local GATT database.
  * @param attr_handle Handle of the attribute to read
  * @param data_len Length of the data buffer.
- * @param[in] data_len_out_p Length of the read attribute.
- * @param[in] data Pointer to the buffer that will contain the read value.
+ * @param[out] data_len_out_p Length of the read attribute.
+ * @param[out] data Pointer to the buffer that will contain the read value.
  * 				The buffer will be filled with the attribute value.
  * 				The length will be the minimum between the provided data_len and the actual length of the
  * 				attribute (in data_len_out_p).
@@ -727,14 +727,36 @@ tBleStatus aci_gatt_read_handle_value(uint16_t attr_handle, uint16_t data_len, u
  * @param attr_handle Handle of the attribute to read
  * @param offset      Offset from which the value needs to be read
  * @param data_len    Length of the data buffer.
- * @param[in] data_len_out_p Length of the read attribute.
- * @param[in] data Pointer to the buffer that will contain the read value.
+ * @param[out] data_len_out_p Length of the read attribute.
+ * @param[out] data Pointer to the buffer that will contain the read value.
  * 				The buffer will be filled with the attribute value.
  * 				The length will be the minimum between the provided data_len and the actual length of the
  * 				attribute (in data_len_out_p).
  * @return Value indicating success or error code.
  */
 tBleStatus aci_gatt_read_handle_value_offset_IDB05A1(uint16_t attr_handle, uint8_t offset, uint16_t data_len, uint16_t *data_len_out_p, uint8_t *data);
+/**
+ * @brief Update the value of a characteristic and sends notifications or indications.
+ * @note This command is a more flexible version of ACI_GATT_UPDATE_CHAR_VALUE to support update of long attribute
+ *  	 up to 512 bytes and indicate selectively the generation of indications and notifications.
+ * @param service_handle Handle of the service to which the characteristic belongs.
+ * @param char_handle Handle of the characteristic
+ * @param update_type Bitmask that controls generation of notifications and indications. It can be a combination
+ * 						@arg @ref NOTIFICATION (0x01): send notification, if enabled.
+ * 						@arg @ref INDICATION (0x02): send indication, if enabled.
+ * 					  If set to 0 no notifications or indications are sent.
+ * @param char_length Total length of the characteristic value. In case of a variable size characteristic,
+ * 					  this field specifies the new length of the characteristic value after the update;
+ * 					  in case of fixed length characteristic this field is ignored.
+ * @param value_offset The offset from which the attribute value has to be updated
+ * @param value_length Length of the value to be updated
+ * @param[out] value   Updated characteristic value
+ * @return Value indicating success or error code.
+ */
+tBleStatus aci_gatt_update_char_value_ext_IDB05A1(uint16_t service_handle, uint16_t char_handle,
+                                                  uint8_t update_type, uint16_t char_length,
+                                                  uint16_t value_offset, uint8_t value_length,
+                                                  const uint8_t* value);
 
 /**
  * @}
@@ -748,8 +770,14 @@ tBleStatus aci_gatt_read_handle_value_offset_IDB05A1(uint16_t attr_handle, uint8
  */
 
 /**
- * This event is raised to the application by the GATT server when a client modifies any attribute on the server,
- * if event is enabled (see @ref Gatt_Event_Mask "Gatt Event Mask").
+ * This event (if enabled, see @ref Gatt_Event_Mask "Gatt Event Mask") is raised to the application
+ * by the GATT server when a client modifies any attribute on the server, as consequence of one of
+ * the following GATT procedures:
+ * @li write without response
+ * @li signed write without response
+ * @li write characteristic value
+ * @li write long characteristic value
+ * @li reliable write.
  * See @ref _evt_gatt_attr_modified_IDB04A1 or @ref _evt_gatt_attr_modified__IDB05A1.
  */
 #define EVT_BLUE_GATT_ATTRIBUTE_MODIFIED          (0x0C01)
@@ -1017,8 +1045,8 @@ typedef __packed struct _evt_gatt_write_permit_req{
 typedef __packed struct _evt_gatt_read_permit_req{
   uint16_t conn_handle; /**< Handle of the connection on which there was the request to read the attribute. */
   uint16_t attr_handle; /**< The handle of the attribute for which the read request has been made by the client */
-  uint8_t  data_length; /**< Length of offset field. (always 1). */
-  uint8_t  offset;      /**< Contains the offset from which the read has been requested */
+  uint8_t  data_length; /**< Length of offset field. */
+  uint16_t offset;      /**< Contains the offset from which the read has been requested */
 } PACKED evt_gatt_read_permit_req;
 
 /**
@@ -1044,7 +1072,7 @@ typedef __packed struct _evt_gatt_read_multi_permit_req{
  * See @ref evt_gatt_tx_pool_vailable.
  *
  */
-#define EVT_BLUE_GATT_TX_POOL_AVAILABLE_IDB05A1   (0x0C16)
+#define EVT_BLUE_GATT_TX_POOL_AVAILABLE           (0x0C16)
 typedef __packed struct _evt_gatt_tx_pool_available{
   uint16_t conn_handle; /**< Handle of the connection on which there was the request to read the attribute. */
   uint16_t available_buffers; /**< Length of data field. */
@@ -1053,11 +1081,41 @@ typedef __packed struct _evt_gatt_tx_pool_available{
 /**
  * This event is raised on the server when the client confirms the reception of an indication.
  */
-#define EVT_BLUE_GATT_SERVER_CONFIRMATION_EVENT_IDB05A1 (0x0C17)
+#define EVT_BLUE_GATT_SERVER_CONFIRMATION_EVENT    (0x0C17)
 typedef __packed struct _evt_gatt_server_confirmation{
   uint16_t conn_handle; /**< Handle of the connection on which there was the request to read the attribute. */
-  uint16_t reserved; /**< Not used. */
 } PACKED evt_gatt_server_confirmation;
+/**
+ * This event is given to the application when a prepare write request
+ * is received by the server from the client. This event will be given to the application only if the
+ * event bit for this event generation is set when the characteristic was added.
+ * When this event is received, the application has to check whether the value being requested for write
+ * is allowed to be written and respond with the command aci_gatt_write_response().
+ * Based on the response from the application, the attribute value will be modified by the stack.
+ * If the write is rejected by the application, then the value of the attribute will not be modified
+ * and an error response will be sent to the client, with the error code as specified by the application.
+ * See @ref evt_gatt_write_permit_req.
+ */
+#define EVT_BLUE_GATT_PREPARE_WRITE_PERMIT_REQ            (0x0C18)
+typedef __packed struct _evt_gatt_prepare_write_permit_req{
+  uint16_t conn_handle; /**< Handle of the connection on which there was the request to write the attribute. */
+  uint16_t attr_handle; /**< The handle of the attribute for which the write request has been made by the client */
+  uint16_t offset; /**< The offset from which the prepare write has been requested */
+  uint8_t  data_length; /**< Length of data field. */
+  uint8_t  data[VARIABLE_SIZE]; /**< The data that the client has requested to write */
+} PACKED evt_gatt_prepare_write_permit_req;
+
+/**
+ * @}
+ */
+
+/**
+ * @}
+ */
+ 
+/**
+ * @}
+ */
 
 /**
  * @}

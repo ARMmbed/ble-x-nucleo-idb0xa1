@@ -618,7 +618,7 @@ ble_error_t BlueNRGGattConnectionClient::read(GattAttribute::Handle_t attributeH
     return BLE_ERROR_NONE;
   }
   switch (ret) {
-  case BLE_STATUS_BUSY:
+  case ERR_CONTROLLER_BUSY:
     return BLE_STACK_BUSY;
   default:
     return BLE_ERROR_INVALID_STATE;
@@ -677,7 +677,7 @@ ble_error_t BlueNRGGattConnectionClient::write(GattClient::WriteOp_t    cmd,
     return BLE_ERROR_NONE;
   }
   switch (ret) {
-  case BLE_STATUS_BUSY:
+  case ERR_CONTROLLER_BUSY:
     return BLE_STACK_BUSY;
   default:
     return BLE_ERROR_INVALID_STATE;

@@ -17,7 +17,6 @@
 #include "ble_osal.h"
 #include "ble_status.h"
 #include "ble_hal.h"
-#include "ble_osal.h"
 #include "ble_hci_const.h"
 #include "bluenrg_aci_const.h"
 #include "bluenrg_gap_aci.h"
@@ -240,7 +239,8 @@ tBleStatus aci_gap_set_discoverable(uint8_t AdvType, uint16_t AdvIntervMin, uint
   return 0;
 }
 
-tBleStatus aci_gap_set_direct_connectable_IDB05A1(uint8_t own_addr_type, uint8_t directed_adv_type, uint8_t initiator_addr_type, const uint8_t *initiator_addr)
+tBleStatus aci_gap_set_direct_connectable_IDB05A1(uint8_t own_addr_type, uint8_t directed_adv_type, uint8_t initiator_addr_type,
+                                                  const uint8_t *initiator_addr, uint16_t adv_interv_min, uint16_t adv_interv_max)
 {
   struct hci_request rq;
   gap_set_direct_conectable_cp_IDB05A1 cp;
@@ -248,6 +248,8 @@ tBleStatus aci_gap_set_direct_connectable_IDB05A1(uint8_t own_addr_type, uint8_t
 
   cp.own_bdaddr_type = own_addr_type;
   cp.directed_adv_type = directed_adv_type;
+  cp.adv_interv_min = adv_interv_min;
+  cp.adv_interv_max = adv_interv_max;
   cp.direct_bdaddr_type = initiator_addr_type;
   Osal_MemCpy(cp.direct_bdaddr, initiator_addr, 6);
 
@@ -1164,7 +1166,7 @@ tBleStatus aci_gap_resolve_private_address_IDB05A1(const tBDAddr private_address
   if(rp.status)
     return rp.status;
   
-  Osal_MemCpy(actual_address, rp.address, 6);  
+  Osal_MemCpy(actual_address, rp.address, sizeof(actual_address));  
 
   return 0;
 }

@@ -5,6 +5,7 @@
 #include "bluenrg_aci.h"
 #include "bluenrg_utils.h"
 #include "ble_hci.h"
+#include "ble_hci_le.h"
 #include "ble_osal.h"
 #include "string.h"
 #include "stm32_bluenrg_ble.h"
@@ -19,7 +20,6 @@
 #define FULL_STACK_SIZE (66*1024) // 66 KB
 #define BOOTLOADER_SIZE (2*1024)  // 2 kB
 #define SECTOR_SIZE     (2*1024)  // 2 KB
-#define DATA_SIZE       64        // 64 bytes
 
 // x**32 + x**26 + x**23 + x ** 22 + x**16 + x**12 + x**11 +
 // x**10 + x**8 + x**7 + x**5 + x**4 + x**2 + x**1 + x**0
@@ -42,6 +42,8 @@
 #define MAX_ERASE_RETRIES 2
 #define MAX_WRITE_RETRIES 2
 #define MIN_WRITE_BLOCK_SIZE 4
+#define MAX_WRITE_BLOCK_SIZE    64        // 64 bytes
+#define READ_BLOCK_SIZE         64        // 64 bytes
 
 #define RETRY_COMMAND(func, num_ret, error)  \
 {					\
@@ -56,9 +58,7 @@
   }					\
 }
 
-typedef struct{
-  uint8_t cold_ana_act_config_table[64];
-}cold_table_TypeDef;
+#define MIN(a,b) (((a)<(b))?(a):(b))
 
 /* This function calculates the CRC of a sector of flash, if bytes passed are less than sector size, 
    they are extended with 0xFF until sector size is reached
@@ -89,9 +89,8 @@ static uint32_t updater_calc_crc(const uint8_t* data, uint16_t nr_of_bytes)
 
 int program_device(const uint8_t *fw_image, uint32_t fw_size)
 {
-  uint8_t version, num_erase_retries=0, status, data_size;
-  uint8_t number_sectors, module;
-  uint32_t address, j;
+  uint8_t version, num_erase_retries, status, write_block_size;
+  uint32_t address;
   uint32_t crc, crc2, crc_size;
   uint32_t fw_offset = FW_OFFSET;
   
@@ -118,8 +117,6 @@ int program_device(const uint8_t *fw_image, uint32_t fw_size)
   if (fw_size % MIN_WRITE_BLOCK_SIZE)
     return BLE_UTIL_WRONG_IMAGE_SIZE;
 
-  /* Calculate the number of sectors necessary to contain the fw image.*/
-  number_sectors = ((fw_size + SECTOR_SIZE - 1) / SECTOR_SIZE);
 
   /***********************************************************************
   * Erase BLUE flag
@@ -131,16 +128,15 @@ int program_device(const uint8_t *fw_image, uint32_t fw_size)
   /***********************************************************************
   * Erase and Program sectors
   ************************************************************************/  
-  for(unsigned int i = fw_offset; i < (number_sectors * SECTOR_SIZE); i += SECTOR_SIZE) {
+  for(int i = fw_offset; i < fw_size; i += SECTOR_SIZE) {
     num_erase_retries = 0;
     while (num_erase_retries++ < MAX_ERASE_RETRIES) {
       aci_updater_erase_sector(BASE_ADDRESS + i);
-      if ((i/SECTOR_SIZE) < (unsigned int)(number_sectors-1))
-	data_size = DATA_SIZE;
-      else
-	data_size = MIN_WRITE_BLOCK_SIZE;	
-      for (j=i; ((j<SECTOR_SIZE+i)&&(j<fw_size)); j += data_size) {
-	RETRY_COMMAND(aci_updater_program_data_block(BASE_ADDRESS+j, data_size, fw_image+j), MAX_WRITE_RETRIES, status);
+      for (int j=i; ((j<i+SECTOR_SIZE)&&(j<fw_size)); j += write_block_size) {
+        
+        write_block_size = MIN(fw_size-j, MAX_WRITE_BLOCK_SIZE);	
+        
+        RETRY_COMMAND(aci_updater_program_data_block(BASE_ADDRESS+j, write_block_size, fw_image+j), MAX_WRITE_RETRIES, status);
 	if (status != BLE_STATUS_SUCCESS)
 	  break;
       }
@@ -154,15 +150,12 @@ int program_device(const uint8_t *fw_image, uint32_t fw_size)
   /***********************************************************************
   * Verify firmware
   ************************************************************************/
-  module = fw_size % SECTOR_SIZE;
-  crc_size = SECTOR_SIZE;
-  for(int i = fw_offset; i < (number_sectors*SECTOR_SIZE); i += SECTOR_SIZE){
+  for(int i = fw_offset; i < fw_size; i += SECTOR_SIZE){
     address = BASE_ADDRESS + i;
     if(aci_updater_calc_crc(address, 1, &crc))
       return BLE_UTIL_ACI_ERROR;
     
-    if ((module != 0)  && ((i/SECTOR_SIZE) == (number_sectors-1)))
-	crc_size = module;
+    crc_size = MIN(fw_size-i,SECTOR_SIZE);
 
     crc2 = updater_calc_crc(fw_image+i,crc_size);
     if(crc!=crc2)
@@ -198,9 +191,9 @@ int read_IFR(uint8_t *data)
   /***********************************************************************
   * Reading last 3 IFR 64-byte blocks
   ************************************************************************/
-  for(int i = (FULL_STACK_SIZE - IFR_SIZE); i < FULL_STACK_SIZE; i += DATA_SIZE){
-    ret = aci_updater_read_data_block(BASE_ADDRESS+i, DATA_SIZE, (data+offset));
-    offset += DATA_SIZE;
+  for(int i = (FULL_STACK_SIZE - IFR_SIZE); i < FULL_STACK_SIZE; i += READ_BLOCK_SIZE){
+    ret = aci_updater_read_data_block(BASE_ADDRESS+i, READ_BLOCK_SIZE, (data+offset));
+    offset += READ_BLOCK_SIZE;
     if(ret) return BLE_UTIL_ACI_ERROR;
   }
   
@@ -284,8 +277,8 @@ int program_IFR(const IFR_config_TypeDef *ifr_image)
     /***********************************************************************
    * READ IFR data
    ************************************************************************/  
-  for(int i = 0; i < SECTOR_SIZE; i += DATA_SIZE){
-    ret = aci_updater_read_data_block(IFR_BASE_ADDRESS+i, DATA_SIZE, ifr_data+i);
+  for(int i = 0; i < SECTOR_SIZE; i += READ_BLOCK_SIZE){
+    ret = aci_updater_read_data_block(IFR_BASE_ADDRESS+i, READ_BLOCK_SIZE, ifr_data+i);
     if(ret != BLE_STATUS_SUCCESS){
       return ret;
     }
@@ -301,8 +294,8 @@ int program_IFR(const IFR_config_TypeDef *ifr_image)
   num_erase_retries = 0;
   while (num_erase_retries++ < MAX_ERASE_RETRIES) {
     aci_updater_erase_sector(IFR_BASE_ADDRESS);
-    for(int i = IFR_WRITE_OFFSET_BEGIN, j = 0; i < SECTOR_SIZE; i += DATA_SIZE, j += DATA_SIZE) {
-      RETRY_COMMAND(aci_updater_program_data_block(IFR_BASE_ADDRESS+i, DATA_SIZE, ifr_data+j), MAX_WRITE_RETRIES, ret);
+    for(int i = IFR_WRITE_OFFSET_BEGIN, j = 0; i < SECTOR_SIZE; i += MAX_WRITE_BLOCK_SIZE, j += MAX_WRITE_BLOCK_SIZE) {
+      RETRY_COMMAND(aci_updater_program_data_block(IFR_BASE_ADDRESS+i, MAX_WRITE_BLOCK_SIZE, ifr_data+j), MAX_WRITE_RETRIES, ret);
       if (ret != BLE_STATUS_SUCCESS)
 	break;
     }
@@ -316,13 +309,13 @@ int program_IFR(const IFR_config_TypeDef *ifr_image)
   * Verify IFR
   ************************************************************************/  
   {
-    uint8_t ifr_updated[DATA_SIZE];
-    for(int i = IFR_WRITE_OFFSET_BEGIN, j = 0; i < SECTOR_SIZE; i += DATA_SIZE, j += DATA_SIZE){
-      ret = aci_updater_read_data_block(IFR_BASE_ADDRESS+i, DATA_SIZE, ifr_updated);
+    uint8_t ifr_updated[READ_BLOCK_SIZE];
+    for(int i = IFR_WRITE_OFFSET_BEGIN, j = 0; i < SECTOR_SIZE; i += READ_BLOCK_SIZE, j += READ_BLOCK_SIZE){
+      ret = aci_updater_read_data_block(IFR_BASE_ADDRESS+i, READ_BLOCK_SIZE, ifr_updated);
       if(ret != BLE_STATUS_SUCCESS){
 	return ret;
       }
-      if (memcmp(ifr_updated, ifr_data+j, DATA_SIZE) != 0)
+      if (memcmp(ifr_updated, ifr_data+j, READ_BLOCK_SIZE) != 0)
 	return BLE_UTIL_WRONG_VERIFY;
     }
   }
@@ -335,18 +328,18 @@ int program_IFR(const IFR_config_TypeDef *ifr_image)
 
 uint8_t verify_IFR(const IFR_config_TypeDef *ifr_data)
 {
-  uint8_t ifr_updated[DATA_SIZE];
+  uint8_t ifr_updated[READ_BLOCK_SIZE];
   uint8_t version, ret = BLE_STATUS_SUCCESS;
     
   aci_updater_start();
   if(aci_get_updater_version(&version))
     return BLE_UTIL_ACI_ERROR;
-  for(int i = 0; i < IFR_SIZE; i += DATA_SIZE){
-    ret = aci_updater_read_data_block((IFR_BASE_ADDRESS+SECTOR_SIZE-IFR_SIZE)+i, DATA_SIZE, ifr_updated);
+  for(int i = 0; i < IFR_SIZE; i += READ_BLOCK_SIZE){
+    ret = aci_updater_read_data_block((IFR_BASE_ADDRESS+SECTOR_SIZE-IFR_SIZE)+i, READ_BLOCK_SIZE, ifr_updated);
     if(ret != BLE_STATUS_SUCCESS){
       return ret;
     }
-    if (memcmp(ifr_updated, ((uint8_t*)ifr_data)+i, DATA_SIZE) != 0)
+    if (memcmp(ifr_updated, ((uint8_t*)ifr_data)+i, READ_BLOCK_SIZE) != 0)
     {
       ret = BLE_UTIL_WRONG_VERIFY;
       break;

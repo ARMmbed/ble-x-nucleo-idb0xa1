@@ -218,6 +218,12 @@ typedef __packed struct _charactFormat {
  * @}
  */
 
+ /**
+ * @name Update type of aci_gatt_upd_char_val_ext().
+ * @{
+ */
 
+#define NOTIFICATION         1
+#define INDICATION           2
 
 #endif /* __BNRG_GATT_SERVER_H__ */
