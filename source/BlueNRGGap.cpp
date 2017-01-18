@@ -54,9 +54,14 @@
 void BlueNRGGap::Process(void)
 {
     if(AdvToFlag) {
+        AdvToFlag = false;
         stopAdvertising();
     }
 
+    if(ScanToFlag) {
+        ScanToFlag = false;
+        stopScan();
+    }
 }
 
 /**************************************************************************/
@@ -202,31 +207,32 @@ void BlueNRGGap::setAdvToFlag(void) {
 #ifdef AST_FOR_MBED_OS
 static void advTimeoutCB(void)
 {
-    Gap::GapState_t state;
-
-    state = BlueNRGGap::getInstance().getState();
-    if (state.advertising == 1) {
-
-        BlueNRGGap::getInstance().stopAdvertising();
-
-    }
+    BlueNRGGap::getInstance().stopAdvertising();
 }
 #else
 static void advTimeoutCB(void)
 {
-    Gap::GapState_t state;
+    BlueNRGGap::getInstance().setAdvToFlag();
 
-    state = BlueNRGGap::getInstance().getState();
-    if (state.advertising == 1) {
-
-        BlueNRGGap::getInstance().setAdvToFlag();
-
-        Timeout t = BlueNRGGap::getInstance().getAdvTimeout();
-        t.detach(); /* disable the callback from the timeout */
-
-    }
+    Timeout t = BlueNRGGap::getInstance().getAdvTimeout();
+    t.detach(); /* disable the callback from the timeout */
 }
 #endif /* AST_FOR_MBED_OS */
+
+/*
+ * Utility to set SCAN timeout flag
+ */
+void BlueNRGGap::setScanToFlag(void) {
+    ScanToFlag = true;
+}
+
+static void scanTimeoutCB(void)
+{
+    BlueNRGGap::getInstance().setScanToFlag();
+
+    Timeout t = BlueNRGGap::getInstance().getScanTimeout();
+    t.detach(); /* disable the callback from the timeout */
+}
 
 /**************************************************************************/
 /*!
@@ -381,9 +387,8 @@ ble_error_t BlueNRGGap::startAdvertising(const GapAdvertisingParams &params)
     //FIXME: to be removed
     //state.advertising = 1;
 
-    AdvToFlag = false;
     if(params.getTimeout() != 0) {
-        PRINTF("!!! attaching to!!!\n");
+        PRINTF("!!! attaching adv to!!!\n");
 #ifdef AST_FOR_MBED_OS
         minar::Scheduler::postCallback(advTimeoutCB).delay(minar::milliseconds(params.getTimeout() * 1000));
 #else
@@ -414,7 +419,6 @@ ble_error_t BlueNRGGap::startAdvertising(const GapAdvertisingParams &params)
 /**************************************************************************/
 ble_error_t BlueNRGGap::stopAdvertising(void)
 {
-
     if(state.advertising == 1) {
 
         int err = hci_le_set_advertise_enable(0);
@@ -1131,6 +1135,12 @@ ble_error_t BlueNRGGap::startRadioScan(const GapScanningParams &scanningParams)
   if (BLE_STATUS_SUCCESS == ret){
     PRINTF("Observation Procedure Started\n");
     _scanning = true;
+
+    if(scanningParams.getTimeout() != 0) {
+        PRINTF("!!! attaching scan to!!!\n");
+        scanTimeout.attach(scanTimeoutCB, scanningParams.getTimeout());
+    }
+
     return BLE_ERROR_NONE;
   }
 
@@ -1149,16 +1159,19 @@ ble_error_t BlueNRGGap::startRadioScan(const GapScanningParams &scanningParams)
 ble_error_t BlueNRGGap::stopScan() {
   tBleStatus ret = BLE_STATUS_SUCCESS;
 
-  PRINTF("stopScan\n\r");
-  ret = aci_gap_terminate_gap_procedure(GAP_OBSERVATION_PROC);
+  if(_scanning) {
+    ret = aci_gap_terminate_gap_procedure(GAP_OBSERVATION_PROC);
 
-  if (ret != BLE_STATUS_SUCCESS) {
-    PRINTF("GAP Terminate Gap Procedure failed(ret=0x%x)\n", ret);
-    return BLE_ERROR_UNSPECIFIED;
-  } else {
-    PRINTF("Discovery Procedure Terminated\n");
-    return BLE_ERROR_NONE;
+    if (ret != BLE_STATUS_SUCCESS) {
+      PRINTF("GAP Terminate Gap Procedure failed(ret=0x%x)\n", ret);
+      return BLE_ERROR_UNSPECIFIED;
+    } else {
+      PRINTF("Discovery Procedure Terminated\n");
+      return BLE_ERROR_NONE;
+    }
   }
+
+  return BLE_ERROR_NONE;
 }
 
 /**************************************************************************/
@@ -1432,6 +1445,9 @@ ble_error_t BlueNRGGap::reset(void)
     if (Gap::reset() != BLE_ERROR_NONE) {
         return BLE_ERROR_INVALID_STATE;
     }
+
+    AdvToFlag = false;
+    ScanToFlag = false;
 
     /* Clear derived class members */
     m_connectionHandle = BLE_CONN_HANDLE_INVALID;

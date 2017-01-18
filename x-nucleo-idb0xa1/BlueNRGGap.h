@@ -139,6 +139,7 @@ public:
 
     bool getIsSetAddress();
 
+    // ADV timeout handling
     Timeout getAdvTimeout(void) const {
         return advTimeout;
     }
@@ -146,6 +147,15 @@ public:
         return AdvToFlag;
     }
     void setAdvToFlag(void);
+
+    // SCAN timeout handling
+    Timeout getScanTimeout(void) const {
+        return scanTimeout;
+    }
+    uint8_t getScanToFlag(void) {
+        return ScanToFlag;
+    }
+    void setScanToFlag(void);
 
     void Process(void);
 
@@ -169,8 +179,13 @@ private:
     bool isSetAddress;
     uint8_t deviceAppearance[2];
 
+    // ADV timeout handling
     Timeout advTimeout;
     bool AdvToFlag;
+
+    // SCAN timeout handling
+    Timeout scanTimeout;
+    bool ScanToFlag;
 
     static uint16_t SCAN_DURATION_UNITS_TO_MSEC(uint16_t duration) {
         return (duration * 625) / 1000;
@@ -193,7 +208,7 @@ private:
 
     ble_error_t updateAdvertisingData(void);
 
-    BlueNRGGap() {
+    BlueNRGGap() : AdvToFlag(false), ScanToFlag(false) {
         m_connectionHandle = BLE_CONN_HANDLE_INVALID;
         addr_type = BLEProtocol::AddressType::RANDOM_STATIC;
 

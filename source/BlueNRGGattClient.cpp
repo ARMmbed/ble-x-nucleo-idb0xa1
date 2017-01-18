@@ -99,21 +99,7 @@ ble_error_t BlueNRGGattClient::removeGattConnectionClient(Gap::Handle_t connecti
       return BLE_ERROR_INTERNAL_STACK_FAILURE;
     }
   }
-/*
-  BlueNRGGattConnectionClient *gattConnectionClient = getGattConnectionClient(connectionHandle);
 
-  if(gattConnectionClient != NULL) {
-    delete gattConnectionClient;
-    gattConnectionClient = NULL;
-
-    _numConnections--;
-
-  } else {
-    return BLE_ERROR_INTERNAL_STACK_FAILURE;
-  }
-
-  PRINTF("removeGattConnectionClient: succesfully removed gattConnectionClient (_numConnections=%d)\r\n", _numConnections);
-*/
   return BLE_ERROR_NONE;
 }
 
