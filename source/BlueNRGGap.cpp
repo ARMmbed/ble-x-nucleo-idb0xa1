@@ -378,7 +378,8 @@ ble_error_t BlueNRGGap::startAdvertising(const GapAdvertisingParams &params)
         return BLE_ERROR_UNSPECIFIED;
     }
 
-    state.advertising = 1;
+    //FIXME: to be removed
+    //state.advertising = 1;
 
     AdvToFlag = false;
     if(params.getTimeout() != 0) {
@@ -1234,7 +1235,13 @@ void BlueNRGGap::setAdvParameters(void)
 /**************************************************************************/
 void BlueNRGGap::setConnectionParameters(void)
 {
-  if (state.advertising == 1) {
+  if (state.connected == 1) {
+
+    PRINTF("state.connected=1\r\n");
+    scanInterval = _scanningParams.MSEC_TO_SCAN_DURATION_UNITS(conn_min_interval*1.25);
+    scanWindow = _scanningParams.MSEC_TO_SCAN_DURATION_UNITS(((conn_min_interval*1.25)/100)*60); // scanWin ~= 60%(scanInt)
+
+  } else if (state.advertising == 1) {
 
     if (_scanningParams.getInterval() < advInterval) {
       PRINTF("state.adv=1 scanInterval<advInterval\r\n");
