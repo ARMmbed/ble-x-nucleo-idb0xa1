@@ -60,7 +60,7 @@ public:
     }
 
     ble_error_t createGattConnectionClient(Gap::Handle_t connectionHandle);
-    ble_error_t removeGattConnectionClient(Gap::Handle_t connectionHandle);
+    ble_error_t removeGattConnectionClient(Gap::Handle_t connectionHandle, uint8_t reason);
     
     /* Functions that must be implemented from GattClient */
     virtual ble_error_t launchServiceDiscovery(Gap::Handle_t                               connectionHandle,
@@ -140,10 +140,11 @@ public:
 
 protected:
 
-    BlueNRGGattClient() {
+    BlueNRGGattClient(): _connectionPool() {};
+/*
       memset(_connectionPool, 0, sizeof(_connectionPool));
     }
-
+*/
     ServiceDiscovery::TerminationCallback_t terminationCallback;
 
 private:

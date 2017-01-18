@@ -396,7 +396,7 @@ extern "C" {
                 evt_disconn_complete *evt = (evt_disconn_complete*)event_pckt->data;
 
                 if(BlueNRGGap::getInstance().getGapRole() == Gap::CENTRAL) {
-                  BlueNRGGattClient::getInstance().removeGattConnectionClient(evt->handle);
+                  BlueNRGGattClient::getInstance().removeGattConnectionClient(evt->handle, evt->reason);
                 }
 
                 BlueNRGGap::getInstance().processDisconnectionEvent(evt->handle, (Gap::DisconnectionReason_t)evt->reason);

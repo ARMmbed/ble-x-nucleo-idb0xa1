@@ -68,16 +68,38 @@ ble_error_t BlueNRGGattClient::createGattConnectionClient(Gap::Handle_t connecti
       _connectionPool[i]->onServiceDiscoveryTermination(terminationCallback);
       _numConnections++;
 
+      PRINTF("createGattConnectionClient: _connectionPool index=%d\r\n", i);
+      PRINTF("createGattConnectionClient: succesfully added new gattConnectionClient (_numConnections=%d)\r\n", _numConnections);
       break;
     }
   }
-  PRINTF("createGattConnectionClient: succesfully added new gattConnectionClient (_numConnections=%d)\r\n", _numConnections);
 
   return BLE_ERROR_NONE;
 }
 
-ble_error_t BlueNRGGattClient::removeGattConnectionClient(Gap::Handle_t connectionHandle)
+ble_error_t BlueNRGGattClient::removeGattConnectionClient(Gap::Handle_t connectionHandle, uint8_t reason)
 {
+
+  PRINTF("removeGattConnectionClient: connectionHandle=%d reason=0x%x\r\n", connectionHandle, reason);
+
+  for (uint8_t i = 0; i < MAX_ACTIVE_CONNECTIONS; i++) {
+    PRINTF("removeGattConnectionClient: _connectionPool[%d]->_connectionHandle=%d\r\n", i, _connectionPool[i]->_connectionHandle);
+
+    if(_connectionPool[i]->_connectionHandle == connectionHandle) {
+      PRINTF("removeGattConnectionClient: Found gattConnectionClient\r\n");
+      delete _connectionPool[i];
+      _connectionPool[i] = NULL;
+
+      _numConnections--;
+      PRINTF("removeGattConnectionClient: succesfully removed gattConnectionClient (_numConnections=%d)\r\n", _numConnections);
+
+      break;
+
+    } else {
+      return BLE_ERROR_INTERNAL_STACK_FAILURE;
+    }
+  }
+/*
   BlueNRGGattConnectionClient *gattConnectionClient = getGattConnectionClient(connectionHandle);
 
   if(gattConnectionClient != NULL) {
@@ -91,7 +113,7 @@ ble_error_t BlueNRGGattClient::removeGattConnectionClient(Gap::Handle_t connecti
   }
 
   PRINTF("removeGattConnectionClient: succesfully removed gattConnectionClient (_numConnections=%d)\r\n", _numConnections);
-
+*/
   return BLE_ERROR_NONE;
 }
 
@@ -99,7 +121,7 @@ BlueNRGGattConnectionClient * BlueNRGGattClient::getGattConnectionClient(Gap::Ha
   PRINTF("getGattConnectionClient\r\n");
 
   for (uint8_t i = 0; i < MAX_ACTIVE_CONNECTIONS; i++) {
-    PRINTF("getGattConnectionClient: _connectionPool[i]->_connectionHandle=%d\r\n",_connectionPool[i]->_connectionHandle);
+    PRINTF("getGattConnectionClient: _connectionPool[%d]->_connectionHandle=%d\r\n", i, _connectionPool[i]->_connectionHandle);
 
     if(_connectionPool[i]->_connectionHandle == connectionHandle) {
       PRINTF("getGattConnectionClient: Found gattConnectionClient\r\n");
@@ -111,6 +133,10 @@ BlueNRGGattConnectionClient * BlueNRGGattClient::getGattConnectionClient(Gap::Ha
 }
 
 void BlueNRGGattClient::gattProcedureCompleteCB(Gap::Handle_t connectionHandle, uint8_t error_code) {
+
+  if(error_code != BLE_STATUS_SUCCESS) {
+    return;
+  }
 
   BlueNRGGattConnectionClient *gattConnectionClient = getGattConnectionClient(connectionHandle);
 

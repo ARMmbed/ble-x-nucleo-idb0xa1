@@ -152,6 +152,7 @@ private:
 
   BlueNRGGattConnectionClient(BlueNRGGattConnectionClient const &);
   void operator=(BlueNRGGattConnectionClient const &);
+  ~BlueNRGGattConnectionClient() {};
 
   BlueNRGGattClient *_gattClient;
 
