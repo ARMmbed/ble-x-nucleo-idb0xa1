@@ -314,6 +314,15 @@ void BlueNRGGattClient::terminateServiceDiscovery(void)
   }
 }
 
+void BlueNRGGattClient::onServiceDiscoveryTermination(ServiceDiscovery::TerminationCallback_t callback) {
+  terminationCallback = callback;
+  for (uint8_t i = 0; i < MAX_ACTIVE_CONNECTIONS; ++i) {
+    if (_connectionPool[i]) { 
+      _connectionPool[i]->onServiceDiscoveryTermination(callback);
+    }
+  }
+}
+
 ble_error_t BlueNRGGattClient::read(Gap::Handle_t connHandle, GattAttribute::Handle_t attributeHandle, uint16_t offset) const
 {
   BlueNRGGattConnectionClient *gattConnectionClient = const_cast<BlueNRGGattClient*>(this)->getGattConnectionClient(connHandle);
