@@ -259,10 +259,7 @@ ble_error_t BlueNRGGattClient::launchServiceDiscovery(Gap::Handle_t             
   BlueNRGGattConnectionClient *gattConnectionClient = getGattConnectionClient(connectionHandle);
 
   if(gattConnectionClient != NULL) {
-    gattConnectionClient->onServiceDiscoveryTermination(terminationCallback);
-
     return gattConnectionClient->launchServiceDiscovery(sc, cc, matchingServiceUUID, matchingCharacteristicUUIDIn);
-
   } else {
     return BLE_ERROR_INTERNAL_STACK_FAILURE;
   }
@@ -314,6 +311,15 @@ void BlueNRGGattClient::terminateServiceDiscovery(void)
 {
   for (uint8_t i = 0; i < _numConnections; i++) {
     _connectionPool[i]->terminateServiceDiscovery();
+  }
+}
+
+void BlueNRGGattClient::onServiceDiscoveryTermination(ServiceDiscovery::TerminationCallback_t callback) {
+  terminationCallback = callback;
+  for (uint8_t i = 0; i < MAX_ACTIVE_CONNECTIONS; ++i) {
+    if (_connectionPool[i]) { 
+      _connectionPool[i]->onServiceDiscoveryTermination(callback);
+    }
   }
 }
 

@@ -80,9 +80,7 @@ public:
 
     virtual bool isServiceDiscoveryActive(void) const;
     virtual void terminateServiceDiscovery(void);
-    virtual void onServiceDiscoveryTermination(ServiceDiscovery::TerminationCallback_t callback) {
-      terminationCallback = callback;
-    }
+    virtual void onServiceDiscoveryTermination(ServiceDiscovery::TerminationCallback_t callback);
     virtual ble_error_t read(Gap::Handle_t connHandle, GattAttribute::Handle_t attributeHandle, uint16_t offset) const;
     virtual ble_error_t write(GattClient::WriteOp_t    cmd,
                               Gap::Handle_t            connHandle,
