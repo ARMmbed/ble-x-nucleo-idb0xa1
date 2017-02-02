@@ -300,8 +300,10 @@ bool BlueNRGGattClient::isServiceDiscoveryActive(void) const
 {
   bool isSDActive = false;
 
-  for (uint8_t i = 0; i < _numConnections; i++) {
-    isSDActive |= _connectionPool[i]->isServiceDiscoveryActive();
+  for (uint8_t i = 0; i < MAX_ACTIVE_CONNECTIONS; i++) {
+    if (_connectionPool[i]) { 
+      isSDActive |= _connectionPool[i]->isServiceDiscoveryActive();
+    }
   }
 
   return isSDActive;
@@ -309,8 +311,10 @@ bool BlueNRGGattClient::isServiceDiscoveryActive(void) const
 
 void BlueNRGGattClient::terminateServiceDiscovery(void)
 {
-  for (uint8_t i = 0; i < _numConnections; i++) {
-    _connectionPool[i]->terminateServiceDiscovery();
+  for (uint8_t i = 0; i < MAX_ACTIVE_CONNECTIONS; i++) {
+    if (_connectionPool[i]) { 
+      _connectionPool[i]->terminateServiceDiscovery();
+    }
   }
 }
 
