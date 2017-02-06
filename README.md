@@ -23,8 +23,8 @@ Referring to the current list of tested platforms (see [X-NUCLEO-IDB05A1](https:
 
 ### Firmware update
 
-For better performance and compatibility with latest mbed API, you should update firmware of this component by using this simple [application](https://developer.mbed.org/teams/ST/code/BlueNRG-MS-Stack-Updater).
+For better performance and compatibility with latest mbed API, you should update firmware of X-NUCLEO-IDB05A1 component by using this simple [application](https://developer.mbed.org/teams/ST/code/BlueNRG-MS-Stack-Updater).
 
 ## Example Applications
 
-* [mbed-os-example-ble](https://github.com/ARMmbed/mbed-os-example-ble)
+To run BLE example applications using X-NUCLEO-IDB05A1 Expansion Board based on mbed OS and built with [mbed-cli](https://github.com/ARMmbed/mbed-cli), please refer to section [Using ST shield on other targets](https://github.com/ARMmbed/mbed-os-example-ble#using-st-nucleo-shield-on-other-targets) in the official [mbed-os-example-ble](https://github.com/ARMmbed/mbed-os-example-ble) page.
