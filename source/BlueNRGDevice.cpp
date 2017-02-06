@@ -296,6 +296,8 @@ const GattServer &BlueNRGDevice::getGattServer() const
 */
 /**************************************************************************/
 ble_error_t  BlueNRGDevice::shutdown(void) {
+    PRINTF("BlueNRGDevice::reset\n");
+
     if (!isInitialized) {
         return BLE_ERROR_INITIALIZATION_INCOMPLETE;
     }
@@ -326,6 +328,7 @@ ble_error_t  BlueNRGDevice::shutdown(void) {
 
     isInitialized = false;
 
+    PRINTF("BlueNRGDevice::reset complete\n");
     return BLE_ERROR_NONE;
 
 }

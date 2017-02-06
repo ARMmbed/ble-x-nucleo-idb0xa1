@@ -790,6 +790,8 @@ ble_error_t BlueNRGGattConnectionClient::discoverCharacteristicDescriptors(
 */
 /**************************************************************************/
 ble_error_t BlueNRGGattConnectionClient::reset(void) {
+  PRINTF("BlueNRGGattConnectionClient::reset\n");
+
   /* Clear all state, including private members */
 
   _currentState = GATT_IDLE;
@@ -806,7 +808,9 @@ ble_error_t BlueNRGGattConnectionClient::reset(void) {
   memset(discoveredChar, 0, sizeof(discoveredChar));
 
   // free response if allocated
-  free((void*)(readCBParams.data));
+  if(readCBParams.data) {
+    free((void*)(readCBParams.data));
+  }
 
   return BLE_ERROR_NONE;
 }

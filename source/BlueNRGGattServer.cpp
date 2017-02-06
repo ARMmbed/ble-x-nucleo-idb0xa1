@@ -697,6 +697,8 @@ ble_error_t BlueNRGGattServer::initializeGATTDatabase(void)   {
 /**************************************************************************/
 ble_error_t BlueNRGGattServer::reset(void)
 {
+    PRINTF("BlueNRGGattServer::reset\n");
+
     /* Clear all state that is from the parent, including private members */
     if (GattServer::reset() != BLE_ERROR_NONE) {
         return BLE_ERROR_INVALID_STATE;

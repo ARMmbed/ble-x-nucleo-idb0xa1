@@ -139,10 +139,7 @@ public:
 protected:
 
     BlueNRGGattClient(): _connectionPool() {};
-/*
-      memset(_connectionPool, 0, sizeof(_connectionPool));
-    }
-*/
+
     ServiceDiscovery::TerminationCallback_t terminationCallback;
 
 private:

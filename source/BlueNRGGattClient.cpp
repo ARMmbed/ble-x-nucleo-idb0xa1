@@ -385,6 +385,8 @@ ble_error_t BlueNRGGattClient::discoverCharacteristicDescriptors(
 /**************************************************************************/
 ble_error_t BlueNRGGattClient::reset(void)
 {
+  PRINTF("BlueNRGGattClient::reset\n");
+
   for (uint8_t i = 0; i < MAX_ACTIVE_CONNECTIONS; i++) {
     if(_connectionPool[i] != NULL) {
       _connectionPool[i]->reset();

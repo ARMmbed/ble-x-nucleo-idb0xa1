@@ -130,15 +130,21 @@ public:
 
 protected:
 
-    BlueNRGGattConnectionClient(BlueNRGGattClient *gattClient, Gap::Handle_t connectionHandle) {
+    BlueNRGGattConnectionClient(BlueNRGGattClient *gattClient, Gap::Handle_t connectionHandle):
+                                discoveredService(),
+                                discoveredChar(),
+                                readCBParams(),
+                                writeCBParams(),
+                                _characteristic()  {
+
+     //PRINTF("BlueNRGGattConnectionClient construtor: connHandle=%d\n\r", connectionHandle);
+
      _gattClient = gattClient;
      _connectionHandle = connectionHandle;
 
      _currentState = GATT_IDLE;
      _matchingServiceUUID = BLE_UUID_UNKNOWN;
      _matchingCharacteristicUUIDIn = BLE_UUID_UNKNOWN;
-
-//     printf("BlueNRGGattConnectionClient construtor: connHandle=%d\n\r", connectionHandle);
 
     }
 
