@@ -199,6 +199,7 @@ ble_error_t BlueNRGGap::setAdvertisingData(const GapAdvertisingData &advData, co
  */
 void BlueNRGGap::setAdvToFlag(void) {
     AdvToFlag = true;
+    signalEventsToProcess();
 }
 
 /*
@@ -224,6 +225,7 @@ static void advTimeoutCB(void)
  */
 void BlueNRGGap::setScanToFlag(void) {
     ScanToFlag = true;
+    signalEventsToProcess();
 }
 
 static void scanTimeoutCB(void)
@@ -384,15 +386,12 @@ ble_error_t BlueNRGGap::startAdvertising(const GapAdvertisingParams &params)
         return BLE_ERROR_UNSPECIFIED;
     }
 
-    //FIXME: to be removed
-    //state.advertising = 1;
-
     if(params.getTimeout() != 0) {
         PRINTF("!!! attaching adv to!!!\n");
 #ifdef AST_FOR_MBED_OS
         minar::Scheduler::postCallback(advTimeoutCB).delay(minar::milliseconds(params.getTimeout() * 1000));
 #else
-        advTimeout.attach(advTimeoutCB, params.getTimeout() * 1000);
+        advTimeout.attach(advTimeoutCB, params.getTimeout());
 #endif
     }
 
@@ -1441,6 +1440,8 @@ Gap::ScanningPolicyMode_t BlueNRGGap::getScanningPolicyMode(void) const
 /**************************************************************************/
 ble_error_t BlueNRGGap::reset(void)
 {
+    PRINTF("BlueNRGGap::reset\n");
+
     /* Clear all state that is from the parent, including private members */
     if (Gap::reset() != BLE_ERROR_NONE) {
         return BLE_ERROR_INVALID_STATE;
