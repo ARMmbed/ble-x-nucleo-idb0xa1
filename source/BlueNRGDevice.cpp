@@ -208,17 +208,13 @@ ble_error_t BlueNRGDevice::init(BLE::InstanceID_t instanceID, FunctionPointerWit
 */
 void BlueNRGDevice::reset(void)
 {
-    wait_us(500);
-
-    /* Reset BlueNRG SPI interface */
-	  rst_ = 0;
-  	wait_us(5);
-	  rst_ = 1;
-  	wait_us(5);
+    /* Reset BlueNRG SPI interface. Hold reset line to 0 for 1500ms */
+    rst_ = 0;
+    wait_us(1500);
+    rst_ = 1;
 
     /* Wait for the radio to come back up */
-    wait_us(500);
-
+    wait_us(5000);
 }
 
 /*!
