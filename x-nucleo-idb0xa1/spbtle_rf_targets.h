@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    x_nucleo_idb0xa1_targets.h
+  * @file    spbtle_rf.h
   * @author  AST / EST
   * @version V0.0.1
   * @date    24-July-2015
@@ -38,16 +38,24 @@
   */ 
  
 /* Define to prevent from recursive inclusion --------------------------------*/
-#ifndef _X_NUCLEO_IDB0XA1_TARGETS_H_
-#define _X_NUCLEO_IDB0XA1_TARGETS_H_
+#ifndef _SPBTLE_RF_H_
+#define _SPBTLE_RF_H_
  
-/*** SPI ***/
-/* Use Arduino I2C Connectors */
-#define IDB0XA1_PIN_SPI_MOSI   (D11)
-#define IDB0XA1_PIN_SPI_MISO   (D12)
-#define IDB0XA1_PIN_SPI_nCS    (A1)
-#define IDB0XA1_PIN_SPI_RESET  (D7)
-#define IDB0XA1_PIN_SPI_IRQ    (A0)
+#if !defined(SPBTLE_RF_PIN_SPI_MOSI)
+#define SPBTLE_RF_PIN_SPI_MOSI   (D11)
+#endif
+#if !defined(SPBTLE_RF_PIN_SPI_MISO)
+#define SPBTLE_RF_PIN_SPI_MISO   (D12)
+#endif
+#if !defined(SPBTLE_RF_PIN_SPI_nCS)
+#define SPBTLE_RF_PIN_SPI_nCS    (A1)
+#endif
+#if !defined(SPBTLE_RF_PIN_SPI_RESET)
+#define SPBTLE_RF_PIN_SPI_RESET  (D7)
+#endif
+#if !defined(SPBTLE_RF_PIN_SPI_IRQ)
+#define SPBTLE_RF_PIN_SPI_IRQ    (A0)
+#endif
 
 /* NOTE: Define macro 'IDB0XA1_D13_PATCH' if you want to compile for a specifically
          modified version of the X_NUCLEO_IDB0XA1 expansion board in
@@ -56,20 +64,15 @@
 	 Expansion boards modified in this way allow to be used on almost
 	 any Arduino-compliant base board.
 */
-#if defined(IDB0XA1_D13_PATCH)
-#define IDB0XA1_PIN_SPI_SCK    (D13)
-#else // !defined(IDB0XA1_D13_PATCH)
-#define IDB0XA1_PIN_SPI_SCK    (D3)
-#endif // !defined(IDB0XA1_D13_PATCH)
+#if !defined(SPBTLE_RF_PIN_SPI_SCK)
+#define SPBTLE_RF_PIN_SPI_SCK    (D3)
+#endif
 
 /* NOTE: Stack Mode 0x04 allows Simultaneous Scanning and Advertisement (SSAdv)
          Define macro 'SSADV' to enable it
 */
-#define SSADV
-#if defined(SSADV)
-#define IDB0XA1_STACK_MODE (0x04)
-#else
-#define IDB0XA1_STACK_MODE (0x02)
+#if !defined(SPBTLE_RF_STACK_MODE)
+#define SPBTLE_RF_STACK_MODE (0x04)
 #endif
 
-#endif // _X_NUCLEO_IDB0XA1_TARGETS_H_
+#endif // _SPBTLE_RF_H_

@@ -42,7 +42,7 @@
 #include "BlueNRGGattClient.h"
 #include "ble_utils.h"
 
-#include "x_nucleo_idb0xa1_targets.h"
+#include "spbtle_rf_targets.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -73,8 +73,8 @@ extern "C" {
 #define IDB04A1 0
 #define IDB05A1 1
 
-/* See file 'x_nucleo_idb0xa1_targets.h' for details regarding the IDB0XA1 STACK_MODE */
-#define STACK_MODE IDB0XA1_STACK_MODE
+/* See file 'spbtle_rf_targets.h' for details regarding the SPBTLE_RF STACK_MODE */
+#define STACK_MODE SPBTLE_RF_STACK_MODE
 
 void HCI_Input(tHciDataPacket * hciReadPacket);
 

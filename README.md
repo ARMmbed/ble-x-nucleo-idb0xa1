@@ -15,11 +15,11 @@ To be fully Arduino compatible, X-NUCLEO-IDB05A1 needs a small HW patch.
 
 For X-NUCLEO-IDB05A1 this patch consists in removing zero resistor **R4** and instead soldering zero resistor **R6**.
 
-In case you patch your board, then you also have to configure this library to use pin **D13** to drive the SPI clock (see macro `IDB0XA1_D13_PATCH` in file [x_nucleo_idb0xa1_targets.h](https://github.com/ARMmbed/ble-x-nucleo-idb0xa1/blob/master/x-nucleo-idb0xa1/x_nucleo_idb0xa1_targets.h)).
+In case you patch your board, then you also have to configure this library to use pin **D13** to drive the SPI clock. To this aim you need to compile this driver with macro `SPBTLE_RF_PIN_SPI_SCK=D13` defined.
 
 If you use pin **D13** for the SPI clock, please be aware that on STM32 Nucleo boards you may **not** drive the LED, otherwise you will get a conflict: the LED on STM32 Nucleo boards is connected to pin **D13**.
 
-Referring to the current list of tested platforms (see [X-NUCLEO-IDB05A1](https://developer.mbed.org/components/X-NUCLEO-IDB05A1-Bluetooth-Low-Energy|X-NUCLEO-IDB05A1) page), the patch is required by [ST-Nucleo-F103RB](https://developer.mbed.org/platforms/ST-Nucleo-F103RB); [ST-Nucleo-F302R8](https://developer.mbed.org/platforms/ST-Nucleo-F302R8); [ST-Nucleo-F411RE](https://developer.mbed.org/platforms/ST-Nucleo-F411RE); and [ST-Nucleo-F446RE](https://developer.mbed.org/platforms/ST-Nucleo-F446RE).
+Referring to the current list of tested platforms (see [X-NUCLEO-IDB05A1](https://developer.mbed.org/components/X-NUCLEO-IDB05A1-Bluetooth-Low-Energy/) page), the patch is required by [ST-Nucleo-F103RB](https://developer.mbed.org/platforms/ST-Nucleo-F103RB/); [ST-Nucleo-F302R8](https://developer.mbed.org/platforms/ST-Nucleo-F302R8/); [ST-Nucleo-F411RE](https://developer.mbed.org/platforms/ST-Nucleo-F411RE/); [ST-Nucleo-F446RE](https://developer.mbed.org/platforms/ST-Nucleo-F446RE/); and [FRDM-K64F](https://developer.mbed.org/platforms/FRDM-K64F/).
 
 ### Firmware update
 
