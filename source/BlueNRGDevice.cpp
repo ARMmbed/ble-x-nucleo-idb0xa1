@@ -66,14 +66,14 @@ extern "C" {
  *
  * See file 'spbtle_rf_targets.h' for details regarding the peripheral pins used!
  */
-#include "spbtle_rf_targets.h"
+#include "bluenrg_targets.h"
 
-BlueNRGDevice bluenrgDeviceInstance(SPBTLE_RF_PIN_SPI_MOSI,
-                                    SPBTLE_RF_PIN_SPI_MISO,
-                                    SPBTLE_RF_PIN_SPI_SCK,
-                                    SPBTLE_RF_PIN_SPI_nCS,
-                                    SPBTLE_RF_PIN_SPI_RESET,
-                                    SPBTLE_RF_PIN_SPI_IRQ);
+BlueNRGDevice bluenrgDeviceInstance(BLUENRG_PIN_SPI_MOSI,
+                                    BLUENRG_PIN_SPI_MISO,
+                                    BLUENRG_PIN_SPI_SCK,
+                                    BLUENRG_PIN_SPI_nCS,
+                                    BLUENRG_PIN_SPI_RESET,
+                                    BLUENRG_PIN_SPI_IRQ);
 
 /**
 * BLE-API requires an implementation of the following function in order to

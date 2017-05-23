@@ -42,7 +42,7 @@
 #include "BlueNRGGattClient.h"
 #include "ble_utils.h"
 
-#include "spbtle_rf_targets.h"
+#include "bluenrg_targets.h"
 
 #ifdef __cplusplus
 extern "C" {

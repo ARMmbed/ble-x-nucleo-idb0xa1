@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    spbtle_rf.h
+  * @file    bluenrg_targets.h
   * @author  AST / EST
   * @version V0.0.1
   * @date    24-July-2015
@@ -38,36 +38,36 @@
   */ 
  
 /* Define to prevent from recursive inclusion --------------------------------*/
-#ifndef _SPBTLE_RF_H_
-#define _SPBTLE_RF_H_
+#ifndef _BLUENRG_TARGETS_H_
+#define _BLUENRG_TARGETS_H_
  
-#if !defined(SPBTLE_RF_PIN_SPI_MOSI)
-#define SPBTLE_RF_PIN_SPI_MOSI   (D11)
+#if !defined(BLUENRG_PIN_SPI_MOSI)
+#define BLUENRG_PIN_SPI_MOSI   (D11)
 #endif
-#if !defined(SPBTLE_RF_PIN_SPI_MISO)
-#define SPBTLE_RF_PIN_SPI_MISO   (D12)
+#if !defined(BLUENRG_PIN_SPI_MISO)
+#define BLUENRG_PIN_SPI_MISO   (D12)
 #endif
-#if !defined(SPBTLE_RF_PIN_SPI_nCS)
-#define SPBTLE_RF_PIN_SPI_nCS    (A1)
+#if !defined(BLUENRG_PIN_SPI_nCS)
+#define BLUENRG_PIN_SPI_nCS    (A1)
 #endif
-#if !defined(SPBTLE_RF_PIN_SPI_RESET)
-#define SPBTLE_RF_PIN_SPI_RESET  (D7)
+#if !defined(BLUENRG_PIN_SPI_RESET)
+#define BLUENRG_PIN_SPI_RESET  (D7)
 #endif
-#if !defined(SPBTLE_RF_PIN_SPI_IRQ)
-#define SPBTLE_RF_PIN_SPI_IRQ    (A0)
+#if !defined(BLUENRG_PIN_SPI_IRQ)
+#define BLUENRG_PIN_SPI_IRQ    (A0)
 #endif
 
-/* NOTE: Refer to README for further details regarding SPBTLE_RF_PIN_SPI_SCK
+/* NOTE: Refer to README for further details regarding BLUENRG_PIN_SPI_SCK
 */
-#if !defined(SPBTLE_RF_PIN_SPI_SCK)
-#define SPBTLE_RF_PIN_SPI_SCK    (D3)
+#if !defined(BLUENRG_PIN_SPI_SCK)
+#define BLUENRG_PIN_SPI_SCK    (D3)
 #endif
 
 /* NOTE: Stack Mode 0x04 allows Simultaneous Scanning and Advertisement (SSAdv)
          Define macro 'SSADV' to enable it
 */
-#if !defined(SPBTLE_RF_STACK_MODE)
-#define SPBTLE_RF_STACK_MODE (0x04)
+#if !defined(BLUENRG_STACK_MODE)
+#define BLUENRG_STACK_MODE (0x04)
 #endif
 
-#endif // _SPBTLE_RF_H_
+#endif // _BLUENRG_TARGTES_H_
