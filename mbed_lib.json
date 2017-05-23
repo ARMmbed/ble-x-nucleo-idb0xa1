@@ -4,9 +4,6 @@
         "K64F": {
             "target.macros_add": ["BLUENRG_PIN_SPI_SCK=D13"]
         },
-        "NUCLEO_F401RE": {
-            "target.macros_add": ["BLUENRG_PIN_SPI_SCK=D3"]
-        },
         "DISCO_L475VG_IOT01A": {
             "target.macros_add": ["BLUENRG_PIN_SPI_MOSI=PC_12",
                                   "BLUENRG_PIN_SPI_MISO=PC_11",
