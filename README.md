@@ -27,7 +27,7 @@ For better performance and compatibility with latest mbed API, you should update
 
 ### Driver configuration
 
-In order to use the BlueNRG-MS module together with other targets, you need to configure the macros defined in file [bluenrg_targets.h](https://github.com/ARMmbed/ble-x-nucleo-idb0xa1/blob/master/bluenrg/bluenrg_targets.h).
+In order to use the BlueNRG-MS module together with other targets, you need to set the macros defined in file [bluenrg_targets.h](https://github.com/ARMmbed/ble-x-nucleo-idb0xa1/blob/master/bluenrg/bluenrg_targets.h). Please, update the [mbed_lib.json](https://github.com/ARMmbed/ble-x-nucleo-idb0xa1/blob/master/mbed_lib.json) to include the list of extra macros that configure the driver for your target.
 
 ## Example Applications
 
