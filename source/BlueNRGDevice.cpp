@@ -64,7 +64,7 @@ extern "C" {
 /**
  * The singleton which represents the BlueNRG transport for the BLEDevice.
  *
- * See file 'spbtle_rf_targets.h' for details regarding the peripheral pins used!
+ * See file 'bluenrg_targets.h' for details regarding the peripheral pins used!
  */
 #include "bluenrg_targets.h"
 

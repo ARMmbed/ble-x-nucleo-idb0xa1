@@ -73,8 +73,8 @@ extern "C" {
 #define IDB04A1 0
 #define IDB05A1 1
 
-/* See file 'spbtle_rf_targets.h' for details regarding the SPBTLE_RF STACK_MODE */
-#define STACK_MODE SPBTLE_RF_STACK_MODE
+/* See file 'bluenrg_targets.h' for details regarding the BLUENRG_STACK_MODE */
+#define STACK_MODE BLUENRG_STACK_MODE
 
 void HCI_Input(tHciDataPacket * hciReadPacket);
 
