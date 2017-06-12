@@ -57,15 +57,19 @@
 #define BLUENRG_PIN_SPI_IRQ    (A0)
 #endif
 
-/* NOTE: Refer to README for further details regarding BLUENRG_PIN_SPI_SCK
-*/
+/* NOTE: Refer to README for further details regarding BLUENRG_PIN_SPI_SCK */
 #if !defined(BLUENRG_PIN_SPI_SCK)
 #define BLUENRG_PIN_SPI_SCK    (D3)
 #endif
 
 /* NOTE: Stack Mode 0x04 allows Simultaneous Scanning and Advertisement (SSAdv)
-         Define macro 'SSADV' to enable it
-*/
+ *       Mode 0x01: slave or master, 1 connection
+ *       Mode 0x02: slave or master, 1 connection
+ *       Mode 0x03: master/slave, 8 connections
+ *       Mode 0x04: master/slave, 4 connections (simultaneous scanning and advertising)
+ *       Check Table 285 of 
+ *       BlueNRG-MS Bluetooth LE stack application command interface (ACI) User Manual (UM1865) at st.com
+ */
 #if !defined(BLUENRG_STACK_MODE)
 #define BLUENRG_STACK_MODE (0x04)
 #endif
