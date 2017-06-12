@@ -64,16 +64,16 @@ extern "C" {
 /**
  * The singleton which represents the BlueNRG transport for the BLEDevice.
  *
- * See file 'x_nucleo_idb0xa1_targets.h' for details regarding the peripheral pins used!
+ * See file 'bluenrg_targets.h' for details regarding the peripheral pins used!
  */
-#include "x_nucleo_idb0xa1_targets.h"
+#include "bluenrg_targets.h"
 
-BlueNRGDevice bluenrgDeviceInstance(IDB0XA1_PIN_SPI_MOSI,
-                                    IDB0XA1_PIN_SPI_MISO,
-                                    IDB0XA1_PIN_SPI_SCK,
-                                    IDB0XA1_PIN_SPI_nCS,
-                                    IDB0XA1_PIN_SPI_RESET,
-                                    IDB0XA1_PIN_SPI_IRQ);
+BlueNRGDevice bluenrgDeviceInstance(BLUENRG_PIN_SPI_MOSI,
+                                    BLUENRG_PIN_SPI_MISO,
+                                    BLUENRG_PIN_SPI_SCK,
+                                    BLUENRG_PIN_SPI_nCS,
+                                    BLUENRG_PIN_SPI_RESET,
+                                    BLUENRG_PIN_SPI_IRQ);
 
 /**
 * BLE-API requires an implementation of the following function in order to
@@ -208,7 +208,7 @@ ble_error_t BlueNRGDevice::init(BLE::InstanceID_t instanceID, FunctionPointerWit
 */
 void BlueNRGDevice::reset(void)
 {
-    /* Reset BlueNRG SPI interface. Hold reset line to 0 for 1500ms */
+    /* Reset BlueNRG SPI interface. Hold reset line to 0 for 1500us */
     rst_ = 0;
     wait_us(1500);
     rst_ = 1;

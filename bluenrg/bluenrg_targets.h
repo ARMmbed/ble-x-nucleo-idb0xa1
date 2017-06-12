@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    x_nucleo_idb0xa1_targets.h
+  * @file    bluenrg_targets.h
   * @author  AST / EST
   * @version V0.0.1
   * @date    24-July-2015
@@ -38,38 +38,40 @@
   */ 
  
 /* Define to prevent from recursive inclusion --------------------------------*/
-#ifndef _X_NUCLEO_IDB0XA1_TARGETS_H_
-#define _X_NUCLEO_IDB0XA1_TARGETS_H_
+#ifndef _BLUENRG_TARGETS_H_
+#define _BLUENRG_TARGETS_H_
  
-/*** SPI ***/
-/* Use Arduino I2C Connectors */
-#define IDB0XA1_PIN_SPI_MOSI   (D11)
-#define IDB0XA1_PIN_SPI_MISO   (D12)
-#define IDB0XA1_PIN_SPI_nCS    (A1)
-#define IDB0XA1_PIN_SPI_RESET  (D7)
-#define IDB0XA1_PIN_SPI_IRQ    (A0)
-
-/* NOTE: Define macro 'IDB0XA1_D13_PATCH' if you want to compile for a specifically
-         modified version of the X_NUCLEO_IDB0XA1 expansion board in
-         which pin 'D13' (rather than the standard pin 'D3') is used 
-         in order to provide the SPI serial clock.
-	 Expansion boards modified in this way allow to be used on almost
-	 any Arduino-compliant base board.
-*/
-#if defined(IDB0XA1_D13_PATCH)
-#define IDB0XA1_PIN_SPI_SCK    (D13)
-#else // !defined(IDB0XA1_D13_PATCH)
-#define IDB0XA1_PIN_SPI_SCK    (D3)
-#endif // !defined(IDB0XA1_D13_PATCH)
-
-/* NOTE: Stack Mode 0x04 allows Simultaneous Scanning and Advertisement (SSAdv)
-         Define macro 'SSADV' to enable it
-*/
-#define SSADV
-#if defined(SSADV)
-#define IDB0XA1_STACK_MODE (0x04)
-#else
-#define IDB0XA1_STACK_MODE (0x02)
+#if !defined(BLUENRG_PIN_SPI_MOSI)
+#define BLUENRG_PIN_SPI_MOSI   (D11)
+#endif
+#if !defined(BLUENRG_PIN_SPI_MISO)
+#define BLUENRG_PIN_SPI_MISO   (D12)
+#endif
+#if !defined(BLUENRG_PIN_SPI_nCS)
+#define BLUENRG_PIN_SPI_nCS    (A1)
+#endif
+#if !defined(BLUENRG_PIN_SPI_RESET)
+#define BLUENRG_PIN_SPI_RESET  (D7)
+#endif
+#if !defined(BLUENRG_PIN_SPI_IRQ)
+#define BLUENRG_PIN_SPI_IRQ    (A0)
 #endif
 
-#endif // _X_NUCLEO_IDB0XA1_TARGETS_H_
+/* NOTE: Refer to README for further details regarding BLUENRG_PIN_SPI_SCK */
+#if !defined(BLUENRG_PIN_SPI_SCK)
+#define BLUENRG_PIN_SPI_SCK    (D3)
+#endif
+
+/* NOTE: Stack Mode 0x04 allows Simultaneous Scanning and Advertisement (SSAdv)
+ *       Mode 0x01: slave or master, 1 connection
+ *       Mode 0x02: slave or master, 1 connection
+ *       Mode 0x03: master/slave, 8 connections
+ *       Mode 0x04: master/slave, 4 connections (simultaneous scanning and advertising)
+ *       Check Table 285 of 
+ *       BlueNRG-MS Bluetooth LE stack application command interface (ACI) User Manual (UM1865) at st.com
+ */
+#if !defined(BLUENRG_STACK_MODE)
+#define BLUENRG_STACK_MODE (0x04)
+#endif
+
+#endif // _BLUENRG_TARGTES_H_
