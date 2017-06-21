@@ -140,7 +140,7 @@ public:
     bool getIsSetAddress();
 
     // ADV timeout handling
-    Timeout getAdvTimeout(void) const {
+    Timeout& getAdvTimeout(void) {
         return advTimeout;
     }
     uint8_t getAdvToFlag(void) {
@@ -149,7 +149,7 @@ public:
     void setAdvToFlag(void);
 
     // SCAN timeout handling
-    Timeout getScanTimeout(void) const {
+    Timeout& getScanTimeout(void) {
         return scanTimeout;
     }
     uint8_t getScanToFlag(void) {

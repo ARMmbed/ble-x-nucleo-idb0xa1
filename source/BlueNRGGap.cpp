@@ -215,7 +215,7 @@ static void advTimeoutCB(void)
 {
     BlueNRGGap::getInstance().setAdvToFlag();
 
-    Timeout t = BlueNRGGap::getInstance().getAdvTimeout();
+    Timeout& t = BlueNRGGap::getInstance().getAdvTimeout();
     t.detach(); /* disable the callback from the timeout */
 }
 #endif /* AST_FOR_MBED_OS */
@@ -232,7 +232,7 @@ static void scanTimeoutCB(void)
 {
     BlueNRGGap::getInstance().setScanToFlag();
 
-    Timeout t = BlueNRGGap::getInstance().getScanTimeout();
+    Timeout& t = BlueNRGGap::getInstance().getScanTimeout();
     t.detach(); /* disable the callback from the timeout */
 }
 
