@@ -132,9 +132,9 @@ void HCI_Process(void)
 #endif
     list_empty = list_is_empty(&hciReadPktRxQueue);
   }
-  /* Explicit call to HCI_Isr(), since it cannot be called by ISR if IRQ is kept high by
+  /* Explicit call to HCI_HandleSPI(), since it cannot be triggered by ISR if IRQ is kept high by
   BlueNRG. */
-  HCI_Isr();
+  HCI_HandleSPI();
   Enable_SPI_IRQ();    
 }
 
@@ -143,7 +143,24 @@ BOOL HCI_Queue_Empty(void)
   return list_is_empty(&hciReadPktRxQueue);
 }
 
+/**
+ * When an interrupt is raised by BlueNRG,
+ * just signal that a new event (availability of SPI data to be read)
+ * needs to be processed.
+ */
 void HCI_Isr(void)
+{
+  signalEventsToProcess();
+}
+
+/**
+ * Now, SPI Data are handled in user space.
+ * In case it has to be called in ISR, take care to
+ * call Disable_SPI_IRQ/Enable_SPI_IRQ in a proper way.
+ * The calls Disable_SPI_IRQ/Enable_SPI_IRQ have not been removed
+ * from this code for backward compatibility.
+ */
+void HCI_HandleSPI(void)
 {
   tHciDataPacket * hciReadPacket = NULL;
   uint8_t data_len;
@@ -165,7 +182,6 @@ void HCI_Isr(void)
         hciReadPacket->data_len = data_len;
         if(HCI_verify(hciReadPacket) == 0) {
           list_insert_tail(&hciReadPktRxQueue, (tListNode *)hciReadPacket);
-	      signalEventsToProcess();
         } else {
           list_insert_head(&hciReadPktPool, (tListNode *)hciReadPacket);
 #ifdef POOL_CNT
@@ -183,7 +199,6 @@ void HCI_Isr(void)
     }
     else{
       // HCI Read Packet Pool is empty, wait for a free packet.
-      signalEventsToProcess();
       Clear_SPI_EXTI_Flag();
       return;
     }
@@ -239,9 +254,9 @@ static void free_event_list(void)
   while(list_get_size(&hciReadPktPool) < HCI_READ_PACKET_NUM_MAX/2){
     list_remove_head(&hciReadPktRxQueue, (tListNode **)&pckt);    
     list_insert_tail(&hciReadPktPool, (tListNode *)pckt);
-    /* Explicit call to HCI_Isr(), since it cannot be called by ISR if IRQ is kept high by
+    /* Explicit call to HCI_HandleSPI(), since it cannot be triggered by ISR if IRQ is kept high by
     BlueNRG */
-    HCI_Isr();
+    HCI_HandleSPI();
   }
   
   Enable_SPI_IRQ();
@@ -281,6 +296,11 @@ int hci_send_req(struct hci_request *r, BOOL async)
     int len;
       
     while(1){
+
+      Disable_SPI_IRQ();
+      HCI_HandleSPI();
+      Enable_SPI_IRQ();
+
       if(Timer_Expired(&t)){
         goto failed;
       }
@@ -370,7 +390,7 @@ int hci_send_req(struct hci_request *r, BOOL async)
 	    hciReadPacket = NULL;
     }
 
-    HCI_Isr();
+    HCI_HandleSPI();
     
     Enable_SPI_IRQ();
     
