@@ -206,6 +206,7 @@ void btle_handler(void)
 {
     btle_handler_pending = 0;
     BlueNRGGap::getInstance().Process();
+    HCI_HandleSPI();
     HCI_Process();
 }
 

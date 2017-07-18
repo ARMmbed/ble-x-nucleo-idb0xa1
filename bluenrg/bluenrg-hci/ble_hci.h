@@ -110,6 +110,7 @@ void HCI_Cmd_Status(HCI_CMD_STATUS_t Hci_Cmd_Status);
 void HCI_Wait_For_Response(void);
 #else
 void HCI_Isr(void);
+void HCI_HandleSPI(void);
 
 int hci_send_req(struct hci_request *r, BOOL async);
 #endif /* __DMA_LP__ */
