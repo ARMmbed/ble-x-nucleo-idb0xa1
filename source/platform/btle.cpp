@@ -662,13 +662,15 @@ extern "C" {
 
         case EVT_BLUE_L2CAP_CONN_UPD_RESP:
           {
-            PRINTF("EVT_BLUE_L2CAP_CONN_UPD_RESP\r\n");
+            evt_l2cap_conn_upd_resp *evt = (evt_l2cap_conn_upd_resp*)blue_evt->data;
+            PRINTF("EVT_BLUE_L2CAP_CONN_UPD_RESP code=0x%x, result=0x%x\r\n", evt->code, evt->result);
           }
           break;
 
         case EVT_LE_CONN_UPDATE_COMPLETE:
           {
-            PRINTF("EVT_LE_CONN_UPDATE_COMPLETE\r\n");
+            evt_le_connection_update_complete *evt = (evt_le_connection_update_complete*)blue_evt->data;
+            PRINTF("EVT_LE_CONN_UPDATE_COMPLETE status=0x%x\r\n", evt->status);
           }
           break;
 
