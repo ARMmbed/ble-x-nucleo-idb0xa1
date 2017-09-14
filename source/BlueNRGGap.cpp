@@ -1078,7 +1078,7 @@ void BlueNRGGap::Discovery_CB(Reason_t reason,
 
     // Since the DISCOVERY_COMPLETE event can be received during the scanning interval,
     // we need to delay the starting of connection
-    uint16_t delay = 2*(_scanningParams.getInterval());
+    uint16_t delay = (_scanningParams.getInterval()*0.625);
 
 #ifdef AST_FOR_MBED_OS
     if(_connecting) {
