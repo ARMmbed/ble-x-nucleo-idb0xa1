@@ -43,8 +43,7 @@
     #include "mbed.h"
 #endif
 #include "BlueNRGDevice.h"
-#include "BlueNRGGap.h"
-#include "BlueNRGGattServer.h"
+#include "GenericGattClient.h"
 
 #include "btle.h"
 #include "ble_utils.h"
@@ -102,7 +101,9 @@ BlueNRGDevice::BlueNRGDevice(PinName mosi,
                              PinName cs,
                              PinName rst,
                              PinName irq) :
-	isInitialized(false), spi_(mosi, miso, sck), nCS_(cs), rst_(rst), irq_(irq)
+	isInitialized(false),
+        gattClientAdapter(ble::pal::st::BlueNRGGattClient::getInstance()),
+        spi_(mosi, miso, sck), nCS_(cs), rst_(rst), irq_(irq)
 {
     // Setup the spi for 8 bit data, low clock polarity,
     // 1-edge phase, with an 8MHz clock rate
@@ -287,6 +288,18 @@ const GattServer &BlueNRGDevice::getGattServer() const
 
 /**************************************************************************/
 /*!
+    @brief  get reference to GATT client object
+    @param[in] void
+    @returns GattClient&
+*/
+/**************************************************************************/
+GattClient& BlueNRGDevice::getGattClient() {
+    static ble::generic::GenericGattClient client(&gattClientAdapter);
+    return client;
+}
+
+/**************************************************************************/
+/*!
     @brief  shut down the BLE device
     @param[out] error if any
 */
@@ -311,7 +324,7 @@ ble_error_t  BlueNRGDevice::shutdown(void) {
     }
 
     /* GattClient instance */
-    error = BlueNRGGattClient::getInstance().reset();
+    error = gattClientAdapter.terminate();
     if (error != BLE_ERROR_NONE) {
         return error;
     }
@@ -342,8 +355,8 @@ int32_t BlueNRGDevice::spiRead(uint8_t *buffer, uint8_t buff_size)
   uint8_t char_ff = 0xff;
   volatile uint8_t read_char;
 
-	uint8_t i = 0;
-	volatile uint8_t tmpreg;
+  uint8_t i = 0;
+  volatile uint8_t tmpreg;
 
   uint8_t header_master[HEADER_SIZE] = {0x0b, 0x00, 0x00, 0x00, 0x00};
   uint8_t header_slave[HEADER_SIZE];

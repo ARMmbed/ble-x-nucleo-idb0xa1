@@ -397,7 +397,7 @@ extern "C" {
                 evt_disconn_complete *evt = (evt_disconn_complete*)event_pckt->data;
 
                 if(BlueNRGGap::getInstance().getGapRole() == Gap::CENTRAL) {
-                  BlueNRGGattClient::getInstance().removeGattConnectionClient(evt->handle, evt->reason);
+                  //ble::pal::st::BlueNRGGattClient::getInstance().terminate();
                 }
 
                 BlueNRGGap::getInstance().processDisconnectionEvent(evt->handle, (Gap::DisconnectionReason_t)evt->reason);
@@ -452,7 +452,6 @@ extern "C" {
                         switch (cc->role) {
 			case 0: //master
                                 role = Gap::CENTRAL;
-                                BlueNRGGattClient::getInstance().createGattConnectionClient(cc->handle);
                                 break;
 			case 1:
                                 role = Gap::PERIPHERAL;
@@ -547,100 +546,24 @@ extern "C" {
                     }
                     break;
 
-                    //Any cases for Data Sent Notifications?
+                //GattClient side
                 case EVT_BLUE_GATT_NOTIFICATION:
-                    //This is only relevant for Client Side Event
-                    PRINTF("EVT_BLUE_GATT_NOTIFICATION");
-                    break;
                 case EVT_BLUE_GATT_INDICATION:
-                    //This is only relevant for Client Side Event
-                    PRINTF("EVT_BLUE_GATT_INDICATION");
-                    break;
-
-        case EVT_BLUE_ATT_READ_BY_GROUP_TYPE_RESP:
-          {
-            PRINTF("EVT_BLUE_ATT_READ_BY_GROUP_TYPE_RESP\n\r");
-            evt_att_read_by_group_resp *pr = (evt_att_read_by_group_resp*)blue_evt->data;
-            BlueNRGGattClient::getInstance().primaryServicesCB(pr->conn_handle,
-                                                               pr->event_data_length,
-                                                               pr->attribute_data_length,
-                                                               pr->attribute_data_list);
-          }
-          break;
-        case EVT_BLUE_ATT_READ_BY_TYPE_RESP:
-          {
-            PRINTF("EVT_BLUE_ATT_READ_BY_TYPE_RESP\n\r");
-            evt_att_read_by_type_resp *pr = (evt_att_read_by_type_resp*)blue_evt->data;
-            BlueNRGGattClient::getInstance().serviceCharsCB(pr->conn_handle,
-                                                            pr->event_data_length,
-                                                            pr->handle_value_pair_length,
-                                                            pr->handle_value_pair);
-          }
-          break;
-        case EVT_BLUE_ATT_READ_RESP:
-          {
-            PRINTF("EVT_BLUE_ATT_READ_RESP\n\r");
-            evt_att_read_resp *pr = (evt_att_read_resp*)blue_evt->data;
-            BlueNRGGattClient::getInstance().charReadCB(pr->conn_handle,
-                                                        pr->event_data_length,
-                                                        pr->attribute_value);
-          }
-          break;
-        case EVT_BLUE_ATT_EXEC_WRITE_RESP:
-          {
-            PRINTF("EVT_BLUE_ATT_EXEC_WRITE_RESP\n\r");
-            evt_att_prepare_write_resp *pr = (evt_att_prepare_write_resp*)blue_evt->data;
-            BlueNRGGattClient::getInstance().charWriteExecCB(pr->conn_handle,
-                                                             pr->event_data_length);
-          }
-          break;
-        case EVT_BLUE_ATT_PREPARE_WRITE_RESP:
-          {
-            PRINTF("EVT_BLUE_ATT_PREPARE_WRITE_RESP\n\r");
-            evt_att_prepare_write_resp *pr = (evt_att_prepare_write_resp*)blue_evt->data;
-            BlueNRGGattClient::getInstance().charWritePrepareCB(pr->conn_handle,
-                                                                pr->event_data_length,
-                                                                pr->attribute_handle,
-                                                                pr->offset,
-                                                                pr->part_attr_value);
-          }
-          break;
-        case EVT_BLUE_GATT_DISC_READ_CHAR_BY_UUID_RESP:
-          {
-            PRINTF("EVT_BLUE_GATT_DISC_READ_CHAR_BY_UUID_RESP\n\r");
-            evt_gatt_disc_read_char_by_uuid_resp *pr = (evt_gatt_disc_read_char_by_uuid_resp*)blue_evt->data;
-            BlueNRGGattClient::getInstance().serviceCharByUUIDCB(pr->conn_handle,
-                                                                 pr->event_data_length,
-                                                                 pr->attr_handle,
-                                                                 pr->attr_value);
-          }
-          break;
-        case EVT_BLUE_ATT_FIND_BY_TYPE_VAL_RESP:
-          {
-            PRINTF("EVT_BLUE_ATT_FIND_BY_TYPE_VAL_RESP\n\r");
-            evt_att_find_by_type_val_resp *pr = (evt_att_find_by_type_val_resp*)blue_evt->data;
-            BlueNRGGattClient::getInstance().primaryServiceCB(pr->conn_handle,
-                                                              pr->event_data_length,
-                                                              pr->handles_info_list);
-          }
-          break;
-        case EVT_BLUE_ATT_FIND_INFORMATION_RESP:
-          {
-            PRINTF("EVT_BLUE_ATT_FIND_INFORMATION_RESP\n\r");
-            evt_att_find_information_resp *pr = (evt_att_find_information_resp*)blue_evt->data;
-            BlueNRGGattClient::getInstance().discAllCharacDescCB(pr->conn_handle,
-                                                                 pr->event_data_length,
-                                                                 pr->format,
-                                                                 pr->handle_uuid_pair);
-          }
-          break;
-        case EVT_BLUE_GATT_PROCEDURE_COMPLETE:
-          {
-            evt_gatt_procedure_complete *evt = (evt_gatt_procedure_complete*)blue_evt->data;
-            PRINTF("EVT_BLUE_GATT_PROCEDURE_COMPLETE error_code=%d\n\r", evt->error_code);
-            BlueNRGGattClient::getInstance().gattProcedureCompleteCB(evt->conn_handle, evt->error_code);
-          }
-          break;
+                case EVT_BLUE_ATT_READ_BY_GROUP_TYPE_RESP:
+                case EVT_BLUE_ATT_READ_BY_TYPE_RESP:
+                case EVT_BLUE_ATT_READ_RESP:
+                case EVT_BLUE_ATT_READ_BLOB_RESP:
+                case EVT_BLUE_ATT_EXEC_WRITE_RESP:
+                case EVT_BLUE_ATT_PREPARE_WRITE_RESP:
+                case EVT_BLUE_GATT_DISC_READ_CHAR_BY_UUID_RESP:
+                case EVT_BLUE_ATT_FIND_BY_TYPE_VAL_RESP:
+                case EVT_BLUE_ATT_FIND_INFORMATION_RESP:
+                case EVT_BLUE_GATT_PROCEDURE_COMPLETE:
+                case EVT_BLUE_GATT_ERROR_RESP:
+                {
+                    ble::pal::st::BlueNRGGattClient::getInstance().aci_event_cb(blue_evt);
+                }
+                break;
 
         case EVT_BLUE_L2CAP_CONN_UPD_REQ:
           {
@@ -662,15 +585,19 @@ extern "C" {
 
         case EVT_BLUE_L2CAP_CONN_UPD_RESP:
           {
+#ifdef DEBUG
             evt_l2cap_conn_upd_resp *evt = (evt_l2cap_conn_upd_resp*)blue_evt->data;
             PRINTF("EVT_BLUE_L2CAP_CONN_UPD_RESP code=0x%x, result=0x%x\r\n", evt->code, evt->result);
+#endif /* DEBUG */
           }
           break;
 
         case EVT_LE_CONN_UPDATE_COMPLETE:
           {
+#ifdef DEBUG
             evt_le_connection_update_complete *evt = (evt_le_connection_update_complete*)blue_evt->data;
             PRINTF("EVT_LE_CONN_UPDATE_COMPLETE status=0x%x\r\n", evt->status);
+#endif /* DEBUG */
           }
           break;
 

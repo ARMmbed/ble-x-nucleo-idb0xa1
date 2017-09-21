@@ -52,6 +52,7 @@
 #include "BlueNRGGattServer.h"
 #include "BlueNRGGattClient.h"
 
+#include "AttClientToGattClientAdapter.h"
 
 class BlueNRGDevice : public BLEInstanceBase
 {
@@ -67,11 +68,8 @@ public:
     virtual const Gap&  getGap() const;
     virtual GattServer& getGattServer();
     virtual const GattServer& getGattServer() const;
+    virtual GattClient& getGattClient();
     virtual void        waitForEvent(void);
-    
-    virtual GattClient& getGattClient() {
-        return BlueNRGGattClient::getInstance();
-    }
 
     virtual SecurityManager& getSecurityManager() {
         return *sm;
@@ -97,6 +95,7 @@ public:
     
 private:
     bool isInitialized;
+    ble::pal::AttClientToGattClientAdapter gattClientAdapter;
 
     SPI         spi_;
     DigitalOut  nCS_;
@@ -106,6 +105,8 @@ private:
     //FIXME: TBI (by now just placeholders to let build
     /*** betzw: placeholders ***/
     SecurityManager *sm;
+
 };
+
 
 #endif
