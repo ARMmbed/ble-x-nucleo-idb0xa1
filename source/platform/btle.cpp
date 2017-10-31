@@ -395,11 +395,7 @@ extern "C" {
                 PRINTF("EVT_DISCONN_COMPLETE\n");
 
                 evt_disconn_complete *evt = (evt_disconn_complete*)event_pckt->data;
-
-                if(BlueNRGGap::getInstance().getGapRole() == Gap::CENTRAL) {
-                  BlueNRGGattClient::getInstance().removeGattConnectionClient(evt->handle, evt->reason);
-                }
-
+                BlueNRGGattClient::getInstance().removeGattConnectionClient(evt->handle, evt->reason);
                 BlueNRGGap::getInstance().processDisconnectionEvent(evt->handle, (Gap::DisconnectionReason_t)evt->reason);
             }
             break;
@@ -450,17 +446,17 @@ extern "C" {
                         }
                         //PRINTF("EVT_LE_CONN_COMPLETE LL role=%d\n", cc->role);
                         switch (cc->role) {
-			case 0: //master
+			                case 0: //master
                                 role = Gap::CENTRAL;
-                                BlueNRGGattClient::getInstance().createGattConnectionClient(cc->handle);
                                 break;
-			case 1:
+			                case 1:
                                 role = Gap::PERIPHERAL;
                                 break;
-			default:
+			                default:
                                 role = Gap::PERIPHERAL;
-				break;
+				            break;
                         }
+                        BlueNRGGattClient::getInstance().createGattConnectionClient(cc->handle);
 
                         BlueNRGGap::getInstance().setGapRole(role);
 
@@ -549,12 +545,37 @@ extern "C" {
 
                     //Any cases for Data Sent Notifications?
                 case EVT_BLUE_GATT_NOTIFICATION:
-                    //This is only relevant for Client Side Event
-                    PRINTF("EVT_BLUE_GATT_NOTIFICATION");
+                    {
+                        PRINTF("EVT_BLUE_GATT_NOTIFICATION");
+
+                        evt_gatt_attr_notification *notification = (evt_gatt_attr_notification*)blue_evt->data;
+
+                        GattHVXCallbackParams params;
+                        params.connHandle = notification->conn_handle;
+                        params.handle     = notification->attr_handle;
+                        params.type       = BLE_HVX_NOTIFICATION;
+                        params.len        = notification->event_data_length - 2;
+                        params.data       = notification->attr_value;
+
+                        BlueNRGGattClient::getInstance().processHVXEvent(&params);
+                    }
                     break;
+
                 case EVT_BLUE_GATT_INDICATION:
-                    //This is only relevant for Client Side Event
-                    PRINTF("EVT_BLUE_GATT_INDICATION");
+                    {
+                        PRINTF("EVT_BLUE_GATT_INDICATION");
+                        evt_gatt_indication *indication = (evt_gatt_indication*)blue_evt->data;
+
+                        GattHVXCallbackParams params;
+                        params.connHandle = indication->conn_handle;
+                        params.handle     = indication->attr_handle;
+                        params.type       = BLE_HVX_INDICATION;
+                        params.len        = indication->event_data_length - 2;
+                        params.data       = indication->attr_value;
+
+                        BlueNRGGattClient::getInstance().processHVXEvent(&params);
+                        aci_gatt_confirm_indication(params.connHandle);
+                    }
                     break;
 
         case EVT_BLUE_ATT_READ_BY_GROUP_TYPE_RESP:
