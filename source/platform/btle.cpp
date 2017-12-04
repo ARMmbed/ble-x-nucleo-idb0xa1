@@ -309,16 +309,18 @@ void Attribute_Modified_CB(evt_blue_aci *blue_evt)
             (GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_NOTIFY | GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_INDICATE)) &&
             currentHandle == BlueNRGGattServer::CHAR_DESC_HANDLE) {
 
-            GattAttribute::Handle_t charDescHandle = p_char->getValueAttribute().getHandle()+1;
+            GattAttribute::Handle_t char_value_handle = p_char->getValueAttribute().getHandle();
 
             PRINTF("*****NOTIFICATION CASE\n\r");
             //Now Check if data written in Enable or Disable
-            if((uint16_t)att_data[0]==1) {
+            uint16_t att_value;
+            memcpy(&att_value, att_data, sizeof(att_value));
+            if((att_value & NOTIFICATION) || (att_value & INDICATION)) {
                 //PRINTF("Notify ENABLED\n\r");
-                BlueNRGGattServer::getInstance().HCIEvent(GattServerEvents::GATT_EVENT_UPDATES_ENABLED, charDescHandle);
+                BlueNRGGattServer::getInstance().HCIEvent(GattServerEvents::GATT_EVENT_UPDATES_ENABLED, char_value_handle);
             } else {
                 //PRINTF("Notify DISABLED\n\r");
-                BlueNRGGattServer::getInstance().HCIEvent(GattServerEvents::GATT_EVENT_UPDATES_DISABLED, charDescHandle);
+                BlueNRGGattServer::getInstance().HCIEvent(GattServerEvents::GATT_EVENT_UPDATES_DISABLED, char_value_handle);
             }
             return;
         }
