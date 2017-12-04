@@ -313,7 +313,9 @@ void Attribute_Modified_CB(evt_blue_aci *blue_evt)
 
             PRINTF("*****NOTIFICATION CASE\n\r");
             //Now Check if data written in Enable or Disable
-            if((uint16_t)att_data[0]==1) {
+            uint16_t att_value;
+            memcpy(&att_value, att_data, sizeof(att_value));
+            if((att_value & NOTIFICATION) || (att_value & INDICATION)) {
                 //PRINTF("Notify ENABLED\n\r");
                 BlueNRGGattServer::getInstance().HCIEvent(GattServerEvents::GATT_EVENT_UPDATES_ENABLED, charDescHandle);
             } else {
